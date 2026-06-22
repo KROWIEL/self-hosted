@@ -1,0 +1,63 @@
+services:
+  api:
+    build:
+      context: ../../
+      dockerfile: infra/vps/images/api.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./rathole:/etc/rathole
+
+  panel-web:
+    build:
+      context: ../../
+      dockerfile: infra/vps/images/panel.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: self_hosted
+      POSTGRES_USER: selfhosted
+      POSTGRES_PASSWORD: selfhosted
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - ./data/redis:/data
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data
+      - ./config/caddy:/config
+
+  rathole:
+    image: rapiz1/rathole:latest
+    restart: unless-stopped
+    command: ["--server", "/etc/rathole/server.toml"]
+    ports:
+      - "2333:2333"
+    volumes:
+      - ./rathole/server.toml:/etc/rathole/server.toml

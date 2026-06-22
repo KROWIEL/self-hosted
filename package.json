@@ -1,0 +1,21 @@
+{
+  "name": "self-hosted",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Self-hosted control plane for routing local apps via VPS.",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "bootstrap": "pnpm install && docker compose -f infra/dev/docker-compose.yml up -d && pnpm --filter @self-hosted/api prisma:generate && pnpm --filter @self-hosted/api prisma:push",
+    "dev": "pnpm --parallel --filter @self-hosted/api --filter @self-hosted/panel-web --filter @self-hosted/node-agent dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "format": "pnpm -r format",
+    "security": "pnpm audit --audit-level high",
+    "smoke": "pnpm --filter @self-hosted/api test:smoke && pnpm --filter @self-hosted/panel-web test:smoke"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
