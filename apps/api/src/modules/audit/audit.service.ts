@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 
 import { PrismaService } from "../database/prisma.service";
 
@@ -7,7 +8,7 @@ export interface AuditEventInput {
   action: string;
   entityType: string;
   entityId?: string;
-  metaJson?: Record<string, unknown>;
+  metaJson?: unknown;
 }
 
 @Injectable()
@@ -21,7 +22,7 @@ export class AuditService {
         action: input.action,
         entityType: input.entityType,
         entityId: input.entityId,
-        metaJson: input.metaJson
+        metaJson: this.normalizeJson(input.metaJson)
       }
     });
   }
@@ -43,5 +44,18 @@ export class AuditService {
       },
       take: params.take ?? 100
     });
+  }
+
+  private normalizeJson(value: unknown): Prisma.InputJsonValue | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const serialized = JSON.stringify(value);
+    if (serialized === undefined) {
+      return undefined;
+    }
+
+    return JSON.parse(serialized) as Prisma.InputJsonValue;
   }
 }
