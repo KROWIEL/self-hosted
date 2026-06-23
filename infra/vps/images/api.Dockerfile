@@ -1,6 +1,7 @@
 FROM node:22-alpine AS base
 WORKDIR /app
 
+RUN apk add --no-cache openssl
 COPY . .
 ENV DATABASE_URL=postgresql://selfhosted:selfhosted@localhost:5432/self_hosted
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate

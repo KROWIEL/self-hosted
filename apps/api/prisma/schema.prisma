@@ -57,6 +57,8 @@ model User {
   roles        UserRole[]
   auditEvents  AuditEvent[]
   deployJobs   DeployJob[]
+  createdInvites          UserInvite[]
+  createdEnrollmentTokens EnrollmentToken[]
 }
 
 model Role {
