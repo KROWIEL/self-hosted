@@ -30,6 +30,8 @@ export class TunnelConfigService {
       "[server]",
       'bind_addr = "0.0.0.0:2333"',
       `default_token = "${process.env.CONTROL_CHANNEL_SHARED_SECRET ?? "self-hosted"}"`,
+      "",
+      "[server.services]",
       ""
     ];
 
