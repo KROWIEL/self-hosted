@@ -109,7 +109,7 @@ export default function RoutesPage() {
           <div key={route.id} className="card">
             <strong>{route.domain}</strong>
             <div>
-              bind {route.bindPort} -> target {route.targetPort}
+              bind {route.bindPort} {"->"} target {route.targetPort}
             </div>
             <div>Status: {route.status}</div>
             <button onClick={() => void syncRoute(route.id)}>Sync</button>
