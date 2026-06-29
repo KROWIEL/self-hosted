@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { setupExecProxy } from './exec-proxy';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +15,8 @@ async function bootstrap() {
     }),
   );
   app.enableCors({ origin: true, credentials: true });
+
+  setupExecProxy(app);
 
   const port = process.env.CP_PORT ? Number(process.env.CP_PORT) : 3001;
   await app.listen(port);

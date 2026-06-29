@@ -47,6 +47,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("DELETE /api/servers/{uuid}", s.handleRemove)
 	s.mux.HandleFunc("GET /api/servers/{uuid}/logs", s.handleLogs)
 	s.mux.HandleFunc("GET /api/servers/{uuid}/stats", s.handleStats)
+	s.mux.HandleFunc("POST /api/servers/{uuid}/gc", s.handleGC)
+	s.mux.HandleFunc("GET /api/servers/{uuid}/exec", s.handleExec)
 }
 
 // auth enforces the shared daemon token (constant-time compare).
@@ -63,12 +65,80 @@ func (s *Server) auth(next http.Handler) http.Handler {
 }
 
 func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, map[string]any{
-		"cpu":     0,
-		"memMb":   0,
-		"diskMb":  0,
-		"version": "0.1.0",
-	})
+	ctx := r.Context()
+	resp := map[string]any{"version": "0.1.0"}
+
+	if running, err := s.docker.Ps(ctx, false); err == nil {
+		resp["containersRunning"] = countLines(running)
+	}
+	if all, err := s.docker.Ps(ctx, true); err == nil {
+		resp["containersTotal"] = countLines(all)
+	}
+
+	// docker system df: one JSON object per resource type (Images, Containers, …).
+	if df, err := s.docker.SystemDf(ctx); err == nil {
+		for _, line := range strings.Split(strings.TrimSpace(df), "\n") {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			var row map[string]string
+			if json.Unmarshal([]byte(line), &row) != nil {
+				continue
+			}
+			switch row["Type"] {
+			case "Images":
+				resp["imagesCount"] = row["TotalCount"]
+				resp["imagesSize"] = row["Size"]
+				resp["imagesReclaimable"] = row["Reclaimable"]
+			case "Local Volumes":
+				resp["volumesSize"] = row["Size"]
+			case "Build Cache":
+				resp["buildCacheSize"] = row["Size"]
+			}
+		}
+	}
+	writeJSON(w, resp)
+}
+
+// handleGC removes stale images of a service, keeping the currently used one.
+func (s *Server) handleGC(w http.ResponseWriter, r *http.Request) {
+	uuid := r.PathValue("uuid")
+	var body struct {
+		KeepImage string `json:"keepImage"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+
+	// Image repo is "svc-" + first 8 chars of the service id (see control plane).
+	short := uuid
+	if len(short) > 8 {
+		short = short[:8]
+	}
+	repo := "svc-" + short
+
+	out, err := s.docker.ImagesByRepo(r.Context(), repo)
+	if err != nil {
+		writeJSON(w, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	removed := 0
+	for _, ref := range strings.Split(strings.TrimSpace(out), "\n") {
+		ref = strings.TrimSpace(ref)
+		if ref == "" || ref == body.KeepImage || strings.HasSuffix(ref, ":<none>") {
+			continue
+		}
+		if s.docker.RemoveImage(r.Context(), ref) == nil {
+			removed++
+		}
+	}
+	writeJSON(w, map[string]any{"ok": true, "removed": removed})
+}
+
+func countLines(s string) int {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0
+	}
+	return len(strings.Split(s, "\n"))
 }
 
 type buildBody struct {

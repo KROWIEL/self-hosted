@@ -15,10 +15,12 @@ import {
   envVars,
   nodes,
   services,
+  templates,
 } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import { AgentClient } from '../nodes/agent.client';
 import { CreateServiceDto } from './dto/create-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
 import { SetDomainDto, SetEnvDto } from './dto/set-env.dto';
 import { DEPLOY_QUEUE, DeployJobData } from './deploy.constants';
 
@@ -82,11 +84,79 @@ export class ServicesService {
     return rows[0];
   }
 
+  /** Service enriched with its node, template and domain — for the detail page. */
+  async getDetail(id: string) {
+    const service = await this.get(id);
+    const [node] = await this.db
+      .select()
+      .from(nodes)
+      .where(eq(nodes.id, service.nodeId))
+      .limit(1);
+    const [template] = await this.db
+      .select()
+      .from(templates)
+      .where(eq(templates.id, service.templateId))
+      .limit(1);
+    const [domain] = await this.db
+      .select()
+      .from(domains)
+      .where(eq(domains.serviceId, id))
+      .limit(1);
+    return {
+      ...service,
+      node: node
+        ? {
+            id: node.id,
+            name: node.name,
+            fqdn: node.fqdn,
+            agentPort: node.agentPort,
+          }
+        : null,
+      template: template
+        ? {
+            id: template.id,
+            name: template.name,
+            defaultPort: template.defaultPort,
+            type: template.type,
+          }
+        : null,
+      domain: domain ? { host: domain.host, https: domain.https } : null,
+    };
+  }
+
+  /** Updates editable service settings. Takes effect on the next deploy. */
+  async update(id: string, dto: UpdateServiceDto) {
+    await this.get(id);
+    const set: Partial<typeof services.$inferInsert> = {};
+    if (dto.name !== undefined) set.name = dto.name;
+    if (dto.repoUrl !== undefined) set.repoUrl = dto.repoUrl;
+    if (dto.branch !== undefined) set.branch = dto.branch;
+    if (dto.port !== undefined) set.port = dto.port;
+    if (dto.gitCredId !== undefined) set.gitCredId = dto.gitCredId || null;
+    if (dto.useRepoDockerfile !== undefined) {
+      set.useRepoDockerfile = dto.useRepoDockerfile;
+    }
+    if (dto.cpuLimit !== undefined) set.cpuLimit = dto.cpuLimit;
+    if (dto.memLimit !== undefined) set.memLimit = dto.memLimit;
+    const rows = await this.db
+      .update(services)
+      .set(set)
+      .where(eq(services.id, id))
+      .returning();
+    return rows[0];
+  }
+
   /** Opens the runtime log stream for a service from its node's agent. */
   async openLogStream(id: string, signal?: AbortSignal) {
     const service = await this.get(id);
     const node = await this.node(service.nodeId);
     return this.agent.streamLogs(node, id, signal);
+  }
+
+  /** Returns the node row (incl. encrypted daemon token) hosting a service. */
+  async getNodeRow(id: string) {
+    const service = await this.get(id);
+    return this.node(service.nodeId);
   }
 
   /** Live resource + health stats for a service container. */

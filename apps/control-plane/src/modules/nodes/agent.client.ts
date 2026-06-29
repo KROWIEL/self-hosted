@@ -28,6 +28,17 @@ export interface AgentBuildResult {
   buildLog: string;
 }
 
+export interface AgentSystem {
+  version: string;
+  containersRunning?: number;
+  containersTotal?: number;
+  imagesCount?: string;
+  imagesSize?: string;
+  imagesReclaimable?: string;
+  volumesSize?: string;
+  buildCacheSize?: string;
+}
+
 export interface AgentStats {
   running: boolean;
   state: string;
@@ -89,11 +100,20 @@ export class AgentClient {
   }
 
   getSystem(node: NodeRow) {
-    return this.request<{ version: string }>(node, '/system');
+    return this.request<AgentSystem>(node, '/system');
   }
 
   getStats(node: NodeRow, serviceId: string) {
     return this.request<AgentStats>(node, `/servers/${serviceId}/stats`);
+  }
+
+  /** Removes stale images of a service, keeping `keepImage`. Best-effort. */
+  gc(node: NodeRow, serviceId: string, keepImage: string) {
+    return this.request<{ ok: boolean; removed: number }>(
+      node,
+      `/servers/${serviceId}/gc`,
+      { method: 'POST', body: JSON.stringify({ keepImage }) },
+    );
   }
 
   /**

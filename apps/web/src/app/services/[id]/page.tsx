@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import {
   Deployment,
   EnvVar,
+  GitCredential,
   Service,
   ServiceStats,
   deleteService,
@@ -15,14 +16,18 @@ import {
   getWebhook,
   listDeployments,
   listEnv,
+  listGitCredentials,
   powerService,
   rollbackDeployment,
   setDomain,
   setEnv,
   streamDeploymentLogs,
   streamServiceLogs,
+  updateService,
+  execSocketUrl,
   API_URL,
 } from '@/lib/api';
+import '@xterm/xterm/css/xterm.css';
 import { AppShell } from '@/components/shell';
 import { Card, EmptyState, ErrorBox, Spinner, StatusBadge } from '@/components/ui';
 import { useI18n, useTypeLabel } from '@/i18n';
@@ -40,6 +45,8 @@ export default function ServicePage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [openLog, setOpenLog] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [termOpen, setTermOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refresh = useCallback(async () => {
@@ -167,6 +174,18 @@ export default function ServicePage() {
               {t('service.restart')}
             </button>
             <button
+              onClick={() => setTermOpen(true)}
+              disabled={service.status !== 'RUNNING'}
+              title={
+                service.status !== 'RUNNING'
+                  ? t('service.terminalNotRunning')
+                  : undefined
+              }
+              className="btn-ghost"
+            >
+              &gt;_ {t('service.terminal')}
+            </button>
+            <button
               onClick={() => {
                 if (confirm(t('service.confirmDelete')))
                   act(() => deleteService(id)).then(() => {
@@ -180,74 +199,60 @@ export default function ServicePage() {
             </button>
           </Card>
 
+          <OverviewPanel service={service} />
+
           <MetricsPanel id={id} status={service.status} />
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-                {t('service.deployments')}
-              </h2>
-              {deployments.length === 0 ? (
-                <EmptyState>{t('service.noDeployments')}</EmptyState>
-              ) : (
-                <ul className="space-y-2">
-                  {deployments.map((d) => {
-                    const active =
-                      d.status === 'QUEUED' ||
-                      d.status === 'BUILDING' ||
-                      d.status === 'DEPLOYING';
-                    return (
-                      <Card key={d.id} className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm">
-                            <StatusBadge status={d.status} />
-                            <span className="font-mono text-neutral-500">
-                              {d.commitSha ? d.commitSha.slice(0, 7) : '—'}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            {!active && d.status === 'SUCCESS' && (
-                              <button
-                                onClick={() => {
-                                  if (confirm(t('service.rollbackConfirm')))
-                                    act(() => rollbackDeployment(d.id));
-                                }}
-                                disabled={busy}
-                                className="text-xs text-neutral-400 transition-colors hover:text-indigo-300"
-                              >
-                                {t('service.rollback')}
-                              </button>
-                            )}
-                            {!active && (d.buildLog || d.errorMsg) && (
-                              <button
-                                onClick={() =>
-                                  setOpenLog(openLog === d.id ? null : d.id)
-                                }
-                                className="text-xs text-neutral-400 transition-colors hover:text-white"
-                              >
-                                {openLog === d.id
-                                  ? t('service.hideLog')
-                                  : t('service.showLog')}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        {active ? (
-                          <BuildLogStream deploymentId={d.id} />
-                        ) : (
-                          openLog === d.id && (
-                            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-ink-950/80 p-3 font-mono text-xs text-neutral-300">
-                              {d.errorMsg ? `ERROR: ${d.errorMsg}\n\n` : ''}
-                              {d.buildLog ?? t('service.noBuildLog')}
-                            </pre>
-                          )
-                        )}
-                      </Card>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
+            <div className="space-y-6">
+              <section>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+                  {t('service.deployments')}
+                </h2>
+                {deployments.length === 0 ? (
+                  <EmptyState>{t('service.noDeployments')}</EmptyState>
+                ) : (
+                  <div className="space-y-2">
+                    <DeploymentCard
+                      d={deployments[0]}
+                      openLog={openLog}
+                      setOpenLog={setOpenLog}
+                      busy={busy}
+                      onRollback={(dep) => act(() => rollbackDeployment(dep))}
+                    />
+                    {deployments.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setShowHistory((s) => !s)}
+                          className="w-full rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-xs text-neutral-400 transition-colors hover:text-white"
+                        >
+                          {showHistory
+                            ? t('service.deploymentsHide')
+                            : t('service.deploymentsShowAll', {
+                                count: deployments.length - 1,
+                              })}
+                        </button>
+                        {showHistory &&
+                          deployments.slice(1).map((d) => (
+                            <DeploymentCard
+                              key={d.id}
+                              d={d}
+                              openLog={openLog}
+                              setOpenLog={setOpenLog}
+                              busy={busy}
+                              onRollback={(dep) =>
+                                act(() => rollbackDeployment(dep))
+                              }
+                            />
+                          ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </section>
+
+              <SettingsBox service={service} onSaved={refresh} />
+            </div>
 
             <section className="space-y-6">
               <EnvEditor id={id} env={env} onSaved={refresh} />
@@ -259,9 +264,524 @@ export default function ServicePage() {
           <section className="mt-6">
             <LogViewer id={id} />
           </section>
+
+          {termOpen && (
+            <TerminalModal serviceId={id} onClose={() => setTermOpen(false)} />
+          )}
         </>
       )}
     </AppShell>
+  );
+}
+
+function TerminalModal({
+  serviceId,
+  onClose,
+}: {
+  serviceId: string;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const ref = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState<'connecting' | 'open' | 'closed'>(
+    'connecting',
+  );
+
+  useEffect(() => {
+    let disposed = false;
+    let ws: WebSocket | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let term: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let fit: any;
+    let onWinResize: (() => void) | null = null;
+
+    (async () => {
+      const [{ Terminal }, { FitAddon }] = await Promise.all([
+        import('@xterm/xterm'),
+        import('@xterm/addon-fit'),
+      ]);
+      if (disposed || !ref.current) return;
+
+      term = new Terminal({
+        cursorBlink: true,
+        fontFamily:
+          'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
+        fontSize: 13,
+        theme: { background: '#0a0a0a', foreground: '#e5e5e5' },
+      });
+      fit = new FitAddon();
+      term.loadAddon(fit);
+      term.open(ref.current);
+      try {
+        fit.fit();
+      } catch {
+        /* ignore */
+      }
+
+      const enc = new TextEncoder();
+      ws = new WebSocket(execSocketUrl(serviceId));
+      ws.binaryType = 'arraybuffer';
+
+      const sendResize = () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(
+            JSON.stringify({ resize: { cols: term.cols, rows: term.rows } }),
+          );
+        }
+      };
+
+      ws.onopen = () => {
+        setStatus('open');
+        sendResize();
+        term.focus();
+      };
+      ws.onmessage = (ev: MessageEvent) => {
+        if (typeof ev.data === 'string') term.write(ev.data);
+        else term.write(new Uint8Array(ev.data as ArrayBuffer));
+      };
+      ws.onclose = () => {
+        setStatus('closed');
+        term.write('\r\n\x1b[33m— ' + t('service.terminalClosed') + ' —\x1b[0m\r\n');
+      };
+      ws.onerror = () => setStatus('closed');
+
+      term.onData((d: string) => {
+        if (ws && ws.readyState === WebSocket.OPEN) ws.send(enc.encode(d));
+      });
+      term.onResize(() => sendResize());
+
+      onWinResize = () => {
+        try {
+          fit.fit();
+        } catch {
+          /* ignore */
+        }
+      };
+      window.addEventListener('resize', onWinResize);
+    })();
+
+    return () => {
+      disposed = true;
+      if (onWinResize) window.removeEventListener('resize', onWinResize);
+      try {
+        ws?.close();
+      } catch {
+        /* ignore */
+      }
+      try {
+        term?.dispose();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [serviceId, t]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="flex h-[72vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-sm text-neutral-200">
+              &gt;_ {t('service.terminalTitle')}
+            </span>
+            <span
+              className={`text-xs ${
+                status === 'open'
+                  ? 'text-emerald-400'
+                  : status === 'closed'
+                    ? 'text-red-400'
+                    : 'text-neutral-500'
+              }`}
+            >
+              {status === 'open'
+                ? '●'
+                : status === 'closed'
+                  ? t('service.terminalClosed')
+                  : t('service.terminalConnecting')}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg px-2 py-1 text-xs text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+          >
+            {t('service.close')} ✕
+          </button>
+        </div>
+        <p className="border-b border-white/5 px-4 py-1.5 text-xs text-neutral-500">
+          {t('service.terminalHint')}
+        </p>
+        <div ref={ref} className="min-h-0 flex-1 bg-[#0a0a0a] p-2" />
+      </div>
+    </div>
+  );
+}
+
+function DeploymentCard({
+  d,
+  openLog,
+  setOpenLog,
+  busy,
+  onRollback,
+}: {
+  d: Deployment;
+  openLog: string | null;
+  setOpenLog: (id: string | null) => void;
+  busy: boolean;
+  onRollback: (id: string) => void;
+}) {
+  const { t } = useI18n();
+  const active =
+    d.status === 'QUEUED' || d.status === 'BUILDING' || d.status === 'DEPLOYING';
+  return (
+    <Card className="p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm">
+          <StatusBadge status={d.status} />
+          <span className="font-mono text-neutral-500">
+            {d.commitSha ? d.commitSha.slice(0, 7) : '—'}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          {!active && d.status === 'SUCCESS' && (
+            <button
+              onClick={() => {
+                if (confirm(t('service.rollbackConfirm'))) onRollback(d.id);
+              }}
+              disabled={busy}
+              className="text-xs text-neutral-400 transition-colors hover:text-indigo-300"
+            >
+              {t('service.rollback')}
+            </button>
+          )}
+          {!active && (d.buildLog || d.errorMsg) && (
+            <button
+              onClick={() => setOpenLog(openLog === d.id ? null : d.id)}
+              className="text-xs text-neutral-400 transition-colors hover:text-white"
+            >
+              {openLog === d.id ? t('service.hideLog') : t('service.showLog')}
+            </button>
+          )}
+        </div>
+      </div>
+      {active ? (
+        <BuildLogStream deploymentId={d.id} />
+      ) : (
+        openLog === d.id && (
+          <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-ink-950/80 p-3 font-mono text-xs text-neutral-300">
+            {d.errorMsg ? `ERROR: ${d.errorMsg}\n\n` : ''}
+            {d.buildLog ?? t('service.noBuildLog')}
+          </pre>
+        )
+      )}
+    </Card>
+  );
+}
+
+function OverviewPanel({ service }: { service: Service }) {
+  const { t } = useI18n();
+  const port = service.port ?? service.template?.defaultPort ?? null;
+  const appUrl = service.domain?.host
+    ? `${service.domain.https ? 'https' : 'http'}://${service.domain.host}`
+    : port
+      ? `http://localhost:${port}`
+      : null;
+
+  return (
+    <Card className="mb-8 p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+          {t('service.info')}
+        </h2>
+        {appUrl && service.status === 'RUNNING' && (
+          <a
+            href={appUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-ghost py-1.5 text-xs"
+          >
+            {t('service.open')} ↗
+          </a>
+        )}
+      </div>
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+        <Fact label={t('service.node')}>
+          {service.node ? (
+            <>
+              {service.node.name}
+              <span className="block font-mono text-xs text-neutral-500">
+                {service.node.fqdn}:{service.node.agentPort}
+              </span>
+            </>
+          ) : (
+            '—'
+          )}
+        </Fact>
+        <Fact label={t('service.template')}>
+          {service.template?.name ?? '—'}
+        </Fact>
+        <Fact label={t('service.port')}>{port ?? '—'}</Fact>
+        <Fact label={t('service.repo')}>
+          <span className="break-all font-mono text-xs text-neutral-300">
+            {service.repoUrl}
+          </span>
+          <span className="block font-mono text-xs text-neutral-500">
+            {service.branch}
+          </span>
+        </Fact>
+        <Fact label={t('service.domain')}>
+          {service.domain?.host ? (
+            <span className="font-mono text-xs">
+              {service.domain.host}
+              {service.domain.https ? ' · HTTPS' : ''}
+            </span>
+          ) : (
+            '—'
+          )}
+        </Fact>
+        <Fact label={t('service.image')}>
+          <span className="break-all font-mono text-xs text-neutral-300">
+            {service.currentImage ?? '—'}
+          </span>
+        </Fact>
+      </dl>
+    </Card>
+  );
+}
+
+function Fact({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <dt className="text-xs text-neutral-500">{label}</dt>
+      <dd className="mt-0.5 text-neutral-200">{children}</dd>
+    </div>
+  );
+}
+
+function SettingsBox({
+  service,
+  onSaved,
+}: {
+  service: Service;
+  onSaved: () => Promise<unknown>;
+}) {
+  const { t } = useI18n();
+  const [editing, setEditing] = useState(false);
+  const [creds, setCreds] = useState<GitCredential[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const initialForm = useCallback(
+    () => ({
+      name: service.name,
+      repoUrl: service.repoUrl,
+      branch: service.branch,
+      port: service.port ?? undefined,
+      gitCredId: service.gitCredId ?? '',
+      useRepoDockerfile: service.useRepoDockerfile,
+      cpuLimit: service.cpuLimit,
+      memLimit: service.memLimit,
+    }),
+    [service],
+  );
+
+  const [form, setForm] = useState(initialForm);
+
+  useEffect(() => {
+    listGitCredentials().then(setCreds).catch(() => {});
+  }, []);
+
+  function cancel() {
+    setForm(initialForm());
+    setErr(null);
+    setEditing(false);
+  }
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setErr(null);
+    try {
+      await updateService(service.id, {
+        name: form.name.trim(),
+        repoUrl: form.repoUrl.trim(),
+        branch: form.branch.trim(),
+        port: form.port ? Number(form.port) : undefined,
+        gitCredId: form.gitCredId,
+        useRepoDockerfile: form.useRepoDockerfile,
+        cpuLimit: Number(form.cpuLimit),
+        memLimit: Number(form.memLimit),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+      setEditing(false);
+      await onSaved();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('common.failed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const ro = !editing;
+  const field = `field w-full disabled:cursor-not-allowed disabled:opacity-60`;
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+          {t('service.settings')}
+        </h2>
+        {editing ? (
+          <button
+            onClick={cancel}
+            className="text-xs text-neutral-400 transition-colors hover:text-white"
+          >
+            {t('common.cancel')}
+          </button>
+        ) : (
+          <button
+            onClick={() => setEditing(true)}
+            className="text-xs text-neutral-400 transition-colors hover:text-white"
+          >
+            {t('common.edit')}
+          </button>
+        )}
+      </div>
+      <Card>
+        {err && <ErrorBox message={err} />}
+        <form onSubmit={save} className="space-y-3">
+          <Labeled label={t('service.name')}>
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              disabled={ro}
+              className={field}
+            />
+          </Labeled>
+          <Labeled label={t('service.repo')}>
+            <input
+              value={form.repoUrl}
+              onChange={(e) => setForm({ ...form, repoUrl: e.target.value })}
+              disabled={ro}
+              className={field}
+            />
+          </Labeled>
+          <div className="grid grid-cols-2 gap-3">
+            <Labeled label={t('project.branch')}>
+              <input
+                value={form.branch}
+                onChange={(e) => setForm({ ...form, branch: e.target.value })}
+                disabled={ro}
+                className={field}
+              />
+            </Labeled>
+            <Labeled label={t('service.port')}>
+              <input
+                type="number"
+                value={form.port ?? ''}
+                onChange={(e) =>
+                  setForm({ ...form, port: Number(e.target.value) })
+                }
+                disabled={ro}
+                className={field}
+              />
+            </Labeled>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Labeled label={t('service.cpu')}>
+              <input
+                type="number"
+                value={form.cpuLimit}
+                onChange={(e) =>
+                  setForm({ ...form, cpuLimit: Number(e.target.value) })
+                }
+                disabled={ro}
+                className={field}
+              />
+            </Labeled>
+            <Labeled label={t('service.mem')}>
+              <input
+                type="number"
+                value={form.memLimit}
+                onChange={(e) =>
+                  setForm({ ...form, memLimit: Number(e.target.value) })
+                }
+                disabled={ro}
+                className={field}
+              />
+            </Labeled>
+          </div>
+          <Labeled label={t('project.gitCred')}>
+            <select
+              value={form.gitCredId}
+              onChange={(e) => setForm({ ...form, gitCredId: e.target.value })}
+              disabled={ro}
+              className={field}
+            >
+              <option value="" className="bg-ink-850">
+                {t('project.gitCredNone')}
+              </option>
+              {creds.map((c) => (
+                <option key={c.id} value={c.id} className="bg-ink-850">
+                  {c.name} ({c.provider})
+                </option>
+              ))}
+            </select>
+          </Labeled>
+          <label className="flex items-start gap-2 text-sm text-neutral-300">
+            <input
+              type="checkbox"
+              checked={form.useRepoDockerfile}
+              onChange={(e) =>
+                setForm({ ...form, useRepoDockerfile: e.target.checked })
+              }
+              disabled={ro}
+              className="mt-0.5 accent-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+            <span>{t('project.useRepoDockerfile')}</span>
+          </label>
+          {editing && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-neutral-500">
+                {t('service.settingsHint')}
+              </span>
+              <button type="submit" disabled={busy} className="btn-primary py-1.5">
+                {saved ? t('common.saved') : t('common.save')}
+              </button>
+            </div>
+          )}
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+function Labeled({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs text-neutral-500">{label}</span>
+      {children}
+    </label>
   );
 }
 

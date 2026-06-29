@@ -98,6 +98,30 @@ func (c *Client) Inspect(ctx context.Context, name, format string) (string, erro
 	return c.runCapture(ctx, io.Discard, "inspect", "--format", format, name)
 }
 
+// SystemDf returns `docker system df` rows as JSON lines (one per resource type).
+func (c *Client) SystemDf(ctx context.Context) (string, error) {
+	return c.runCapture(ctx, io.Discard, "system", "df", "--format", "{{json .}}")
+}
+
+// Ps returns container IDs (one per line); all includes stopped containers.
+func (c *Client) Ps(ctx context.Context, all bool) (string, error) {
+	args := []string{"ps", "--format", "{{.ID}}"}
+	if all {
+		args = []string{"ps", "-a", "--format", "{{.ID}}"}
+	}
+	return c.runCapture(ctx, io.Discard, args...)
+}
+
+// ImagesByRepo lists "repo:tag" for every image of a given repository.
+func (c *Client) ImagesByRepo(ctx context.Context, repo string) (string, error) {
+	return c.runCapture(ctx, io.Discard, "images", repo, "--format", "{{.Repository}}:{{.Tag}}")
+}
+
+// RemoveImage force-removes an image by reference (ignores errors via caller).
+func (c *Client) RemoveImage(ctx context.Context, ref string) error {
+	return c.run(ctx, io.Discard, "rmi", "-f", ref)
+}
+
 func (c *Client) run(ctx context.Context, w io.Writer, args ...string) error {
 	cmd := exec.CommandContext(ctx, "docker", args...)
 	cmd.Stdout = w

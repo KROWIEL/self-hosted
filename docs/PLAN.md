@@ -238,7 +238,17 @@ Docker (clone → build → run → power → remove).
 5. ✅ Метрики контейнеров (`docker stats`) и health checks.
 6. ✅ Rollback на предыдущий образ (без пересборки) + webhook авто-деплоя
    (`POST /webhooks/services/:id/:token`, HMAC-токен).
+7. ✅ Метрики ноды (Docker-уровень: контейнеры, образы, размеры, reclaimable;
+   `GET /nodes/:id/system`) на странице «Ноды».
+8. ✅ Авто-GC старых образов сервиса после успешного деплоя
+   (`POST /servers/:uuid/gc`, оставляет текущий образ).
+9. ✅ Интерактивный терминал в контейнер (web-консоль). Полный дуплекс по
+   WebSocket: браузер (xterm.js, JWT в `?token`) ⟷ control-plane
+   (`/api/v1/services/:id/exec`) ⟷ агент (`/api/servers/:uuid/exec`,
+   daemon-токен) ⟷ Docker exec API с TTY внутри контейнера (hijacked stream,
+   без host-PTY — одинаково на Linux-нодах и Windows-деве). Можно зайти руками,
+   подключиться к базе, посмотреть/поправить данные.
 
 Дальше (Фаза 6, ещё не сделано): бэкапы томов, автоматическая сборка по cron,
-сборка/GC старых образов, метрики ноды (CPU/RAM/диск), аудит-лог действий.
+аудит-лог действий, метрики хоста (CPU/RAM/диск самой ОС, не только Docker).
 ```

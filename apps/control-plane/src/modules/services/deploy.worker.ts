@@ -180,6 +180,18 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
         status: 'SUCCESS',
         finishedAt: new Date(),
       });
+
+      // Housekeeping: drop older images of this service to reclaim disk.
+      // Best-effort — never fail a successful deploy over cleanup.
+      try {
+        await this.agent.gc(node, serviceId, imageTag);
+      } catch (gcErr) {
+        this.logger.warn(
+          `GC for ${serviceId} failed: ${
+            gcErr instanceof Error ? gcErr.message : String(gcErr)
+          }`,
+        );
+      }
     } catch (e) {
       const err = e as Error & { buildLog?: string };
       await this.buildLog.publish(deploymentId, `\nERROR: ${err.message}\n`);

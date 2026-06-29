@@ -76,4 +76,10 @@ export class NodesController {
   agentStatus(@Param('id') id: string) {
     return this.runner.status(id);
   }
+
+  /** Live Docker-level metrics from the node's agent. */
+  @Get(':id/system')
+  system(@Param('id') id: string) {
+    return this.nodes.systemInfo(id);
+  }
 }

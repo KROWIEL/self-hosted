@@ -31,8 +31,29 @@ export interface Service {
   port: number | null;
   cpuLimit: number;
   memLimit: number;
+  gitCredId: string | null;
   containerId: string | null;
   currentImage: string | null;
+  // Present only on the detail endpoint (getService).
+  node?: { id: string; name: string; fqdn: string; agentPort: number } | null;
+  template?: {
+    id: string;
+    name: string;
+    defaultPort: number;
+    type: ServiceType;
+  } | null;
+  domain?: { host: string; https: boolean } | null;
+}
+
+export interface UpdateServiceBody {
+  name?: string;
+  repoUrl?: string;
+  branch?: string;
+  gitCredId?: string;
+  useRepoDockerfile?: boolean;
+  port?: number;
+  cpuLimit?: number;
+  memLimit?: number;
 }
 
 export interface Project {
@@ -255,6 +276,16 @@ export async function streamServiceLogs(
   return res;
 }
 
+/**
+ * Builds the WebSocket URL for an interactive container shell. The access token
+ * is passed as a query param because browsers can't set WS headers.
+ */
+export function execSocketUrl(serviceId: string): string {
+  const token = getToken() ?? '';
+  const wsBase = API_URL.replace(/^http/, 'ws');
+  return `${wsBase}/services/${serviceId}/exec?token=${encodeURIComponent(token)}`;
+}
+
 /** Opens the live build-log stream for a deployment (see streamServiceLogs). */
 export async function streamDeploymentLogs(
   deploymentId: string,
@@ -285,6 +316,26 @@ export interface ServiceStats {
 
 export const getServiceStats = (id: string) =>
   api<ServiceStats>(`/services/${id}/stats`);
+
+export interface NodeSystem {
+  version: string;
+  containersRunning?: number;
+  containersTotal?: number;
+  imagesCount?: string;
+  imagesSize?: string;
+  imagesReclaimable?: string;
+  volumesSize?: string;
+  buildCacheSize?: string;
+}
+
+export const getNodeSystem = (id: string) =>
+  api<NodeSystem>(`/nodes/${id}/system`);
+
+export const updateService = (id: string, body: UpdateServiceBody) =>
+  api<Service>(`/services/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
 
 export const rollbackDeployment = (deploymentId: string) =>
   api<Deployment>(`/deployments/${deploymentId}/rollback`, { method: 'POST' });

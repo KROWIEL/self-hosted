@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Req,
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ServicesService } from './services.service';
 import { BuildLogService } from './build-log.service';
 import { CreateServiceDto } from './dto/create-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
 import { SetDomainDto, SetEnvDto } from './dto/set-env.dto';
 
 @UseGuards(JwtAuthGuard)
@@ -34,7 +36,12 @@ export class ServicesController {
 
   @Get('services/:id')
   get(@Param('id') id: string) {
-    return this.services.get(id);
+    return this.services.getDetail(id);
+  }
+
+  @Patch('services/:id')
+  update(@Param('id') id: string, @Body() dto: UpdateServiceDto) {
+    return this.services.update(id, dto);
   }
 
   @Delete('services/:id')

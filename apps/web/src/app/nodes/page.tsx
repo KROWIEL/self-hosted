@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import {
   AgentStatus,
   Node,
+  NodeSystem,
   NodeWithToken,
   createNode,
   deleteNode,
+  getNodeSystem,
   listNodes,
   nodeAgentStatus,
   startNodeAgent,
@@ -141,16 +143,34 @@ AGENT_PORT=${newToken.agentPort} go run ./cmd/agent`}
   );
 }
 
+function NodeMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+      <p className="text-xs text-neutral-500">{label}</p>
+      <p className="mt-0.5 font-mono text-sm text-white">{value}</p>
+    </div>
+  );
+}
+
 function NodeItem({ node, onDelete }: { node: Node; onDelete: () => void }) {
   const { t } = useI18n();
   const [agent, setAgent] = useState<AgentStatus | null>(null);
+  const [system, setSystem] = useState<NodeSystem | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
 
   async function refresh() {
     try {
-      setAgent(await nodeAgentStatus(node.id));
+      const status = await nodeAgentStatus(node.id);
+      setAgent(status);
+      if (status.running) {
+        getNodeSystem(node.id)
+          .then(setSystem)
+          .catch(() => setSystem(null));
+      } else {
+        setSystem(null);
+      }
     } catch {
       /* ignore polling errors */
     }
@@ -230,6 +250,27 @@ function NodeItem({ node, onDelete }: { node: Node; onDelete: () => void }) {
           </button>
         </div>
       </div>
+
+      {system && (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <NodeMetric
+            label={t('nodes.containers')}
+            value={`${system.containersRunning ?? 0}/${system.containersTotal ?? 0}`}
+          />
+          <NodeMetric
+            label={t('nodes.images')}
+            value={`${system.imagesCount ?? '0'} · ${system.imagesSize ?? '—'}`}
+          />
+          <NodeMetric
+            label={t('nodes.reclaimable')}
+            value={system.imagesReclaimable ?? '—'}
+          />
+          <NodeMetric
+            label={t('nodes.volumes')}
+            value={system.volumesSize ?? '—'}
+          />
+        </div>
+      )}
 
       {agent?.enabled === false && (
         <p className="mt-3 text-xs text-amber-300">{t('nodes.disabledHint')}</p>

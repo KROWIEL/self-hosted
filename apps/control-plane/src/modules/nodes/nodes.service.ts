@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { DRIZZLE, Database } from '../../db/database.module';
 import { nodes } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
+import { AgentClient } from './agent.client';
 
 interface CreateNodeInput {
   name: string;
@@ -16,6 +17,7 @@ export class NodesService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly crypto: CryptoService,
+    private readonly agent: AgentClient,
   ) {}
 
   list() {
@@ -60,5 +62,11 @@ export class NodesService {
     await this.get(id);
     await this.db.delete(nodes).where(eq(nodes.id, id));
     return { ok: true };
+  }
+
+  /** Live Docker-level metrics from the node's agent (reachable only if up). */
+  async systemInfo(id: string) {
+    const node = await this.get(id);
+    return this.agent.getSystem(node);
   }
 }
