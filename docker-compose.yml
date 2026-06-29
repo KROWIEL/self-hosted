@@ -1,0 +1,84 @@
+# Local development stack: Postgres + Redis + Traefik.
+# The control-plane, web and agent run on the host during dev (npm/go run),
+# but can also be containerized later.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: selfhosted-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: selfhosted
+      POSTGRES_PASSWORD: selfhosted
+      POSTGRES_DB: selfhosted
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.docker-data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U selfhosted"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: selfhosted-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./.docker-data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Reverse proxy that routes user-deployed services by domain.
+  # On a real node this runs alongside the agent. Included here for local testing.
+  # Service containers are attached (by the agent) to the shared `selfhosted-edge`
+  # network so Traefik can reach them; routing is driven by container labels.
+  traefik:
+    image: traefik:v3.1
+    container_name: selfhosted-traefik
+    restart: unless-stopped
+    # Pin the Docker API version: Traefik's embedded client otherwise negotiates
+    # a version the (newer) daemon rejects with an empty "Error response from daemon".
+    environment:
+      DOCKER_API_VERSION: "1.44"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Only consider containers on the shared edge network for routing.
+      - "--providers.docker.network=selfhosted-edge"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      # Let's Encrypt (HTTP-01 challenge). Requires public DNS pointing at this
+      # host on ports 80/443 — works in production, not on localhost.
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik dashboard (dev only)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik-acme:/acme
+    networks:
+      - edge
+
+volumes:
+  # Named volume for ACME certs (avoids host-bind permission issues; Traefik
+  # requires the storage file to be 600).
+  traefik-acme:
+
+# Shared network for the reverse proxy and all deployed service containers.
+# Given a fixed name so the agent (running on the host) can attach containers
+# to it via `docker run --network selfhosted-edge`.
+networks:
+  edge:
+    name: selfhosted-edge

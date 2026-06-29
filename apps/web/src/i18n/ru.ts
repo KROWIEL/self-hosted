@@ -1,0 +1,182 @@
+import type { Dict } from './index';
+
+// Russian message catalog. Must implement every key declared in en.ts.
+export const ru: Dict = {
+  // Common
+  'common.loading': 'Загрузка…',
+  'common.failed': 'Что-то пошло не так',
+  'common.delete': 'Удалить',
+  'common.create': 'Создать',
+  'common.creating': 'Создание…',
+  'common.save': 'Сохранить',
+  'common.set': 'Задать',
+  'common.dismiss': 'Скрыть',
+  'common.signOut': 'Выйти',
+
+  // Language switcher
+  'lang.ru': 'RU',
+  'lang.en': 'EN',
+
+  // Navigation
+  'nav.projects': 'Проекты',
+  'nav.nodes': 'Ноды',
+  'nav.templates': 'Шаблоны',
+  'nav.git': 'Git-доступы',
+
+  // Home
+  'home.subtitle':
+    'Разворачивайте свои SaaS-проекты — Java-бэкенды и React/Next.js-фронтенды — из git-репозитория в Docker, за реверс-прокси с HTTPS.',
+  'home.signIn': 'Войти',
+  'home.openDashboard': 'Открыть панель',
+
+  // Login
+  'login.welcome': 'С возвращением',
+  'login.subtitle': 'Войдите в свою панель Self-Hosted',
+  'login.email': 'Email',
+  'login.password': 'Пароль',
+  'login.signIn': 'Войти',
+  'login.signingIn': 'Вход…',
+  'login.failed': 'Не удалось войти',
+
+  // Projects (dashboard)
+  'projects.title': 'Проекты',
+  'projects.subtitle': 'Группируйте сервисы. Каждый разворачивается из git в контейнер.',
+  'projects.newPlaceholder': 'Название нового проекта',
+  'projects.empty': 'Проектов пока нет. Создайте один выше.',
+  'projects.noServices': 'Нет сервисов',
+  'projects.confirmDelete': 'Удалить этот проект и все его сервисы?',
+
+  // Nodes
+  'nodes.title': 'Ноды',
+  'nodes.subtitle': 'Серверы с агентом. Зарегистрируйте ноду и запустите её агент.',
+  'nodes.tokenOnce': 'Daemon-токен для {name} — показан только один раз.',
+  'nodes.namePlaceholder': 'Название',
+  'nodes.fqdnPlaceholder': 'FQDN / хост',
+  'nodes.portPlaceholder': 'Порт агента',
+  'nodes.add': 'Добавить ноду',
+  'nodes.adding': 'Добавление…',
+  'nodes.empty': 'Ноды ещё не зарегистрированы.',
+  'nodes.start': 'Запустить агент',
+  'nodes.stop': 'Остановить агент',
+  'nodes.log': 'Лог',
+  'nodes.hideLog': 'Скрыть лог',
+  'nodes.confirmDelete': 'Удалить эту ноду?',
+  'nodes.disabledHint':
+    'Управление локальным агентом отключено. Запустите его вручную или задайте LOCAL_AGENT_ENABLED=1.',
+  'nodes.disabledTitle':
+    'Задайте LOCAL_AGENT_ENABLED=1, чтобы управлять агентом из UI',
+
+  // Templates
+  'templates.title': 'Шаблоны',
+  'templates.subtitle': 'Определения стеков для сборки и запуска сервисов.',
+  'templates.builtIn': 'встроенный',
+  'templates.desc.javaMaven':
+    'Собирает Maven-проект в JAR и запускает на Temurin 21.',
+  'templates.desc.javaGradle':
+    'Собирает Gradle-проект (через wrapper из репозитория) в JAR и запускает на Temurin 25.',
+  'templates.desc.nextjs':
+    'Собирает Next.js-приложение (standalone) и запускает на Node 20.',
+  'templates.desc.reactVite':
+    'Собирает Vite React SPA и отдаёт статику через nginx.',
+
+  // Project detail
+  'project.back': '← Проекты',
+  'project.services': 'Сервисы',
+  'project.noServices': 'Сервисов пока нет. Создайте один ниже.',
+  'project.newService': 'Новый сервис',
+  'project.registerNodeFirst': 'Сначала зарегистрируйте ноду на странице «Ноды».',
+  'project.serviceName': 'Название сервиса',
+  'project.repoPlaceholder': 'https://github.com/you/repo',
+  'project.branch': 'Ветка',
+  'project.port': 'Порт',
+  'project.createService': 'Создать сервис',
+  'project.useRepoDockerfile': 'Использовать Dockerfile из репозитория (если есть)',
+  'project.useRepoDockerfileHint':
+    'Выкл: сборка по выбранному шаблону. Вкл: использовать Dockerfile из репозитория (он должен собирать из исходников).',
+  'project.gitCred': 'Git-доступ',
+  'project.gitCredNone': 'Публичный (без токена)',
+  'project.gitCredHint': 'Выберите доступ для клонирования приватного репозитория.',
+
+  // Git credentials
+  'git.title': 'Git-доступы',
+  'git.subtitle':
+    'Personal Access Token для клонирования приватных репозиториев. Токены хранятся в зашифрованном виде и не возвращаются.',
+  'git.name': 'Название',
+  'git.namePlaceholder': 'напр. GitHub (личный)',
+  'git.provider': 'Провайдер',
+  'git.username': 'Имя пользователя (необязательно)',
+  'git.usernamePlaceholder': 'оставьте пустым для токен-авторизации',
+  'git.pat': 'Personal Access Token',
+  'git.patPlaceholder': 'ghp_… / glpat-…',
+  'git.add': 'Добавить доступ',
+  'git.adding': 'Добавление…',
+  'git.empty': 'Git-доступов пока нет. Добавьте один выше.',
+  'git.confirmDelete': 'Удалить этот доступ?',
+  'git.verify': 'Проверить',
+  'git.verifying': 'Проверка…',
+  'git.verifyRepoPlaceholder': 'https://github.com/you/private-repo',
+  'git.verifyHint': 'Введите URL репозитория, чтобы проверить доступ через git ls-remote.',
+
+  // Service detail
+  'service.back': '← Проект',
+  'service.image': 'образ',
+  'service.deploy': 'Деплой',
+  'service.start': 'Запустить',
+  'service.stop': 'Остановить',
+  'service.restart': 'Перезапустить',
+  'service.delete': 'Удалить',
+  'service.confirmDelete': 'Удалить этот сервис и его контейнер?',
+  'service.deployments': 'Деплои',
+  'service.noDeployments': 'Деплоев пока нет.',
+  'service.showLog': 'Показать лог',
+  'service.hideLog': 'Скрыть лог',
+  'service.noBuildLog': '(лог сборки пуст)',
+  'service.buildLogLive': 'Лог сборки (в реальном времени)',
+  'service.buildLogWaiting': 'Ожидание вывода сборки…',
+  'service.environment': 'Переменные окружения',
+  'service.noVariables': 'Переменных нет.',
+  'service.secret': 'секрет',
+  'service.keyPlaceholder': 'КЛЮЧ',
+  'service.valuePlaceholder': 'значение',
+  'service.domain': 'Домен',
+  'service.domainPlaceholder': 'app.example.com',
+  'service.https': 'HTTPS (Let’s Encrypt)',
+  'service.logs': 'Логи в реальном времени',
+  'service.logsStart': 'Смотреть',
+  'service.logsStop': 'Остановить',
+  'service.logsClear': 'Очистить',
+  'service.logsEmpty': 'Стрим не запущен. Нажмите «Смотреть», чтобы видеть живой вывод контейнера.',
+  'service.logsConnecting': 'Подключение…',
+  'service.logsEnded': '— стрим завершён —',
+  'service.rollback': 'Откатить',
+  'service.rollbackConfirm': 'Передеплоить этот образ (откат)?',
+  'service.webhook': 'Webhook авто-деплоя',
+  'service.webhookHint':
+    'Отправьте POST на этот URL (например, из webhook git-пуша), чтобы запустить деплой. Держите токен в секрете.',
+  'service.copy': 'Копировать',
+  'service.copied': 'Скопировано',
+  'service.metrics': 'Метрики',
+  'metrics.cpu': 'CPU',
+  'metrics.memory': 'Память',
+  'metrics.network': 'Сеть I/O',
+  'metrics.pids': 'Процессы',
+  'metrics.health': 'Health',
+  'metrics.notRunning': 'Контейнер не запущен.',
+
+  // Service / deployment statuses
+  'status.RUNNING': 'Работает',
+  'status.SUCCESS': 'Успешно',
+  'status.ONLINE': 'Онлайн',
+  'status.BUILDING': 'Сборка',
+  'status.DEPLOYING': 'Деплой',
+  'status.QUEUED': 'В очереди',
+  'status.CREATED': 'Создан',
+  'status.STOPPED': 'Остановлен',
+  'status.OFFLINE': 'Офлайн',
+  'status.ERROR': 'Ошибка',
+  'status.FAILED': 'Сбой',
+
+  // Service types
+  'type.BACKEND': 'Бэкенд',
+  'type.FRONTEND': 'Фронтенд',
+};

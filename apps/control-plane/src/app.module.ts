@@ -1,0 +1,30 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './db/database.module';
+import { CryptoModule } from './common/crypto/crypto.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { NodesModule } from './modules/nodes/nodes.module';
+import { ProjectsModule } from './modules/projects/projects.module';
+import { ServicesModule } from './modules/services/services.module';
+import { TemplatesModule } from './modules/templates/templates.module';
+import { GitModule } from './modules/git/git.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['../../.env', '.env'],
+    }),
+    DatabaseModule,
+    CryptoModule,
+    AuthModule,
+    UsersModule,
+    NodesModule,
+    ProjectsModule,
+    ServicesModule,
+    TemplatesModule,
+    GitModule,
+  ],
+})
+export class AppModule {}

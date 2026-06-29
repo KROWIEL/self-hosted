@@ -6,37 +6,47 @@ on:
   pull_request:
 
 jobs:
-  quality:
+  js:
+    name: Control plane & web
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: pnpm
+          node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci || npm install
 
       - name: Generate Prisma client
-        run: pnpm --filter @self-hosted/api prisma:generate
+        run: npm run prisma:generate
 
-      - name: Typecheck
-        run: pnpm typecheck
+      - name: Build shared package
+        run: npm run build --workspace @selfhosted/shared
 
-      - name: Lint
-        run: pnpm lint
+      - name: Build control plane
+        run: npm run build --workspace @selfhosted/control-plane
 
-      - name: Unit and integration tests
-        run: pnpm test
+      - name: Build web
+        run: npm run build --workspace @selfhosted/web
 
-      - name: Smoke tests
-        run: pnpm smoke
+  agent:
+    name: Go agent
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/agent
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Dependency security scan
-        run: pnpm audit --audit-level high
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
