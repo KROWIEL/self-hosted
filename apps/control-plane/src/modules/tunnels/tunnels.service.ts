@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { eq } from 'drizzle-orm';
@@ -30,7 +31,7 @@ const PLATFORMS: Record<string, { goos: string; goarch: string; ext: string }> =
   };
 
 @Injectable()
-export class TunnelsService {
+export class TunnelsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(TunnelsService.name);
 
   constructor(
@@ -38,6 +39,37 @@ export class TunnelsService {
     private readonly crypto: CryptoService,
     private readonly runner: TunnelRunnerService,
   ) {}
+
+  /** Restart tunnels that were enabled before the panel shut down. */
+  async onApplicationBootstrap() {
+    if (process.env.LOCAL_AGENT_ENABLED !== '1') return;
+    let rows: TunnelRow[];
+    try {
+      rows = await this.db
+        .select()
+        .from(tunnels)
+        .where(eq(tunnels.enabled, true));
+    } catch (e) {
+      this.logger.warn(
+        `Auto-start skipped (tunnel query failed): ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+      return;
+    }
+    for (const row of rows) {
+      try {
+        await this.start(row.id);
+        this.logger.log(`Auto-started tunnel ${row.name}`);
+      } catch (e) {
+        this.logger.warn(
+          `Auto-start failed for tunnel ${row.name}: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
+      }
+    }
+  }
 
   async list() {
     const rows = await this.db.select().from(tunnels);
@@ -125,7 +157,7 @@ export class TunnelsService {
     this.runner.stop(id);
     await this.db
       .update(tunnels)
-      .set({ status: 'OFFLINE', updatedAt: new Date() })
+      .set({ enabled: false, status: 'OFFLINE', updatedAt: new Date() })
       .where(eq(tunnels.id, id));
     return this.statusFor(id);
   }
@@ -168,12 +200,27 @@ export class TunnelsService {
       `./install.ps1 -Token ${token} -Control ${ctrl} -Ports ${row.relayPorts} ` +
       `-BinUrl ${binUrls['windows-amd64']}`;
 
+    // Offline path: when the panel runs on a grey IP the VDS can't fetch these
+    // files from it. Instead the operator downloads them on the panel host and
+    // copies them to the VDS over scp, then runs the installer with the local
+    // binary (no BIN_URL). `run` and `copy` assume a Linux VDS at serverHost.
+    const offline = {
+      download:
+        `curl -fsSL ${base}/api/v1/tunnels/install.sh -o install.sh && ` +
+        `curl -fsSL ${binUrls['linux-amd64']} -o tunnel-server`,
+      copy: `scp tunnel-server install.sh root@${row.serverHost}:/root/`,
+      run:
+        `ssh root@${row.serverHost} "cd /root && chmod +x tunnel-server && ` +
+        `sudo ${envInline} sh install.sh"`,
+    };
+
     return {
       ...this.view(row),
       token,
       serverAddr: `${row.serverHost}:${row.controlPort}`,
       binUrls,
       commands: { linux, windows },
+      offline,
     };
   }
 

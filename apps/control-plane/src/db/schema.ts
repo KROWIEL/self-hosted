@@ -57,6 +57,9 @@ export const nodes = pgTable('nodes', {
   daemonToken: text('daemon_token').notNull(),
   publicKey: text('public_key'),
   status: nodeStatusEnum('status').notNull().default('OFFLINE'),
+  // Whether the local Go agent should be (re)started automatically on panel
+  // boot. Set when the agent is started from the UI, cleared when stopped.
+  enabled: boolean('enabled').notNull().default(false),
   cpuTotal: integer('cpu_total'),
   memTotal: integer('mem_total'),
   diskTotal: integer('disk_total'),
@@ -278,7 +281,9 @@ export const tunnels = pgTable('tunnels', {
   // Optional pinned server cert SHA-256 (hex). Null = trust token only.
   fingerprint: text('fingerprint'),
   proxyProtocol: boolean('proxy_protocol').notNull().default(false),
-  enabled: boolean('enabled').notNull().default(true),
+  // Whether the client should be (re)started automatically on panel boot. Set
+  // on start, cleared on stop.
+  enabled: boolean('enabled').notNull().default(false),
   status: nodeStatusEnum('status').notNull().default('OFFLINE'),
   lastSeen: timestamp('last_seen'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

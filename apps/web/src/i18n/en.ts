@@ -312,6 +312,12 @@ export const en = {
   'tunnel.token': 'Token',
   'tunnel.copy': 'Copy',
   'tunnel.copied': 'Copied',
+  'tunnel.offlineTitle': 'Panel on a grey IP? (offline via scp)',
+  'tunnel.offlineHint':
+    'If your panel is on a private/grey IP, the VDS can’t download from it. Run step 1 on the panel host, then copy the files to the VDS and launch the installer.',
+  'tunnel.offlineStep1': '1. On the panel host — download relay + script',
+  'tunnel.offlineStep2': '2. On the panel host — copy to the VDS (scp)',
+  'tunnel.offlineStep3': '3. Install on the VDS (over ssh)',
   'tunnel.relayingTo': 'Relaying to',
   'tunnel.disabledHint':
     'Local tunnel control is disabled. Set LOCAL_AGENT_ENABLED=1 to run the client from the panel.',

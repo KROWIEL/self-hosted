@@ -591,6 +591,7 @@ export interface TunnelInstall extends Tunnel {
   serverAddr: string;
   binUrls: Record<string, string>;
   commands: { linux: string; windows: string };
+  offline: { download: string; copy: string; run: string };
 }
 
 export interface CreateTunnelBody {

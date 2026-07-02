@@ -333,6 +333,18 @@ function InstallModal({
         <CmdBlock label={t('tunnel.linux')} cmd={data.commands.linux} />
         <CmdBlock label={t('tunnel.windows')} cmd={data.commands.windows} />
 
+        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-sm font-semibold text-white">
+            {t('tunnel.offlineTitle')}
+          </p>
+          <p className="mt-1 text-xs text-neutral-400">
+            {t('tunnel.offlineHint')}
+          </p>
+          <CmdBlock label={t('tunnel.offlineStep1')} cmd={data.offline.download} />
+          <CmdBlock label={t('tunnel.offlineStep2')} cmd={data.offline.copy} />
+          <CmdBlock label={t('tunnel.offlineStep3')} cmd={data.offline.run} />
+        </div>
+
         <div className="mt-4 rounded-xl border border-white/5 bg-white/[0.02] p-3">
           <p className="text-xs text-neutral-500">{t('tunnel.token')}</p>
           <p className="mt-0.5 break-all font-mono text-xs text-neutral-300">

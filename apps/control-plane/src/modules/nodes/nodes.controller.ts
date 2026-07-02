@@ -55,8 +55,8 @@ export class NodesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    this.runner.stop(id);
+  async remove(@Param('id') id: string) {
+    await this.runner.stop(id);
     return this.nodes.remove(id);
   }
 

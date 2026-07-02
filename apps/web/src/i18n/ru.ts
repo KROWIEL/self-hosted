@@ -315,6 +315,12 @@ export const ru: Dict = {
   'tunnel.token': 'Токен',
   'tunnel.copy': 'Копировать',
   'tunnel.copied': 'Скопировано',
+  'tunnel.offlineTitle': 'Панель на сером IP? (offline через scp)',
+  'tunnel.offlineHint':
+    'Если панель на локалке/сером IP, VDS не сможет скачать файлы с неё. Выполни шаг 1 на машине с панелью, затем скопируй файлы на VDS и запусти установщик.',
+  'tunnel.offlineStep1': '1. На машине с панелью — скачать релей и скрипт',
+  'tunnel.offlineStep2': '2. На машине с панелью — скопировать на VDS (scp)',
+  'tunnel.offlineStep3': '3. Установить на VDS (по ssh)',
   'tunnel.relayingTo': 'Релей на',
   'tunnel.disabledHint':
     'Локальное управление туннелем выключено. Установите LOCAL_AGENT_ENABLED=1, чтобы запускать клиент из панели.',

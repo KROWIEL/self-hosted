@@ -299,7 +299,7 @@ func traefikLabels(uuid, domain string, port int, https bool) []string {
 	router := "svc-" + uuid
 	labels := []string{
 		"traefik.enable=true",
-		fmt.Sprintf("traefik.http.routers.%s.rule=Host(`%s`)", router, domain),
+		fmt.Sprintf("traefik.http.routers.%s.rule=%s", router, traefikHostRule(domain)),
 		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port=%d", router, port),
 	}
 	if https {
@@ -311,6 +311,13 @@ func traefikLabels(uuid, domain string, port int, https bool) []string {
 		labels = append(labels, fmt.Sprintf("traefik.http.routers.%s.entrypoints=web", router))
 	}
 	return labels
+}
+
+// traefikHostRule matches the apex domain and any subdomain (e.g. example.com,
+// admin.example.com, tenant1.example.com).
+func traefikHostRule(domain string) string {
+	reDomain := strings.ReplaceAll(domain, ".", `\.`)
+	return fmt.Sprintf("HostRegexp(`^(.+\\.)?%s$`)", reDomain)
 }
 
 func (s *Server) handleRemove(w http.ResponseWriter, r *http.Request) {

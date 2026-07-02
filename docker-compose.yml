@@ -39,7 +39,9 @@ services:
   # Service containers are attached (by the agent) to the shared `selfhosted-edge`
   # network so Traefik can reach them; routing is driven by container labels.
   traefik:
-    image: traefik:v3.1
+    # Track the latest v3.x: older pins (v3.1) ship a Docker client that a very
+    # new Engine (API >= 1.53) rejects with an empty "Error response from daemon".
+    image: traefik:v3
     container_name: selfhosted-traefik
     restart: unless-stopped
     # Pin the Docker API version: Traefik's embedded client otherwise negotiates

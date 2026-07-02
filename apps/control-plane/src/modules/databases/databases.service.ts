@@ -424,17 +424,23 @@ export class DatabasesService {
       const extras = wanted.slice(1).filter((s) => s !== creds.dbName);
       // Elevate the app user so it can create/manage additional schemas at
       // runtime (multi-tenant apps that CREATE DATABASE per tenant). Safe: each
-      // managed container is dedicated to this one service.
+      // managed container is dedicated to this one service. Retried because the
+      // MySQL image restarts mid-init: the app user (and a stable server) may
+      // not exist yet right after the readiness probe first passes.
       if (need.engine === 'MYSQL') {
         await this.waitReady(view.id);
-        await this.agent
-          .grantPrivileges(node, {
-            container: creds.host,
-            engine: 'mysql',
-            user: creds.username,
-            password: creds.password,
-          })
-          .catch(() => undefined);
+        for (let i = 0; i < 25; i++) {
+          const res = await this.agent
+            .grantPrivileges(node, {
+              container: creds.host,
+              engine: 'mysql',
+              user: creds.username,
+              password: creds.password,
+            })
+            .catch(() => ({ ok: false }));
+          if (res.ok) break;
+          await new Promise((r) => setTimeout(r, 1500));
+        }
       } else if (extras.length > 0) {
         // The container is up but the engine may still be initializing; wait
         // before issuing CREATE DATABASE for the extra schemas.
