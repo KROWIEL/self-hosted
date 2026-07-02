@@ -180,7 +180,9 @@ export const ru: Dict = {
   'service.keyPlaceholder': 'КЛЮЧ',
   'service.valuePlaceholder': 'значение',
   'service.domain': 'Домен',
-  'service.domainPlaceholder': 'app.example.com',
+  'service.domainPlaceholder': 'example.com',
+  'service.domainHint':
+    'Укажите корневой домен (example.com). Traefik маршрутизирует и все поддомены (admin.example.com, tenant.example.com). Для HTTPS добавьте DNS: A *.example.com → IP VDS. Для одного wildcard-сертификата: ACME_WILDCARD_CERTS=1 + Cloudflare DNS API token в .env.',
   'service.https': 'HTTPS (Let’s Encrypt)',
   'service.logs': 'Логи в реальном времени',
   'service.logsStart': 'Смотреть',
@@ -328,7 +330,7 @@ export const ru: Dict = {
   'tunnel.hideLog': 'Скрыть лог',
   'tunnel.confirmDelete': 'Удалить этот туннель?',
   'tunnel.dnsHint':
-    'Направьте A-запись домена на IP VDS. TLS терминируется на вашем локальном Traefik (для сертификатов используйте DNS-01).',
+    'DNS: A example.com and A *.example.com → VDS IP (ports 80/443 via tunnel). TLS on local Traefik: HTTP-01 per subdomain (default) or ACME_WILDCARD_CERTS=1 + Cloudflare token for *.example.com cert.',
 
   // Service / deployment statuses
   'status.RUNNING': 'Работает',

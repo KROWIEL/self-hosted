@@ -178,7 +178,9 @@ export const en = {
   'service.keyPlaceholder': 'KEY',
   'service.valuePlaceholder': 'value',
   'service.domain': 'Domain',
-  'service.domainPlaceholder': 'app.example.com',
+  'service.domainPlaceholder': 'example.com',
+  'service.domainHint':
+    'Use the apex domain (example.com). Traefik routes all subdomains too (admin.example.com, tenant.example.com). For HTTPS add DNS: A *.example.com → VDS IP. For one wildcard cert: ACME_WILDCARD_CERTS=1 + Cloudflare DNS API token in .env.',
   'service.https': "HTTPS (Let's Encrypt)",
   'service.logs': 'Live logs',
   'service.logsStart': 'Stream',
@@ -325,7 +327,7 @@ export const en = {
   'tunnel.hideLog': 'Hide log',
   'tunnel.confirmDelete': 'Delete this tunnel?',
   'tunnel.dnsHint':
-    'Point your domain’s A record at the VDS IP. TLS terminates on your local Traefik (use DNS-01 for certs).',
+    'DNS: A example.com and A *.example.com → VDS IP (ports 80/443 via tunnel). TLS on local Traefik: HTTP-01 per subdomain (default) or ACME_WILDCARD_CERTS=1 + Cloudflare token for a *.example.com cert.',
 
   // Service / deployment statuses
   'status.RUNNING': 'Running',

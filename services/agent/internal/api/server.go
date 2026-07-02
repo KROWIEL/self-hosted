@@ -303,14 +303,42 @@ func traefikLabels(uuid, domain string, port int, https bool) []string {
 		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port=%d", router, port),
 	}
 	if https {
+		resolver := acmeCertResolver()
 		labels = append(labels,
 			fmt.Sprintf("traefik.http.routers.%s.entrypoints=websecure", router),
-			fmt.Sprintf("traefik.http.routers.%s.tls.certresolver=letsencrypt", router),
+			fmt.Sprintf("traefik.http.routers.%s.tls.certresolver=%s", router, resolver),
 		)
+		// DNS-01: one wildcard cert covers apex + all tenant subdomains.
+		if acmeWildcardEnabled() {
+			labels = append(labels,
+				fmt.Sprintf("traefik.http.routers.%s.tls.domains[0].main=%s", router, domain),
+				fmt.Sprintf("traefik.http.routers.%s.tls.domains[0].sans=*.%s", router, domain),
+			)
+		}
 	} else {
 		labels = append(labels, fmt.Sprintf("traefik.http.routers.%s.entrypoints=web", router))
 	}
 	return labels
+}
+
+// acmeCertResolver picks the Traefik certificates resolver name. Default is
+// HTTP-01 (letsencrypt). Set ACME_WILDCARD_CERTS=1 or ACME_CERT_RESOLVER to
+// use DNS-01 wildcard certs (*.domain + domain).
+func acmeCertResolver() string {
+	if r := strings.TrimSpace(os.Getenv("ACME_CERT_RESOLVER")); r != "" {
+		return r
+	}
+	if acmeWildcardEnabled() {
+		return "letsencrypt-dns"
+	}
+	return "letsencrypt"
+}
+
+func acmeWildcardEnabled() bool {
+	if os.Getenv("ACME_WILDCARD_CERTS") == "1" {
+		return true
+	}
+	return strings.TrimSpace(os.Getenv("ACME_CERT_RESOLVER")) == "letsencrypt-dns"
 }
 
 // traefikHostRule matches the apex domain and any subdomain (e.g. example.com,

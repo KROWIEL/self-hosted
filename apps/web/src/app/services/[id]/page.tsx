@@ -1600,6 +1600,7 @@ function DomainBox({
             placeholder={t('service.domainPlaceholder')}
             className="field"
           />
+          <p className="text-xs text-neutral-500">{t('service.domainHint')}</p>
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-xs text-neutral-400">
               <input
