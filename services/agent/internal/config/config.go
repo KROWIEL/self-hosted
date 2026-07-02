@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -15,14 +16,18 @@ type Config struct {
 	WorkDir string
 	// Network is the default Docker network deployed services join.
 	Network string
+	// BackupDir is where volume/database snapshots are stored on the node.
+	BackupDir string
 }
 
 func Load() Config {
+	workDir := envStr("AGENT_WORKDIR", "/tmp/agent-builds")
 	return Config{
 		Port:        envInt("AGENT_PORT", 8443),
 		DaemonToken: os.Getenv("AGENT_DAEMON_TOKEN"),
-		WorkDir:     envStr("AGENT_WORKDIR", "/tmp/agent-builds"),
+		WorkDir:     workDir,
 		Network:     envStr("AGENT_NETWORK", "bridge"),
+		BackupDir:   envStr("AGENT_BACKUP_DIR", filepath.Join(workDir, "backups")),
 	}
 }
 

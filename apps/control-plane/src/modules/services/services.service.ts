@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { PowerAction } from '@selfhosted/shared';
 import { Queue } from 'bullmq';
-import { createHmac, timingSafeEqual } from 'node:crypto';
-import { desc, eq } from 'drizzle-orm';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { and, desc, eq } from 'drizzle-orm';
 import { DRIZZLE, Database } from '../../db/database.module';
 import {
   deployments,
@@ -16,6 +16,7 @@ import {
   nodes,
   services,
   templates,
+  volumes,
 } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import { AgentClient } from '../nodes/agent.client';
@@ -200,6 +201,14 @@ export class ServicesService {
     return this.listEnv(id);
   }
 
+  async deleteEnv(id: string, key: string) {
+    await this.get(id);
+    await this.db
+      .delete(envVars)
+      .where(and(eq(envVars.serviceId, id), eq(envVars.key, key)));
+    return this.listEnv(id);
+  }
+
   async listEnv(id: string) {
     const rows = await this.db
       .select()
@@ -221,6 +230,51 @@ export class ServicesService {
     return Object.fromEntries(
       rows.map((v) => [v.key, this.crypto.decrypt(v.valueEnc)]),
     );
+  }
+
+  /** Persistent volumes mounted into the service container (survive redeploys). */
+  async listVolumes(id: string) {
+    await this.get(id);
+    return this.db
+      .select()
+      .from(volumes)
+      .where(eq(volumes.serviceId, id))
+      .orderBy(volumes.mountPath);
+  }
+
+  async addVolume(id: string, mountPath: string) {
+    await this.get(id);
+    const path = mountPath.trim();
+    if (!path.startsWith('/')) {
+      throw new BadRequestException('Mount path must be absolute (start with /)');
+    }
+    const name = `vol-${randomUUID().slice(0, 8)}`;
+    const rows = await this.db
+      .insert(volumes)
+      .values({ serviceId: id, name, mountPath: path })
+      .returning();
+    return rows[0];
+  }
+
+  async removeVolume(id: string, volumeId: string) {
+    const [vol] = await this.db
+      .select()
+      .from(volumes)
+      .where(eq(volumes.id, volumeId))
+      .limit(1);
+    if (!vol || vol.serviceId !== id) {
+      throw new NotFoundException('Volume not found');
+    }
+    // Best-effort: drop the Docker volume on the node (no-op if still in use).
+    try {
+      const service = await this.get(id);
+      const node = await this.node(service.nodeId);
+      await this.agent.removeVolume(node, vol.name);
+    } catch {
+      // ignore — the row is removed regardless; data can be GC'd later.
+    }
+    await this.db.delete(volumes).where(eq(volumes.id, volumeId));
+    return { ok: true };
   }
 
   async setDomain(id: string, dto: SetDomainDto) {

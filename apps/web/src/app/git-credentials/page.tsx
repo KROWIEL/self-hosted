@@ -10,7 +10,14 @@ import {
   verifyGitCredential,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { Card, EmptyState, ErrorBox, PageHeader, Spinner } from '@/components/ui';
+import {
+  Card,
+  EmptyState,
+  ErrorBox,
+  Field,
+  PageHeader,
+  Spinner,
+} from '@/components/ui';
 import { useI18n } from '@/i18n';
 
 export default function GitCredentialsPage() {
@@ -73,39 +80,47 @@ export default function GitCredentialsPage() {
       {error && <ErrorBox message={error} />}
 
       <Card className="mb-8">
-        <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-2">
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder={t('git.namePlaceholder')}
-            required
-            className="field"
-          />
-          <select
-            value={form.provider}
-            onChange={(e) =>
-              setForm({ ...form, provider: e.target.value as GitProvider })
-            }
-            className="field"
-          >
-            <option value="GITHUB">GitHub</option>
-            <option value="GITLAB">GitLab</option>
-          </select>
-          <input
-            value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
-            placeholder={t('git.usernamePlaceholder')}
-            className="field"
-          />
-          <input
-            type="password"
-            value={form.pat}
-            onChange={(e) => setForm({ ...form, pat: e.target.value })}
-            placeholder={t('git.patPlaceholder')}
-            required
-            autoComplete="off"
-            className="field"
-          />
+        <form onSubmit={onCreate} className="grid items-end gap-3 sm:grid-cols-2">
+          <Field label={t('git.name')}>
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder={t('git.namePlaceholder')}
+              required
+              className="field w-full"
+            />
+          </Field>
+          <Field label={t('git.provider')}>
+            <select
+              value={form.provider}
+              onChange={(e) =>
+                setForm({ ...form, provider: e.target.value as GitProvider })
+              }
+              className="field w-full"
+            >
+              <option value="GITHUB">GitHub</option>
+              <option value="GITLAB">GitLab</option>
+            </select>
+          </Field>
+          <Field label={t('git.username')}>
+            <input
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              placeholder={t('git.usernamePlaceholder')}
+              className="field w-full"
+            />
+          </Field>
+          <Field label={t('git.pat')}>
+            <input
+              type="password"
+              value={form.pat}
+              onChange={(e) => setForm({ ...form, pat: e.target.value })}
+              placeholder={t('git.patPlaceholder')}
+              required
+              autoComplete="off"
+              className="field w-full"
+            />
+          </Field>
           <div className="sm:col-span-2">
             <button type="submit" disabled={creating} className="btn-primary">
               {creating ? t('git.adding') : t('git.add')}
@@ -188,13 +203,15 @@ function CredItem({
         </button>
       </div>
 
-      <form onSubmit={onVerify} className="mt-4 flex flex-wrap gap-2">
-        <input
-          value={repoUrl}
-          onChange={(e) => setRepoUrl(e.target.value)}
-          placeholder={t('git.verifyRepoPlaceholder')}
-          className="field flex-1 min-w-[16rem]"
-        />
+      <form onSubmit={onVerify} className="mt-4 flex flex-wrap items-end gap-2">
+        <Field label={t('git.repoLabel')} className="flex-1 min-w-[16rem]">
+          <input
+            value={repoUrl}
+            onChange={(e) => setRepoUrl(e.target.value)}
+            placeholder={t('git.verifyRepoPlaceholder')}
+            className="field w-full"
+          />
+        </Field>
         <button
           type="submit"
           disabled={verifying || repoUrl.trim().length === 0}

@@ -47,6 +47,11 @@ func (c *Client) RunContainer(ctx context.Context, opts RunOptions, w io.Writer)
 	if opts.CPULimit > 0 {
 		args = append(args, "--cpus", fmt.Sprintf("%.2f", float64(opts.CPULimit)/100.0))
 	}
+	for _, v := range opts.Volumes {
+		if v.Name != "" && v.MountPath != "" {
+			args = append(args, "-v", fmt.Sprintf("%s:%s", v.Name, v.MountPath))
+		}
+	}
 	for k, v := range opts.Env {
 		args = append(args, "-e", fmt.Sprintf("%s=%s", k, v))
 	}
@@ -66,6 +71,45 @@ func (c *Client) RunContainer(ctx context.Context, opts RunOptions, w io.Writer)
 // Remove force-removes a container (ignores "no such container").
 func (c *Client) Remove(ctx context.Context, name string) error {
 	return c.run(ctx, io.Discard, "rm", "-f", name)
+}
+
+// RemoveVolume removes a named volume (ignores "no such volume" via caller).
+func (c *Client) RemoveVolume(ctx context.Context, name string) error {
+	return c.run(ctx, io.Discard, "volume", "rm", "-f", name)
+}
+
+// Exec runs a one-shot command inside a container and returns trimmed stdout.
+func (c *Client) Exec(ctx context.Context, name string, cmd ...string) (string, error) {
+	args := append([]string{"exec", name}, cmd...)
+	return c.runCapture(ctx, io.Discard, args...)
+}
+
+// ExecCapture runs a command inside a container, streaming stdout to out.
+// Used for database dumps (`pg_dump | gzip` → file).
+func (c *Client) ExecCapture(ctx context.Context, name string, out io.Writer, cmd ...string) error {
+	args := append([]string{"exec", name}, cmd...)
+	command := exec.CommandContext(ctx, "docker", args...)
+	command.Stdout = out
+	command.Stderr = io.Discard
+	return command.Run()
+}
+
+// ExecStdin runs a command inside a container, feeding in to its stdin.
+// Used for database restores (`gunzip | psql` ← file).
+func (c *Client) ExecStdin(ctx context.Context, name string, in io.Reader, cmd ...string) error {
+	args := append([]string{"exec", "-i", name}, cmd...)
+	command := exec.CommandContext(ctx, "docker", args...)
+	command.Stdin = in
+	command.Stdout = io.Discard
+	command.Stderr = io.Discard
+	return command.Run()
+}
+
+// RunEphemeral runs `docker run --rm <args...>` (helper containers for volume
+// backup/restore). Output is discarded; returns the command error.
+func (c *Client) RunEphemeral(ctx context.Context, args ...string) error {
+	full := append([]string{"run", "--rm"}, args...)
+	return c.run(ctx, io.Discard, full...)
 }
 
 func (c *Client) Power(ctx context.Context, name, action string) error {
@@ -139,6 +183,11 @@ func (c *Client) runCapture(ctx context.Context, w io.Writer, args ...string) (s
 	return strings.TrimSpace(out.String()), err
 }
 
+type VolumeMount struct {
+	Name      string
+	MountPath string
+}
+
 type RunOptions struct {
 	Name        string
 	Image       string
@@ -148,4 +197,5 @@ type RunOptions struct {
 	PublishPort int // host port to publish (0 = none); maps host->container 1:1
 	Env         map[string]string
 	Labels      []string
+	Volumes     []VolumeMount
 }

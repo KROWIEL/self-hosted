@@ -16,6 +16,7 @@ import {
   nodes,
   services,
   templates,
+  volumes,
 } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import { AgentClient } from '../nodes/agent.client';
@@ -108,6 +109,10 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
         .where(eq(domains.serviceId, serviceId))
         .limit(1)
     )[0];
+    const volumeRows = await this.db
+      .select()
+      .from(volumes)
+      .where(eq(volumes.serviceId, serviceId));
 
     const isRollback = !!rollbackImageTag;
     const imageTag =
@@ -166,6 +171,10 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
         env,
         domain: domainRow?.host,
         https: domainRow?.https,
+        volumes: volumeRows.map((v) => ({
+          name: v.name,
+          mountPath: v.mountPath,
+        })),
       });
       if (!run.ok) {
         throw new Error(run.error ?? 'agent run failed');

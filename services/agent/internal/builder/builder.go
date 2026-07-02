@@ -53,7 +53,12 @@ func (b *Builder) Build(ctx context.Context, req BuildRequest, w io.Writer) (str
 	}
 
 	fmt.Fprintf(w, ">> cloning %s (%s)\n", req.RepoURL, req.Branch)
-	if err := run(ctx, w, dir, "git", "clone", "--depth", "1", "--branch", req.Branch, cloneURL, "."); err != nil {
+	// Force LF on checkout so shell scripts (e.g. gradlew) keep their POSIX
+	// shebang. On a Windows host, git's core.autocrlf can rewrite LF → CRLF,
+	// which breaks `./gradlew` inside the Linux build container ("not found").
+	if err := run(ctx, w, dir, "git",
+		"-c", "core.autocrlf=false", "-c", "core.eol=lf",
+		"clone", "--depth", "1", "--branch", req.Branch, cloneURL, "."); err != nil {
 		return "", fmt.Errorf("git clone failed: %w", err)
 	}
 

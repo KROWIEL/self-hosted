@@ -10,6 +10,7 @@ import { LangSwitcher } from '@/components/lang-switcher';
 const NAV: { href: string; label: TKey }[] = [
   { href: '/dashboard', label: 'nav.projects' },
   { href: '/nodes', label: 'nav.nodes' },
+  { href: '/tunnels', label: 'nav.tunnels' },
   { href: '/templates', label: 'nav.templates' },
   { href: '/git-credentials', label: 'nav.git' },
 ];

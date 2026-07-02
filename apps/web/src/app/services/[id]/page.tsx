@@ -21,14 +21,25 @@ import {
   rollbackDeployment,
   setDomain,
   setEnv,
+  deleteEnv,
   streamDeploymentLogs,
   streamServiceLogs,
   updateService,
   execSocketUrl,
+  listVolumes,
+  addVolume,
+  removeVolume,
+  Volume,
   API_URL,
+  inspectRepo,
+  setupFromRepo,
+  RepoInspect,
+  InspectEnvKey,
+  DbEngine,
 } from '@/lib/api';
 import '@xterm/xterm/css/xterm.css';
 import { AppShell } from '@/components/shell';
+import { BackupsPanel } from '@/components/backups-panel';
 import { Card, EmptyState, ErrorBox, Spinner, StatusBadge } from '@/components/ui';
 import { useI18n, useTypeLabel } from '@/i18n';
 
@@ -47,6 +58,7 @@ export default function ServicePage() {
   const [openLog, setOpenLog] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [termOpen, setTermOpen] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refresh = useCallback(async () => {
@@ -185,6 +197,9 @@ export default function ServicePage() {
             >
               &gt;_ {t('service.terminal')}
             </button>
+            <button onClick={() => setSetupOpen(true)} className="btn-ghost">
+              ⚙ {t('setup.button')}
+            </button>
             <button
               onClick={() => {
                 if (confirm(t('service.confirmDelete')))
@@ -256,6 +271,7 @@ export default function ServicePage() {
 
             <section className="space-y-6">
               <EnvEditor id={id} env={env} onSaved={refresh} />
+              <VolumesBox id={id} />
               <DomainBox id={id} onSaved={refresh} />
               <WebhookBox id={id} />
             </section>
@@ -268,9 +284,202 @@ export default function ServicePage() {
           {termOpen && (
             <TerminalModal serviceId={id} onClose={() => setTermOpen(false)} />
           )}
+
+          {setupOpen && (
+            <ScanSetupModal
+              serviceId={id}
+              onClose={() => setSetupOpen(false)}
+              onApplied={() => {
+                setSetupOpen(false);
+                void refresh();
+              }}
+            />
+          )}
         </>
       )}
     </AppShell>
+  );
+}
+
+function ScanSetupModal({
+  serviceId,
+  onClose,
+  onApplied,
+}: {
+  serviceId: string;
+  onClose: () => void;
+  onApplied: () => void;
+}) {
+  const { t } = useI18n();
+  const [loading, setLoading] = useState(true);
+  const [applying, setApplying] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [result, setResult] = useState<RepoInspect | null>(null);
+  const [dbs, setDbs] = useState<Set<DbEngine>>(new Set());
+  const [keys, setKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let alive = true;
+    inspectRepo(serviceId)
+      .then((r) => {
+        if (!alive) return;
+        setResult(r);
+        setDbs(new Set(r.databases.map((d) => d.engine)));
+        const existing = new Set(r.existingKeys);
+        setKeys(
+          new Set(
+            r.envKeys
+              .filter((k) => !!k.dbRole || !existing.has(k.key))
+              .map((k) => k.key),
+          ),
+        );
+      })
+      .catch((e) => alive && setErr(e instanceof Error ? e.message : String(e)))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [serviceId]);
+
+  function toggle<T>(set: Set<T>, val: T): Set<T> {
+    const next = new Set(set);
+    if (next.has(val)) next.delete(val);
+    else next.add(val);
+    return next;
+  }
+
+  async function apply() {
+    if (!result) return;
+    setApplying(true);
+    setErr(null);
+    try {
+      await setupFromRepo(serviceId, {
+        databases: result.databases.filter((d) => dbs.has(d.engine)),
+        envKeys: result.envKeys.filter((k) => keys.has(k.key)),
+      });
+      onApplied();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setApplying(false);
+    }
+  }
+
+  const existing = new Set(result?.existingKeys ?? []);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-lg overflow-auto rounded-2xl border border-white/10 bg-ink-850 p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">
+            {t('setup.title')}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-neutral-400 transition-colors hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+        <p className="mb-4 text-xs text-neutral-500">{t('setup.hint')}</p>
+
+        {err && <ErrorBox message={err} />}
+        {loading ? (
+          <Spinner label={t('setup.scanning')} />
+        ) : result ? (
+          <div className="space-y-5">
+            <div>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                {t('setup.databases')}
+              </h4>
+              {result.databases.length === 0 ? (
+                <p className="text-xs text-neutral-500">{t('setup.noDatabases')}</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {result.databases.map((d) => (
+                    <li key={d.engine}>
+                      <label className="flex items-center gap-2 text-sm text-neutral-300">
+                        <input
+                          type="checkbox"
+                          checked={dbs.has(d.engine)}
+                          onChange={() => setDbs((s) => toggle(s, d.engine))}
+                          className="accent-indigo-500"
+                        />
+                        {d.engine === 'POSTGRES' ? 'PostgreSQL' : 'MySQL'}
+                        <span className="text-xs text-neutral-500">
+                          {t('setup.willCreate')}
+                        </span>
+                      </label>
+                      {d.schemas.length > 0 && (
+                        <p className="ml-6 mt-0.5 font-mono text-[11px] text-neutral-500">
+                          {t('setup.schemas')}: {d.schemas.join(', ')}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                {result.envFile
+                  ? t('setup.envFrom', { file: result.envFile })
+                  : t('setup.envNone')}
+              </h4>
+              {result.envKeys.length === 0 ? (
+                <p className="text-xs text-neutral-500">{t('setup.envNone')}</p>
+              ) : (
+                <ul className="max-h-56 space-y-1 overflow-auto">
+                  {result.envKeys.map((k) => (
+                    <li key={k.key}>
+                      <label className="flex items-center gap-2 rounded-lg px-1 py-1 font-mono text-xs text-neutral-300">
+                        <input
+                          type="checkbox"
+                          checked={keys.has(k.key)}
+                          onChange={() => setKeys((s) => toggle(s, k.key))}
+                          className="accent-indigo-500"
+                        />
+                        <span className="truncate">{k.key}</span>
+                        {k.dbRole && (
+                          <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 text-[10px] text-indigo-300">
+                            db:{k.dbRole}
+                          </span>
+                        )}
+                        {existing.has(k.key) && (
+                          <span className="text-[10px] text-amber-400">
+                            {t('setup.exists')}
+                          </span>
+                        )}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-white/10 pt-3">
+              <button onClick={onClose} className="btn-ghost">
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={apply}
+                disabled={applying}
+                className="btn-primary"
+              >
+                {applying ? t('setup.applying') : t('setup.apply')}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -785,6 +994,113 @@ function Labeled({
   );
 }
 
+function VolumesBox({ id }: { id: string }) {
+  const { t } = useI18n();
+  const [vols, setVols] = useState<Volume[]>([]);
+  const [mountPath, setMountPath] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [openVol, setOpenVol] = useState<string | null>(null);
+
+  const refresh = () =>
+    listVolumes(id)
+      .then(setVols)
+      .catch(() => {});
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setErr(null);
+    try {
+      await addVolume(id, mountPath.trim());
+      setMountPath('');
+      await refresh();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('common.failed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(volumeId: string) {
+    if (!confirm(t('volume.removeConfirm'))) return;
+    setBusy(true);
+    try {
+      await removeVolume(id, volumeId);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+        {t('volume.title')}
+      </h2>
+      <Card>
+        {err && <ErrorBox message={err} />}
+        {vols.length === 0 ? (
+          <p className="mb-3 text-sm text-neutral-500">{t('volume.none')}</p>
+        ) : (
+          <ul className="mb-3 space-y-2">
+            {vols.map((v) => (
+              <li
+                key={v.id}
+                className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <code className="min-w-0 truncate font-mono text-xs text-neutral-300">
+                    {v.mountPath}
+                    <span className="ml-2 text-neutral-600">{v.name}</span>
+                  </code>
+                  <span className="flex shrink-0 items-center gap-3">
+                    <button
+                      onClick={() =>
+                        setOpenVol((cur) => (cur === v.id ? null : v.id))
+                      }
+                      className="text-xs text-neutral-400 transition-colors hover:text-white"
+                    >
+                      {t('backup.title')}
+                    </button>
+                    <button
+                      onClick={() => remove(v.id)}
+                      disabled={busy}
+                      className="text-xs text-red-400 transition-colors hover:text-red-300"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                </div>
+                {openVol === v.id && (
+                  <BackupsPanel kind="VOLUME" refId={v.id} />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <form onSubmit={add} className="flex gap-2">
+          <input
+            value={mountPath}
+            onChange={(e) => setMountPath(e.target.value)}
+            placeholder={t('volume.mountPath')}
+            className="field flex-1"
+          />
+          <button type="submit" disabled={busy || !mountPath.trim()} className="btn-ghost">
+            {t('volume.add')}
+          </button>
+        </form>
+        <p className="mt-2 text-xs text-neutral-500">{t('volume.hint')}</p>
+      </Card>
+    </div>
+  );
+}
+
 function WebhookBox({ id }: { id: string }) {
   const { t } = useI18n();
   const [url, setUrl] = useState('');
@@ -1037,6 +1353,35 @@ function LogViewer({ id }: { id: string }) {
   );
 }
 
+const SECRET_KEY_RE =
+  /(PASS|PWD|SECRET|TOKEN|PRIVATE|CREDENTIAL|API_?KEY|_KEY$|DATABASE_URL|DSN)/i;
+
+/** Parses .env text into env vars. Handles comments, `export`, and quotes. */
+function parseDotenv(text: string): { key: string; value: string; isSecret: boolean }[] {
+  const out: { key: string; value: string; isSecret: boolean }[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const body = line.startsWith('export ') ? line.slice(7).trim() : line;
+    const eq = body.indexOf('=');
+    if (eq <= 0) continue;
+    const key = body.slice(0, eq).trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
+    let value = body.slice(eq + 1).trim();
+    const quoted =
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"));
+    if (quoted) {
+      value = value.slice(1, -1);
+    } else {
+      const hash = value.indexOf(' #');
+      if (hash >= 0) value = value.slice(0, hash).trim();
+    }
+    out.push({ key, value, isSecret: SECRET_KEY_RE.test(key) });
+  }
+  return out;
+}
+
 function EnvEditor({
   id,
   env,
@@ -1052,6 +1397,28 @@ function EnvEditor({
   const [secret, setSecret] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [bulk, setBulk] = useState('');
+
+  async function importEnv() {
+    const parsed = parseDotenv(bulk);
+    if (parsed.length === 0) {
+      setErr(t('service.envImportEmpty'));
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      await setEnv(id, parsed);
+      setBulk('');
+      setShowImport(false);
+      await onSaved();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('common.failed'));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -1071,13 +1438,63 @@ function EnvEditor({
     }
   }
 
+  async function remove(k: string) {
+    if (!confirm(t('service.envDeleteConfirm'))) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      await deleteEnv(id, k);
+      await onSaved();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('common.failed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-        {t('service.environment')}
-      </h2>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+          {t('service.environment')}
+        </h2>
+        <button
+          type="button"
+          onClick={() => setShowImport((v) => !v)}
+          className="text-xs text-indigo-400 transition-colors hover:text-indigo-300"
+        >
+          {t('service.envImport')}
+        </button>
+      </div>
       <Card>
         {err && <ErrorBox message={err} />}
+        {showImport && (
+          <div className="mb-4 rounded-xl border border-white/5 bg-white/[0.02] p-3">
+            <p className="mb-2 text-xs text-neutral-500">
+              {t('service.envImportHint')}
+            </p>
+            <textarea
+              value={bulk}
+              onChange={(e) => setBulk(e.target.value)}
+              rows={6}
+              placeholder={'DATABASE_URL=...\nAPI_KEY=...\nPORT=8080'}
+              className="field-mono mb-2 w-full text-xs"
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-neutral-500">
+                {t('service.envImportCount', { n: parseDotenv(bulk).length })}
+              </span>
+              <button
+                type="button"
+                onClick={importEnv}
+                disabled={busy || !bulk.trim()}
+                className="btn-ghost py-1.5"
+              >
+                {t('service.envImportBtn')}
+              </button>
+            </div>
+          </div>
+        )}
         {env.length === 0 ? (
           <p className="mb-3 text-sm text-neutral-500">{t('service.noVariables')}</p>
         ) : (
@@ -1085,11 +1502,22 @@ function EnvEditor({
             {env.map((v) => (
               <li
                 key={v.key}
-                className="flex justify-between rounded-lg border border-white/5 bg-white/[0.02] px-3 py-1.5 font-mono"
+                className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-1.5 font-mono"
               >
-                <span className="text-neutral-300">{v.key}</span>
-                <span className="text-neutral-500">
-                  {v.isSecret ? '••••••' : v.value}
+                <span className="min-w-0 truncate text-neutral-300">{v.key}</span>
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="truncate text-neutral-500">
+                    {v.isSecret ? '••••••' : v.value}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => remove(v.key)}
+                    disabled={busy}
+                    title={t('service.envDelete')}
+                    className="shrink-0 text-xs text-red-400 transition-colors hover:text-red-300"
+                  >
+                    ✕
+                  </button>
                 </span>
               </li>
             ))}

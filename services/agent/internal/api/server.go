@@ -42,6 +42,7 @@ func (s *Server) Run() error {
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/system", s.handleSystem)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/build", s.handleBuild)
+	s.mux.HandleFunc("POST /api/inspect", s.handleInspect)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/run", s.handleRun)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/power", s.handlePower)
 	s.mux.HandleFunc("DELETE /api/servers/{uuid}", s.handleRemove)
@@ -49,6 +50,17 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/servers/{uuid}/stats", s.handleStats)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/gc", s.handleGC)
 	s.mux.HandleFunc("GET /api/servers/{uuid}/exec", s.handleExec)
+	s.mux.HandleFunc("POST /api/databases", s.handleDBCreate)
+	s.mux.HandleFunc("POST /api/databases/power", s.handleDBPower)
+	s.mux.HandleFunc("POST /api/databases/status", s.handleDBStatus)
+	s.mux.HandleFunc("DELETE /api/databases", s.handleDBRemove)
+	s.mux.HandleFunc("POST /api/databases/schema", s.handleDBSchema)
+	s.mux.HandleFunc("POST /api/databases/grant", s.handleDBGrant)
+	s.mux.HandleFunc("DELETE /api/volumes", s.handleVolumeRemove)
+	s.mux.HandleFunc("POST /api/backups", s.handleBackupCreate)
+	s.mux.HandleFunc("POST /api/backups/restore", s.handleBackupRestore)
+	s.mux.HandleFunc("GET /api/backups/download", s.handleBackupDownload)
+	s.mux.HandleFunc("DELETE /api/backups", s.handleBackupDelete)
 }
 
 // auth enforces the shared daemon token (constant-time compare).
@@ -183,15 +195,47 @@ func (s *Server) handleBuild(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]any{"commitSha": sha})
 }
 
+type inspectBody struct {
+	RepoURL  string `json:"repoUrl"`
+	Branch   string `json:"branch"`
+	PATToken string `json:"patToken"`
+	WorkID   string `json:"workId"`
+}
+
+func (s *Server) handleInspect(w http.ResponseWriter, r *http.Request) {
+	var body inspectBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	res, err := s.builder.Inspect(context.Background(), builder.InspectRequest{
+		WorkID:   body.WorkID,
+		RepoURL:  body.RepoURL,
+		Branch:   body.Branch,
+		PATToken: body.PATToken,
+	})
+	if err != nil {
+		writeJSON(w, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, res)
+}
+
+type volumeMount struct {
+	Name      string `json:"name"`
+	MountPath string `json:"mountPath"`
+}
+
 type runBody struct {
-	Image      string            `json:"image"`
-	Port       int               `json:"port"`
-	CPULimit   int               `json:"cpuLimit"`
-	MemLimit   int               `json:"memLimit"`
-	Env        map[string]string `json:"env"`
-	Domain     string            `json:"domain"`
-	HTTPS      bool              `json:"https"`
-	Network    string            `json:"network"`
+	Image    string            `json:"image"`
+	Port     int               `json:"port"`
+	CPULimit int               `json:"cpuLimit"`
+	MemLimit int               `json:"memLimit"`
+	Env      map[string]string `json:"env"`
+	Domain   string            `json:"domain"`
+	HTTPS    bool              `json:"https"`
+	Network  string            `json:"network"`
+	Volumes  []volumeMount     `json:"volumes"`
 }
 
 func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
@@ -214,6 +258,11 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 		publishPort = body.Port
 	}
 
+	mounts := make([]docker.VolumeMount, 0, len(body.Volumes))
+	for _, v := range body.Volumes {
+		mounts = append(mounts, docker.VolumeMount{Name: v.Name, MountPath: v.MountPath})
+	}
+
 	name := containerName(uuid)
 	opts := docker.RunOptions{
 		Name:        name,
@@ -224,6 +273,7 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 		PublishPort: publishPort,
 		Env:         body.Env,
 		Labels:      traefikLabels(uuid, body.Domain, body.Port, body.HTTPS),
+		Volumes:     mounts,
 	}
 
 	// Capture progress so the HTTP response stays valid JSON.

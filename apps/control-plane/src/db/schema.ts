@@ -30,6 +30,13 @@ export const deployStatusEnum = pgEnum('deploy_status', [
   'SUCCESS',
   'FAILED',
 ]);
+export const dbEngineEnum = pgEnum('db_engine', ['POSTGRES', 'MYSQL']);
+export const backupKindEnum = pgEnum('backup_kind', ['VOLUME', 'DATABASE']);
+export const backupStatusEnum = pgEnum('backup_status', [
+  'RUNNING',
+  'SUCCESS',
+  'FAILED',
+]);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -166,6 +173,81 @@ export const deployments = pgTable('deployments', {
   finishedAt: timestamp('finished_at'),
 });
 
+/// A persistent Docker named volume mounted into a service container.
+/// Data survives redeploys (containers are recreated, volumes are not).
+export const volumes = pgTable(
+  'volumes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    serviceId: uuid('service_id')
+      .notNull()
+      .references(() => services.id, { onDelete: 'cascade' }),
+    // Docker volume name (e.g. vol-1a2b3c4d). Stable, generated on create.
+    name: text('name').notNull().unique(),
+    mountPath: text('mount_path').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    serviceMountUnique: unique('volumes_service_mount_unique').on(
+      t.serviceId,
+      t.mountPath,
+    ),
+  }),
+);
+
+/// A managed database (Postgres/MySQL) provisioned per project as a sidecar
+/// container on the shared network. Password encrypted at rest (AES-256-GCM).
+export const managedDatabases = pgTable('managed_databases', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  nodeId: uuid('node_id')
+    .notNull()
+    .references(() => nodes.id),
+  engine: dbEngineEnum('engine').notNull(),
+  version: text('version').notNull(),
+  name: text('name').notNull(),
+  // Docker container + volume names (e.g. db-1a2b3c4d, dbvol-1a2b3c4d).
+  containerName: text('container_name').notNull().unique(),
+  volumeName: text('volume_name').notNull(),
+  dbName: text('db_name').notNull(),
+  username: text('username').notNull(),
+  passwordEnc: text('password_enc').notNull(),
+  // Port the engine listens on inside the network (5432 / 3306).
+  internalPort: integer('internal_port').notNull(),
+  status: serviceStatusEnum('status').notNull().default('CREATED'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/// A snapshot of a volume (tar.gz) or managed database (sql.gz) stored on the
+/// node. `refId` points to the volume or database it belongs to.
+export const backups = pgTable('backups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  kind: backupKindEnum('kind').notNull(),
+  refId: uuid('ref_id').notNull(),
+  nodeId: uuid('node_id')
+    .notNull()
+    .references(() => nodes.id),
+  fileName: text('file_name').notNull(),
+  sizeBytes: integer('size_bytes'),
+  status: backupStatusEnum('status').notNull().default('RUNNING'),
+  errorMsg: text('error_msg'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/// A recurring backup (cron) for a volume or database with simple retention.
+export const backupSchedules = pgTable('backup_schedules', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  kind: backupKindEnum('kind').notNull(),
+  refId: uuid('ref_id').notNull(),
+  cron: text('cron').notNull(),
+  keepLast: integer('keep_last').notNull().default(7),
+  enabled: boolean('enabled').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 /// Public domain mapped to a service via the reverse proxy.
 export const domains = pgTable('domains', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -178,6 +260,31 @@ export const domains = pgTable('domains', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+/// A reverse tunnel that exposes this (grey-IP) panel/Traefik through a public
+/// VDS. The home-side client dials OUT to the VDS server; the VDS relays public
+/// ports back. Token encrypted at rest (AES-256-GCM).
+export const tunnels = pgTable('tunnels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  // Public VDS host/IP the client dials and where the install command runs.
+  serverHost: text('server_host').notNull(),
+  // Control channel port on the VDS (client → server).
+  controlPort: integer('control_port').notNull().default(7000),
+  // Comma-separated public ports the VDS relays (e.g. "443" or "443,80").
+  relayPorts: text('relay_ports').notNull().default('443'),
+  // Local host the client forwards inbound connections to (usually Traefik).
+  targetHost: text('target_host').notNull().default('127.0.0.1'),
+  tokenEnc: text('token_enc').notNull(),
+  // Optional pinned server cert SHA-256 (hex). Null = trust token only.
+  fingerprint: text('fingerprint'),
+  proxyProtocol: boolean('proxy_protocol').notNull().default(false),
+  enabled: boolean('enabled').notNull().default(true),
+  status: nodeStatusEnum('status').notNull().default('OFFLINE'),
+  lastSeen: timestamp('last_seen'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export type DbSchema = {
   users: typeof users;
   nodes: typeof nodes;
@@ -188,4 +295,9 @@ export type DbSchema = {
   envVars: typeof envVars;
   deployments: typeof deployments;
   domains: typeof domains;
+  volumes: typeof volumes;
+  managedDatabases: typeof managedDatabases;
+  backups: typeof backups;
+  backupSchedules: typeof backupSchedules;
+  tunnels: typeof tunnels;
 };

@@ -19,6 +19,7 @@ import {
   Card,
   EmptyState,
   ErrorBox,
+  Field,
   PageHeader,
   Spinner,
   StatusBadge,
@@ -99,30 +100,36 @@ AGENT_PORT=${newToken.agentPort} go run ./cmd/agent`}
       )}
 
       <Card className="mb-8">
-        <form onSubmit={onCreate} className="grid gap-3 sm:grid-cols-4">
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder={t('nodes.namePlaceholder')}
-            required
-            className="field"
-          />
-          <input
-            value={form.fqdn}
-            onChange={(e) => setForm({ ...form, fqdn: e.target.value })}
-            placeholder={t('nodes.fqdnPlaceholder')}
-            required
-            className="field"
-          />
-          <input
-            type="number"
-            value={form.agentPort}
-            onChange={(e) =>
-              setForm({ ...form, agentPort: Number(e.target.value) })
-            }
-            placeholder={t('nodes.portPlaceholder')}
-            className="field"
-          />
+        <form onSubmit={onCreate} className="grid items-end gap-3 sm:grid-cols-4">
+          <Field label={t('nodes.nameLabel')}>
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder={t('nodes.namePlaceholder')}
+              required
+              className="field w-full"
+            />
+          </Field>
+          <Field label={t('nodes.fqdnLabel')}>
+            <input
+              value={form.fqdn}
+              onChange={(e) => setForm({ ...form, fqdn: e.target.value })}
+              placeholder={t('nodes.fqdnPlaceholder')}
+              required
+              className="field w-full"
+            />
+          </Field>
+          <Field label={t('nodes.portLabel')}>
+            <input
+              type="number"
+              value={form.agentPort}
+              onChange={(e) =>
+                setForm({ ...form, agentPort: Number(e.target.value) })
+              }
+              placeholder={t('nodes.portPlaceholder')}
+              className="field w-full"
+            />
+          </Field>
           <button type="submit" disabled={creating} className="btn-primary">
             {creating ? t('nodes.adding') : t('nodes.add')}
           </button>

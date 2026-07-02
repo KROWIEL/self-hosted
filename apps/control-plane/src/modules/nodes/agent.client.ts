@@ -51,6 +51,11 @@ export interface AgentStats {
   pids?: string;
 }
 
+export interface AgentVolumeMount {
+  name: string;
+  mountPath: string;
+}
+
 export interface AgentRunInput {
   serviceId: string;
   image: string;
@@ -61,6 +66,67 @@ export interface AgentRunInput {
   domain?: string;
   https?: boolean;
   network?: string;
+  volumes?: AgentVolumeMount[];
+}
+
+export interface AgentDbCreateInput {
+  container: string;
+  volume: string;
+  image: string;
+  network?: string;
+  dataDir: string;
+  internalPort: number;
+  env: Record<string, string>;
+}
+
+export interface AgentDbStatus {
+  running: boolean;
+  state: string;
+  ready: boolean;
+}
+
+export interface AgentInspectInput {
+  repoUrl: string;
+  branch: string;
+  patToken?: string;
+  workId: string;
+}
+
+export interface AgentEnvKey {
+  key: string;
+  example: string;
+  dbRole?: 'url' | 'host' | 'port' | 'name' | 'user' | 'password';
+  dbName?: string;
+}
+
+export interface AgentDatabaseNeed {
+  engine: 'POSTGRES' | 'MYSQL';
+  schemas: string[];
+}
+
+export interface AgentInspectResult {
+  envFile: string;
+  envKeys: AgentEnvKey[];
+  databases: AgentDatabaseNeed[];
+}
+
+export interface AgentSchemaInput {
+  container: string;
+  engine: string;
+  user: string;
+  password: string;
+  schema: string;
+}
+
+export interface AgentBackupInput {
+  kind: 'VOLUME' | 'DATABASE';
+  file: string;
+  volume?: string;
+  container?: string;
+  engine?: string;
+  user?: string;
+  password?: string;
+  dbName?: string;
 }
 
 /**
@@ -101,6 +167,38 @@ export class AgentClient {
 
   getSystem(node: NodeRow) {
     return this.request<AgentSystem>(node, '/system');
+  }
+
+  /** Clones the repo on the node and detects env keys + databases. */
+  inspect(node: NodeRow, input: AgentInspectInput) {
+    return this.request<AgentInspectResult>(node, '/inspect', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  /** Creates an additional schema inside an existing managed DB container. */
+  createSchema(node: NodeRow, input: AgentSchemaInput) {
+    return this.request<{ ok: boolean; error?: string }>(
+      node,
+      '/databases/schema',
+      { method: 'POST', body: JSON.stringify(input) },
+    );
+  }
+
+  /**
+   * Elevates the managed DB's app user so it can create/manage additional
+   * schemas at runtime (multi-tenant apps). Scoped to the dedicated container.
+   */
+  grantPrivileges(
+    node: NodeRow,
+    input: { container: string; engine: string; user: string; password: string },
+  ) {
+    return this.request<{ ok: boolean; error?: string }>(
+      node,
+      '/databases/grant',
+      { method: 'POST', body: JSON.stringify(input) },
+    );
   }
 
   getStats(node: NodeRow, serviceId: string) {
@@ -230,9 +328,98 @@ export class AgentClient {
           domain: input.domain ?? '',
           https: input.https ?? false,
           network: input.network ?? '',
+          volumes: input.volumes ?? [],
         }),
       },
     );
+  }
+
+  /** Creates the volume + container for a managed database on the node. */
+  createDatabase(node: NodeRow, input: AgentDbCreateInput) {
+    return this.request<{ ok: boolean; containerId?: string; error?: string }>(
+      node,
+      '/databases',
+      { method: 'POST', body: JSON.stringify(input) },
+    );
+  }
+
+  powerDatabase(node: NodeRow, container: string, action: string) {
+    return this.request<{ ok: boolean; error?: string }>(node, '/databases/power', {
+      method: 'POST',
+      body: JSON.stringify({ container, action: action.toLowerCase() }),
+    });
+  }
+
+  removeDatabase(
+    node: NodeRow,
+    container: string,
+    volume: string,
+    keepVolume: boolean,
+  ) {
+    return this.request<{ ok: boolean }>(node, '/databases', {
+      method: 'DELETE',
+      body: JSON.stringify({ container, volume, keepVolume }),
+    });
+  }
+
+  databaseStatus(
+    node: NodeRow,
+    input: {
+      container: string;
+      engine: string;
+      user: string;
+      password: string;
+      dbName: string;
+    },
+  ) {
+    return this.request<AgentDbStatus>(node, '/databases/status', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  /** Removes a Docker named volume on the node (no-op if still in use). */
+  removeVolume(node: NodeRow, name: string) {
+    return this.request<{ ok: boolean }>(node, '/volumes', {
+      method: 'DELETE',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  backup(node: NodeRow, input: AgentBackupInput) {
+    return this.request<{ ok: boolean; sizeBytes?: number; error?: string }>(
+      node,
+      '/backups',
+      { method: 'POST', body: JSON.stringify(input) },
+    );
+  }
+
+  restoreBackup(node: NodeRow, input: AgentBackupInput) {
+    return this.request<{ ok: boolean; error?: string }>(
+      node,
+      '/backups/restore',
+      { method: 'POST', body: JSON.stringify(input) },
+    );
+  }
+
+  deleteBackup(node: NodeRow, file: string) {
+    return this.request<{ ok: boolean }>(node, '/backups', {
+      method: 'DELETE',
+      body: JSON.stringify({ file }),
+    });
+  }
+
+  /** Opens the raw download stream of a backup file from the node. */
+  async downloadBackup(node: NodeRow, file: string, signal?: AbortSignal) {
+    const token = this.crypto.decrypt(node.daemonToken);
+    const res = await fetch(
+      `${this.baseUrl(node)}/backups/download?file=${encodeURIComponent(file)}`,
+      { headers: { Authorization: `Bearer ${token}` }, signal },
+    );
+    if (!res.ok || !res.body) {
+      throw new Error(`Agent ${node.name} download HTTP ${res.status}`);
+    }
+    return res;
   }
 
   power(node: NodeRow, serviceId: string, action: PowerAction) {

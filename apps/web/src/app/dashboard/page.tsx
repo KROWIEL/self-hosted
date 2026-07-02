@@ -13,6 +13,7 @@ import {
   Card,
   EmptyState,
   ErrorBox,
+  Field,
   PageHeader,
   Spinner,
   StatusBadge,
@@ -71,13 +72,15 @@ export default function DashboardPage() {
         subtitle={t('projects.subtitle')}
       />
 
-      <form onSubmit={onCreate} className="mb-8 flex gap-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('projects.newPlaceholder')}
-          className="field flex-1"
-        />
+      <form onSubmit={onCreate} className="mb-8 flex items-end gap-2">
+        <Field label={t('projects.nameLabel')} className="flex-1">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('projects.newPlaceholder')}
+            className="field w-full"
+          />
+        </Field>
         <button type="submit" disabled={creating} className="btn-primary">
           {creating ? t('common.creating') : t('common.create')}
         </button>

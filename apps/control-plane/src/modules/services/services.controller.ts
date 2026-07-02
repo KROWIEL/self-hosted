@@ -59,9 +59,32 @@ export class ServicesController {
     return this.services.setEnv(id, dto);
   }
 
+  @Delete('services/:id/env/:key')
+  deleteEnv(@Param('id') id: string, @Param('key') key: string) {
+    return this.services.deleteEnv(id, key);
+  }
+
   @Put('services/:id/domain')
   setDomain(@Param('id') id: string, @Body() dto: SetDomainDto) {
     return this.services.setDomain(id, dto);
+  }
+
+  @Get('services/:id/volumes')
+  listVolumes(@Param('id') id: string) {
+    return this.services.listVolumes(id);
+  }
+
+  @Post('services/:id/volumes')
+  addVolume(@Param('id') id: string, @Body() body: { mountPath: string }) {
+    return this.services.addVolume(id, body.mountPath);
+  }
+
+  @Delete('services/:id/volumes/:volumeId')
+  removeVolume(
+    @Param('id') id: string,
+    @Param('volumeId') volumeId: string,
+  ) {
+    return this.services.removeVolume(id, volumeId);
   }
 
   @Post('services/:id/deploy')

@@ -93,6 +93,29 @@ export function PageHeader({
   );
 }
 
+/** A labelled form control: a caption above its input/select children. */
+export function Field({
+  label,
+  hint,
+  className = '',
+  children,
+}: {
+  label: string;
+  hint?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="mb-1 block text-xs font-medium text-neutral-400">
+        {label}
+      </span>
+      {children}
+      {hint && <span className="mt-1 block text-xs text-neutral-600">{hint}</span>}
+    </label>
+  );
+}
+
 export function ErrorBox({ message }: { message: string }) {
   return (
     <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">

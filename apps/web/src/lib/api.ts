@@ -352,8 +352,268 @@ export const setEnv = (
     method: 'PUT',
     body: JSON.stringify({ vars }),
   });
+export const deleteEnv = (id: string, key: string) =>
+  api<EnvVar[]>(`/services/${id}/env/${encodeURIComponent(key)}`, {
+    method: 'DELETE',
+  });
+
+// ---- Repo auto-setup (scan .env.example + databases) ----
+
+export type DbRole = 'url' | 'host' | 'port' | 'name' | 'user' | 'password';
+
+export interface InspectEnvKey {
+  key: string;
+  example: string;
+  dbRole?: DbRole;
+  dbName?: string;
+}
+
+export interface DatabaseNeed {
+  engine: DbEngine;
+  schemas: string[];
+}
+
+export interface RepoInspect {
+  envFile: string;
+  envKeys: InspectEnvKey[];
+  databases: DatabaseNeed[];
+  existingKeys: string[];
+}
+
+export const inspectRepo = (serviceId: string) =>
+  api<RepoInspect>(`/services/${serviceId}/inspect`);
+export const setupFromRepo = (
+  serviceId: string,
+  body: { databases: DatabaseNeed[]; envKeys: InspectEnvKey[] },
+) =>
+  api<{ databases: ManagedDatabase[]; envSet: number }>(
+    `/services/${serviceId}/setup`,
+    { method: 'POST', body: JSON.stringify(body) },
+  );
 export const setDomain = (id: string, host: string, https = true) =>
   api<unknown>(`/services/${id}/domain`, {
     method: 'PUT',
     body: JSON.stringify({ host, https }),
   });
+
+// ---- Persistent volumes ----
+
+export interface Volume {
+  id: string;
+  serviceId: string;
+  name: string;
+  mountPath: string;
+  createdAt: string;
+}
+
+export const listVolumes = (serviceId: string) =>
+  api<Volume[]>(`/services/${serviceId}/volumes`);
+export const addVolume = (serviceId: string, mountPath: string) =>
+  api<Volume>(`/services/${serviceId}/volumes`, {
+    method: 'POST',
+    body: JSON.stringify({ mountPath }),
+  });
+export const removeVolume = (serviceId: string, volumeId: string) =>
+  api<{ ok: boolean }>(`/services/${serviceId}/volumes/${volumeId}`, {
+    method: 'DELETE',
+  });
+
+// ---- Managed databases ----
+
+export type DbEngine = 'POSTGRES' | 'MYSQL';
+
+export interface ManagedDatabase {
+  id: string;
+  projectId: string;
+  nodeId: string;
+  name: string;
+  engine: DbEngine;
+  version: string;
+  status: ServiceStatus;
+  host: string;
+  port: number;
+  dbName: string;
+  username: string;
+}
+
+export interface DbCredentials {
+  host: string;
+  port: number;
+  dbName: string;
+  username: string;
+  password: string;
+  url: string;
+}
+
+export interface DbStatus {
+  running: boolean;
+  state: string;
+  ready: boolean;
+}
+
+export interface CreateDatabaseBody {
+  name: string;
+  engine: DbEngine;
+  version?: string;
+  nodeId: string;
+  dbName?: string;
+  username?: string;
+}
+
+export const listDatabases = (projectId: string) =>
+  api<ManagedDatabase[]>(`/projects/${projectId}/databases`);
+export const createDatabase = (projectId: string, body: CreateDatabaseBody) =>
+  api<ManagedDatabase>(`/projects/${projectId}/databases`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+export const databaseStatus = (id: string) =>
+  api<DbStatus>(`/databases/${id}/status`);
+export const databaseCredentials = (id: string) =>
+  api<DbCredentials>(`/databases/${id}/credentials`);
+export const powerDatabase = (id: string, action: 'start' | 'stop' | 'restart') =>
+  api<ManagedDatabase>(`/databases/${id}/power`, {
+    method: 'POST',
+    body: JSON.stringify({ action }),
+  });
+export const attachDatabase = (id: string, serviceId: string) =>
+  api<{ ok: boolean }>(`/databases/${id}/attach`, {
+    method: 'POST',
+    body: JSON.stringify({ serviceId }),
+  });
+export const deleteDatabase = (id: string, keepVolume: boolean) =>
+  api<{ ok: boolean }>(
+    `/databases/${id}?keepVolume=${keepVolume ? 'true' : 'false'}`,
+    { method: 'DELETE' },
+  );
+
+// ---- Backups ----
+
+export type BackupKind = 'VOLUME' | 'DATABASE';
+export type BackupStatus = 'RUNNING' | 'SUCCESS' | 'FAILED';
+
+export interface Backup {
+  id: string;
+  kind: BackupKind;
+  refId: string;
+  nodeId: string;
+  fileName: string;
+  sizeBytes: number | null;
+  status: BackupStatus;
+  errorMsg: string | null;
+  createdAt: string;
+}
+
+export interface BackupSchedule {
+  id: string;
+  kind: BackupKind;
+  refId: string;
+  cron: string;
+  keepLast: number;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export const listBackups = (kind: BackupKind, refId: string) =>
+  api<Backup[]>(`/backups?kind=${kind}&refId=${refId}`);
+export const createBackup = (kind: BackupKind, refId: string) =>
+  api<Backup>('/backups', {
+    method: 'POST',
+    body: JSON.stringify({ kind, refId }),
+  });
+export const restoreBackup = (id: string) =>
+  api<{ ok: boolean }>(`/backups/${id}/restore`, { method: 'POST' });
+export const deleteBackup = (id: string) =>
+  api<{ ok: boolean }>(`/backups/${id}`, { method: 'DELETE' });
+
+/** Streams a backup file to the browser as a download (auth via header). */
+export async function downloadBackup(id: string, fileName: string) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/backups/${id}/download`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export const listBackupSchedules = (kind: BackupKind, refId: string) =>
+  api<BackupSchedule[]>(`/backup-schedules?kind=${kind}&refId=${refId}`);
+export const createBackupSchedule = (body: {
+  kind: BackupKind;
+  refId: string;
+  cron: string;
+  keepLast?: number;
+}) =>
+  api<BackupSchedule>('/backup-schedules', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+export const deleteBackupSchedule = (id: string) =>
+  api<{ ok: boolean }>(`/backup-schedules/${id}`, { method: 'DELETE' });
+
+// ---- Tunnels (exposure via public VDS relay) ----
+
+export interface Tunnel {
+  id: string;
+  name: string;
+  serverHost: string;
+  controlPort: number;
+  relayPorts: string;
+  targetHost: string;
+  proxyProtocol: boolean;
+  enabled: boolean;
+  status: 'ONLINE' | 'OFFLINE';
+  lastSeen: string | null;
+  running: boolean;
+  connected: boolean;
+  createdAt: string;
+}
+
+export interface TunnelStatus {
+  enabled: boolean;
+  running: boolean;
+  connected: boolean;
+  status: 'ONLINE' | 'OFFLINE';
+  startedAt: string | null;
+  logs: string[];
+}
+
+export interface TunnelInstall extends Tunnel {
+  token: string;
+  serverAddr: string;
+  binUrls: Record<string, string>;
+  commands: { linux: string; windows: string };
+}
+
+export interface CreateTunnelBody {
+  name: string;
+  serverHost: string;
+  controlPort?: number;
+  relayPorts?: string;
+  targetHost?: string;
+  proxyProtocol?: boolean;
+}
+
+export const listTunnels = () => api<Tunnel[]>('/tunnels');
+export const createTunnel = (body: CreateTunnelBody) =>
+  api<Tunnel>('/tunnels', { method: 'POST', body: JSON.stringify(body) });
+export const updateTunnel = (id: string, body: Partial<CreateTunnelBody>) =>
+  api<Tunnel>(`/tunnels/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
+export const deleteTunnel = (id: string) =>
+  api<{ ok: boolean }>(`/tunnels/${id}`, { method: 'DELETE' });
+export const startTunnel = (id: string) =>
+  api<TunnelStatus>(`/tunnels/${id}/start`, { method: 'POST' });
+export const stopTunnel = (id: string) =>
+  api<TunnelStatus>(`/tunnels/${id}/stop`, { method: 'POST' });
+export const tunnelStatus = (id: string) =>
+  api<TunnelStatus>(`/tunnels/${id}/status`);
+export const tunnelInstall = (id: string) =>
+  api<TunnelInstall>(`/tunnels/${id}/install`);
