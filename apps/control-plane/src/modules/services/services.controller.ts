@@ -112,6 +112,11 @@ export class ServicesController {
     return this.services.stats(id);
   }
 
+  @Get('projects/:projectId/resource-summary')
+  projectResourceSummary(@Param('projectId') projectId: string) {
+    return this.services.projectResourceSummary(projectId);
+  }
+
   /**
    * Live runtime log stream. Pipes the node agent's `docker logs -f` output to
    * the browser as chunked text. The browser reads it via fetch + ReadableStream.

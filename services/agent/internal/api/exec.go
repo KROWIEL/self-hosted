@@ -31,7 +31,7 @@ type wsControl struct {
 // same on Linux nodes and on a Windows dev host. Text frames carry control
 // messages (resize); binary frames carry raw terminal IO.
 func (s *Server) handleExec(w http.ResponseWriter, r *http.Request) {
-	name := containerName(r.PathValue("uuid"))
+	name := s.resolveContainer(r.Context(), r.PathValue("uuid"))
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

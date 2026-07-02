@@ -19,26 +19,24 @@ import {
   EmptyState,
   ErrorBox,
   Field,
+  GuideCard,
+  Modal,
   PageHeader,
   Spinner,
-  StatusBadge,
+  StatusDot,
+  StatusText,
+  statusTone,
+  useConfirmDialog,
 } from '@/components/ui';
 import { useI18n } from '@/i18n';
 
 export default function TunnelsPage() {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [tunnels, setTunnels] = useState<Tunnel[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({
-    name: '',
-    serverHost: '',
-    controlPort: 7000,
-    relayPorts: '443',
-    targetHost: '127.0.0.1',
-    proxyProtocol: false,
-  });
+  const [createOpen, setCreateOpen] = useState(false);
 
   function load() {
     setLoading(true);
@@ -50,37 +48,17 @@ export default function TunnelsPage() {
 
   useEffect(load, []);
 
-  async function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-    setError(null);
-    try {
-      await createTunnel({
-        name: form.name.trim(),
-        serverHost: form.serverHost.trim(),
-        controlPort: Number(form.controlPort),
-        relayPorts: form.relayPorts.trim() || '443',
-        targetHost: form.targetHost.trim() || '127.0.0.1',
-        proxyProtocol: form.proxyProtocol,
-      });
-      setForm({
-        name: '',
-        serverHost: '',
-        controlPort: 7000,
-        relayPorts: '443',
-        targetHost: '127.0.0.1',
-        proxyProtocol: false,
-      });
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t('common.failed'));
-    } finally {
-      setCreating(false);
-    }
-  }
-
   async function onDelete(id: string) {
-    if (!confirm(t('tunnel.confirmDelete'))) return;
+    if (
+      !(await confirm({
+        title: t('common.delete'),
+        message: t('tunnel.confirmDelete'),
+        confirmLabel: t('common.delete'),
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteTunnel(id);
       load();
@@ -91,75 +69,28 @@ export default function TunnelsPage() {
 
   return (
     <AppShell>
-      <PageHeader title={t('tunnel.title')} subtitle={t('tunnel.subtitle')} />
+      <PageHeader
+        title={t('tunnel.title')}
+        subtitle={t('tunnel.subtitle')}
+        action={
+          <button onClick={() => setCreateOpen(true)} className="btn-primary">
+            {t('tunnel.add')}
+          </button>
+        }
+      />
+
+      <GuideCard
+        storageKey="tunnels"
+        title={t('tunnel.aboutTitle')}
+        body={t('tunnel.aboutBody')}
+        steps={[
+          { title: t('tunnel.step1Title'), body: t('tunnel.step1Body') },
+          { title: t('tunnel.step2Title'), body: t('tunnel.step2Body') },
+          { title: t('tunnel.step3Title'), body: t('tunnel.step3Body') },
+        ]}
+      />
 
       {error && <ErrorBox message={error} />}
-
-      <Card className="mb-8">
-        <form onSubmit={onCreate} className="grid items-end gap-3 sm:grid-cols-2">
-          <Field label={t('tunnel.nameLabel')}>
-            <input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder={t('tunnel.namePlaceholder')}
-              required
-              className="field w-full"
-            />
-          </Field>
-          <Field label={t('tunnel.serverHostLabel')}>
-            <input
-              value={form.serverHost}
-              onChange={(e) => setForm({ ...form, serverHost: e.target.value })}
-              placeholder={t('tunnel.serverHostPlaceholder')}
-              required
-              className="field w-full"
-            />
-          </Field>
-          <Field label={t('tunnel.controlPortLabel')}>
-            <input
-              type="number"
-              value={form.controlPort}
-              onChange={(e) =>
-                setForm({ ...form, controlPort: Number(e.target.value) })
-              }
-              placeholder={t('tunnel.controlPortPlaceholder')}
-              className="field w-full"
-            />
-          </Field>
-          <Field label={t('tunnel.relayPortsLabel')}>
-            <input
-              value={form.relayPorts}
-              onChange={(e) => setForm({ ...form, relayPorts: e.target.value })}
-              placeholder={t('tunnel.relayPortsPlaceholder')}
-              className="field w-full"
-            />
-          </Field>
-          <Field label={t('tunnel.targetHostLabel')}>
-            <input
-              value={form.targetHost}
-              onChange={(e) => setForm({ ...form, targetHost: e.target.value })}
-              placeholder={t('tunnel.targetHostPlaceholder')}
-              className="field w-full"
-            />
-          </Field>
-          <label className="flex items-center gap-2 self-center text-sm text-neutral-300">
-            <input
-              type="checkbox"
-              checked={form.proxyProtocol}
-              onChange={(e) =>
-                setForm({ ...form, proxyProtocol: e.target.checked })
-              }
-              className="accent-indigo-500"
-            />
-            {t('tunnel.proxyProtocol')}
-          </label>
-          <div className="sm:col-span-2">
-            <button type="submit" disabled={creating} className="btn-primary">
-              {creating ? t('tunnel.adding') : t('tunnel.add')}
-            </button>
-          </div>
-        </form>
-      </Card>
 
       {loading && <Spinner />}
       {!loading && tunnels.length === 0 && (
@@ -171,7 +102,131 @@ export default function TunnelsPage() {
           <TunnelItem key={tn.id} tunnel={tn} onDelete={() => onDelete(tn.id)} />
         ))}
       </ul>
+      {createOpen && (
+        <CreateTunnelModal
+          onClose={() => setCreateOpen(false)}
+          onCreated={() => {
+            setCreateOpen(false);
+            load();
+          }}
+        />
+      )}
+      {dialog}
     </AppShell>
+  );
+}
+
+function CreateTunnelModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
+  const [creating, setCreating] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: '',
+    serverHost: '',
+    controlPort: 7000,
+    relayPorts: '443',
+    targetHost: '127.0.0.1',
+    proxyProtocol: false,
+  });
+
+  async function onCreate(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+    setErr(null);
+    try {
+      await createTunnel({
+        name: form.name.trim(),
+        serverHost: form.serverHost.trim(),
+        controlPort: Number(form.controlPort),
+        relayPorts: form.relayPorts.trim() || '443',
+        targetHost: form.targetHost.trim() || '127.0.0.1',
+        proxyProtocol: form.proxyProtocol,
+      });
+      onCreated();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('common.failed'));
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return (
+    <Modal title={t('tunnel.add')} description={t('tunnel.subtitle')} onClose={onClose}>
+      {err && <ErrorBox message={err} />}
+      <form onSubmit={onCreate} className="grid items-end gap-3 sm:grid-cols-2">
+        <Field label={t('tunnel.nameLabel')}>
+          <input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder={t('tunnel.namePlaceholder')}
+            required
+            className="field w-full"
+          />
+        </Field>
+        <Field label={t('tunnel.serverHostLabel')}>
+          <input
+            value={form.serverHost}
+            onChange={(e) => setForm({ ...form, serverHost: e.target.value })}
+            placeholder={t('tunnel.serverHostPlaceholder')}
+            required
+            className="field w-full"
+          />
+        </Field>
+        <Field label={t('tunnel.controlPortLabel')}>
+          <input
+            type="number"
+            value={form.controlPort}
+            onChange={(e) =>
+              setForm({ ...form, controlPort: Number(e.target.value) })
+            }
+            placeholder={t('tunnel.controlPortPlaceholder')}
+            className="field w-full"
+          />
+        </Field>
+        <Field label={t('tunnel.relayPortsLabel')}>
+          <input
+            value={form.relayPorts}
+            onChange={(e) => setForm({ ...form, relayPorts: e.target.value })}
+            placeholder={t('tunnel.relayPortsPlaceholder')}
+            className="field w-full"
+          />
+        </Field>
+        <Field label={t('tunnel.targetHostLabel')}>
+          <input
+            value={form.targetHost}
+            onChange={(e) => setForm({ ...form, targetHost: e.target.value })}
+            placeholder={t('tunnel.targetHostPlaceholder')}
+            className="field w-full"
+          />
+        </Field>
+        <label className="flex items-center gap-2 self-center text-sm text-neutral-300">
+          <input
+            type="checkbox"
+            checked={form.proxyProtocol}
+            onChange={(e) =>
+              setForm({ ...form, proxyProtocol: e.target.checked })
+            }
+            className="accent-indigo-500"
+          />
+          {t('tunnel.proxyProtocol')}
+        </label>
+        <div className="flex justify-end gap-2 sm:col-span-2">
+          <button type="button" onClick={onClose} className="btn-ghost">
+            {t('common.cancel')}
+          </button>
+          <button type="submit" disabled={creating} className="btn-primary">
+            {creating ? t('tunnel.adding') : t('tunnel.add')}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -183,6 +238,7 @@ function TunnelItem({
   onDelete: () => void;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [status, setStatus] = useState<TunnelStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -205,6 +261,16 @@ function TunnelItem({
   }, [tunnel.id]);
 
   async function toggle() {
+    if (
+      !(await confirm({
+        title: running ? t('service.stop') : t('service.start'),
+        message: running ? t('tunnel.stopConfirm') : t('tunnel.startConfirm'),
+        confirmLabel: running ? t('service.stop') : t('service.start'),
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -230,12 +296,13 @@ function TunnelItem({
   const connected = status?.connected ?? tunnel.connected;
   const running = status?.running ?? tunnel.running;
   const disabled = busy || status?.enabled === false;
+  const connStatus = connected ? 'ONLINE' : 'OFFLINE';
 
   return (
-    <Card hover>
+    <Card hover accentTone={statusTone(connStatus)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-neutral-400">
+          <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-neutral-400">
             <svg
               width="18"
               height="18"
@@ -250,42 +317,45 @@ function TunnelItem({
               <circle cx="4" cy="12" r="1.6" />
               <circle cx="20" cy="12" r="1.6" />
             </svg>
+            <StatusDot
+              status={connStatus}
+              className="absolute -bottom-0.5 -right-0.5 ring-2 ring-ink-950"
+            />
           </span>
           <div>
-            <p className="font-medium text-white">{tunnel.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-white">{tunnel.name}</p>
+              <StatusText status={connStatus} />
+            </div>
             <p className="font-mono text-xs text-neutral-500">
               {tunnel.serverHost}:{tunnel.controlPort} · {t('tunnel.relayingTo')}{' '}
               {tunnel.targetHost}:{tunnel.relayPorts}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <StatusBadge status={connected ? 'ONLINE' : 'OFFLINE'} />
+        <div className="card-actions">
           <button
             onClick={toggle}
             disabled={disabled}
             title={
               status?.enabled === false ? t('tunnel.disabledHint') : undefined
             }
-            className={running ? 'btn-ghost' : 'btn-primary'}
+            className={running ? 'btn-ghost btn-sm' : 'btn-primary btn-sm'}
           >
             {busy ? '…' : running ? t('tunnel.stop') : t('tunnel.start')}
           </button>
-          <button onClick={openInstall} className="btn-ghost">
+          <button onClick={openInstall} className="btn-ghost btn-sm">
             {t('tunnel.install')}
           </button>
           {status && status.logs.length > 0 && (
             <button
               onClick={() => setShowLogs((s) => !s)}
-              className="text-xs text-neutral-400 transition-colors hover:text-white"
+              className="btn-ghost btn-sm"
             >
               {showLogs ? t('tunnel.hideLog') : t('tunnel.log')}
             </button>
           )}
-          <button
-            onClick={onDelete}
-            className="text-xs text-neutral-500 transition-colors hover:text-red-400"
-          >
+          <button onClick={onDelete} className="btn-danger-ghost">
             {t('common.delete')}
           </button>
         </div>
@@ -304,6 +374,7 @@ function TunnelItem({
       {install && (
         <InstallModal data={install} onClose={() => setInstall(null)} />
       )}
+      {dialog}
     </Card>
   );
 }

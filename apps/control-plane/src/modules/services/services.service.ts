@@ -14,6 +14,7 @@ import {
   domains,
   envVars,
   nodes,
+  projects,
   services,
   templates,
   volumes,
@@ -45,6 +46,7 @@ export class ServicesService {
   }
 
   async create(projectId: string, dto: CreateServiceDto) {
+    await this.ensureProjectQuota(projectId, dto.cpuLimit ?? 100, dto.memLimit ?? 512);
     const rows = await this.db
       .insert(services)
       .values({
@@ -127,7 +129,23 @@ export class ServicesService {
 
   /** Updates editable service settings. Takes effect on the next deploy. */
   async update(id: string, dto: UpdateServiceDto) {
-    await this.get(id);
+    const current = await this.get(id);
+    // Zero-downtime runs two app containers at once. That's unsafe for a service
+    // with a read-write volume — both would mount the same Docker volume and can
+    // corrupt data. Block enabling it while volumes are attached.
+    if (dto.zeroDowntime === true) {
+      const vols = await this.db
+        .select()
+        .from(volumes)
+        .where(eq(volumes.serviceId, id));
+      if (vols.length > 0) {
+        throw new BadRequestException(
+          'Zero-downtime deploy is not available while the service has ' +
+            'persistent volumes (two instances would share the same volume). ' +
+            'Remove the volumes first, or keep the classic in-place deploy.',
+        );
+      }
+    }
     const set: Partial<typeof services.$inferInsert> = {};
     if (dto.name !== undefined) set.name = dto.name;
     if (dto.repoUrl !== undefined) set.repoUrl = dto.repoUrl;
@@ -137,8 +155,20 @@ export class ServicesService {
     if (dto.useRepoDockerfile !== undefined) {
       set.useRepoDockerfile = dto.useRepoDockerfile;
     }
-    if (dto.cpuLimit !== undefined) set.cpuLimit = dto.cpuLimit;
-    if (dto.memLimit !== undefined) set.memLimit = dto.memLimit;
+    if (dto.cpuLimit !== undefined || dto.memLimit !== undefined) {
+      const nextCpu = dto.cpuLimit ?? current.cpuLimit;
+      const nextMem = dto.memLimit ?? current.memLimit;
+      await this.ensureProjectQuota(current.projectId, nextCpu, nextMem, id);
+      set.cpuLimit = nextCpu;
+      set.memLimit = nextMem;
+    }
+    if (dto.zeroDowntime !== undefined) set.zeroDowntime = dto.zeroDowntime;
+    if (dto.healthcheckPath !== undefined) {
+      set.healthcheckPath = dto.healthcheckPath || null;
+    }
+    if (dto.healthTimeoutS !== undefined) {
+      set.healthTimeoutS = dto.healthTimeoutS;
+    }
     const rows = await this.db
       .update(services)
       .set(set)
@@ -164,7 +194,104 @@ export class ServicesService {
   async stats(id: string) {
     const service = await this.get(id);
     const node = await this.node(service.nodeId);
-    return this.agent.getStats(node, id);
+    try {
+      return await this.agent.getStats(node, id);
+    } catch (e) {
+      return {
+        running: false,
+        state: 'unreachable',
+        error: e instanceof Error ? e.message : String(e),
+      };
+    }
+  }
+
+  /** Project-level resource allocation + best-effort live usage summary. */
+  async projectResourceSummary(projectId: string) {
+    const [project] = await this.db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .limit(1);
+    if (!project) throw new NotFoundException('Project not found');
+    const rows = await this.db
+      .select()
+      .from(services)
+      .where(eq(services.projectId, projectId));
+    const allocatedCpu = rows.reduce((sum, s) => sum + s.cpuLimit, 0);
+    const allocatedMemMb = rows.reduce((sum, s) => sum + s.memLimit, 0);
+    const running = rows.filter((s) => s.status === 'RUNNING');
+
+    let currentCpuPerc = 0;
+    let currentMemMb = 0;
+    const unavailable: { serviceId: string; name: string; error: string }[] = [];
+    const nodeCache = new Map<string, typeof nodes.$inferSelect>();
+
+    for (const svc of running) {
+      try {
+        let node = nodeCache.get(svc.nodeId);
+        if (!node) {
+          node = await this.node(svc.nodeId);
+          nodeCache.set(svc.nodeId, node);
+        }
+        const stats = await this.agent.getStats(node, svc.id);
+        currentCpuPerc += parsePercent(stats.cpuPerc);
+        currentMemMb += parseMemoryMb(stats.memUsage);
+      } catch (e) {
+        unavailable.push({
+          serviceId: svc.id,
+          name: svc.name,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+
+    return {
+      servicesTotal: rows.length,
+      servicesRunning: running.length,
+      allocatedCpu,
+      allocatedMemMb,
+      cpuLimit: project.cpuLimit,
+      memLimit: project.memLimit,
+      availableCpu: Math.max(0, project.cpuLimit - allocatedCpu),
+      availableMemMb: Math.max(0, project.memLimit - allocatedMemMb),
+      currentCpuPerc: Number(currentCpuPerc.toFixed(2)),
+      currentMemMb: Number(currentMemMb.toFixed(1)),
+      partial: unavailable.length > 0,
+      unavailable,
+    };
+  }
+
+  private async ensureProjectQuota(
+    projectId: string,
+    cpuLimit: number,
+    memLimit: number,
+    excludeServiceId?: string,
+  ) {
+    const [project] = await this.db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .limit(1);
+    if (!project) throw new NotFoundException('Project not found');
+
+    const rows = await this.db
+      .select()
+      .from(services)
+      .where(eq(services.projectId, projectId));
+    const siblings = rows.filter((s) => s.id !== excludeServiceId);
+    const allocatedCpu = siblings.reduce((sum, s) => sum + s.cpuLimit, 0);
+    const allocatedMemMb = siblings.reduce((sum, s) => sum + s.memLimit, 0);
+
+    if (allocatedCpu + cpuLimit > project.cpuLimit) {
+      throw new BadRequestException(
+        'Service CPU limit exceeds available project CPU quota.',
+      );
+    }
+    if (allocatedMemMb + memLimit > project.memLimit) {
+      throw new BadRequestException(
+        'Service memory limit exceeds available project memory quota.',
+      );
+    }
   }
 
   async remove(id: string) {
@@ -172,6 +299,8 @@ export class ServicesService {
     try {
       const node = await this.node(service.nodeId);
       await this.agent.remove(node, id);
+      // Reclaim disk: drop every image of this service (empty keepImage).
+      await this.agent.gc(node, id, '');
     } catch {
       // Best-effort: still remove the record even if the agent is unreachable.
     }
@@ -405,4 +534,27 @@ export class ServicesService {
       .where(eq(services.id, service.id));
     return this.get(service.id);
   }
+}
+
+function parsePercent(value?: string): number {
+  if (!value) return 0;
+  const n = Number(value.replace('%', '').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+function parseMemoryMb(value?: string): number {
+  if (!value) return 0;
+  const used = value.split('/')[0]?.trim();
+  if (!used) return 0;
+  const match = used.match(/^([\d.]+)\s*([KMGT]?i?B)$/i);
+  if (!match) return 0;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount)) return 0;
+  const unit = match[2].toUpperCase();
+  if (unit === 'B') return amount / 1024 / 1024;
+  if (unit === 'KB' || unit === 'KIB') return amount / 1024;
+  if (unit === 'MB' || unit === 'MIB') return amount;
+  if (unit === 'GB' || unit === 'GIB') return amount * 1024;
+  if (unit === 'TB' || unit === 'TIB') return amount * 1024 * 1024;
+  return 0;
 }

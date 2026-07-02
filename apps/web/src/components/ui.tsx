@@ -1,9 +1,10 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useI18n, useStatusLabel } from '@/i18n';
 
-type Tone = 'green' | 'amber' | 'sky' | 'neutral' | 'red';
+export type Tone = 'green' | 'amber' | 'sky' | 'neutral' | 'red';
 
 const STATUS_TONE: Record<string, Tone> = {
   RUNNING: 'green',
@@ -35,6 +36,27 @@ const DOT_CLASSES: Record<Tone, string> = {
   red: 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.8)]',
 };
 
+const BAR_CLASSES: Record<Tone, string> = {
+  green: 'bg-emerald-400',
+  amber: 'bg-amber-400',
+  sky: 'bg-sky-400',
+  neutral: 'bg-neutral-600',
+  red: 'bg-red-400',
+};
+
+const TEXT_TONE: Record<Tone, string> = {
+  green: 'text-emerald-300',
+  amber: 'text-amber-300',
+  sky: 'text-sky-300',
+  neutral: 'text-neutral-400',
+  red: 'text-red-300',
+};
+
+/** Map a domain status string to a semantic tone. */
+export function statusTone(status: string): Tone {
+  return STATUS_TONE[status] ?? 'neutral';
+}
+
 export function StatusBadge({ status }: { status: string }) {
   const statusLabel = useStatusLabel();
   const tone = STATUS_TONE[status] ?? 'neutral';
@@ -53,20 +75,429 @@ export function StatusBadge({ status }: { status: string }) {
   );
 }
 
+/** A bare status dot (no label). Shows the label as a native tooltip. */
+export function StatusDot({
+  status,
+  className = '',
+}: {
+  status: string;
+  className?: string;
+}) {
+  const statusLabel = useStatusLabel();
+  const tone = STATUS_TONE[status] ?? 'neutral';
+  const pulse = tone === 'amber' || tone === 'sky';
+  return (
+    <span
+      title={statusLabel(status)}
+      className={`inline-block h-2 w-2 shrink-0 rounded-full ${DOT_CLASSES[tone]} ${
+        pulse ? 'animate-pulse' : ''
+      } ${className}`}
+    />
+  );
+}
+
+/**
+ * Status as a coloured dot + label, without a pill background. Meant to sit
+ * next to an entity name (identity), not inside the actions cluster.
+ */
+export function StatusText({
+  status,
+  className = '',
+}: {
+  status: string;
+  className?: string;
+}) {
+  const statusLabel = useStatusLabel();
+  const tone = STATUS_TONE[status] ?? 'neutral';
+  const pulse = tone === 'amber' || tone === 'sky';
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-medium ${TEXT_TONE[tone]} ${className}`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${DOT_CLASSES[tone]} ${
+          pulse ? 'animate-pulse' : ''
+        }`}
+      />
+      {statusLabel(status)}
+    </span>
+  );
+}
+
 export function Card({
+  id,
   children,
   className = '',
   hover = false,
+  accentTone,
 }: {
+  id?: string;
   children: ReactNode;
   className?: string;
   hover?: boolean;
+  /** Renders a coloured status bar down the left edge of the card. */
+  accentTone?: Tone;
 }) {
   return (
     <div
-      className={`glass ${hover ? 'glass-hover' : ''} rounded-2xl p-5 ${className}`}
+      id={id}
+      className={`glass ${hover ? 'glass-hover' : ''} relative overflow-hidden rounded-2xl p-5 ${className}`}
     >
+      {accentTone && (
+        <span
+          aria-hidden
+          className={`absolute inset-y-0 left-0 w-1 ${BAR_CLASSES[accentTone]}`}
+        />
+      )}
       {children}
+    </div>
+  );
+}
+
+export function PanelCard({
+  id,
+  title,
+  description,
+  action,
+  children,
+  className = '',
+}: {
+  id?: string;
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card id={id} className={className}>
+      {(title || description || action) && (
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            {title && (
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+                {title}
+              </h2>
+            )}
+            {description && (
+              <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                {description}
+              </p>
+            )}
+          </div>
+          {action && <div className="shrink-0">{action}</div>}
+        </div>
+      )}
+      {children}
+    </Card>
+  );
+}
+
+export function KpiCard({
+  label,
+  value,
+  sub,
+  tone = 'neutral',
+}: {
+  label: string;
+  value: ReactNode;
+  sub?: ReactNode;
+  tone?: Tone;
+}) {
+  return (
+    <div className={`rounded-xl border p-3 ${TONE_CLASSES[tone]}`}>
+      <p className="text-xs opacity-80">{label}</p>
+      <p className="mt-1 truncate font-mono text-lg font-semibold text-white">
+        {value}
+      </p>
+      {sub && <p className="mt-0.5 truncate text-xs opacity-75">{sub}</p>}
+    </div>
+  );
+}
+
+export function ResponsiveGrid({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`grid gap-6 md:grid-cols-2 xl:grid-cols-3 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+export function Modal({
+  title,
+  description,
+  children,
+  onClose,
+  footer,
+  className = '',
+}: {
+  title: string;
+  description?: ReactNode;
+  children: ReactNode;
+  onClose: () => void;
+  footer?: ReactNode;
+  className?: string;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/60 p-3 backdrop-blur-sm sm:p-6"
+      onClick={onClose}
+    >
+      <div
+        className={`flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-ink-950 shadow-2xl sm:max-h-[calc(100dvh-3rem)] ${className}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            {description && (
+              <div className="mt-1 text-sm leading-relaxed text-neutral-400">
+                {description}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg px-2 py-1 text-neutral-400 transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+          {children}
+        </div>
+        {footer && (
+          <div className="flex shrink-0 justify-end gap-2 border-t border-white/10 px-5 py-4 sm:px-6">
+            {footer}
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+export interface ConfirmOptions {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  tone?: 'danger' | 'warning';
+}
+
+export function useConfirmDialog() {
+  const { t } = useI18n();
+  const [state, setState] = useState<
+    (ConfirmOptions & { resolve: (value: boolean) => void }) | null
+  >(null);
+
+  function confirm(options: ConfirmOptions) {
+    return new Promise<boolean>((resolve) => {
+      setState({ ...options, resolve });
+    });
+  }
+
+  function close(value: boolean) {
+    state?.resolve(value);
+    setState(null);
+  }
+
+  const dialog = state ? (
+    <Modal
+      title={state.title}
+      onClose={() => close(false)}
+      className="max-w-md"
+      footer={
+        <>
+          <button onClick={() => close(false)} className="btn-ghost">
+            {t('common.cancel')}
+          </button>
+          <button
+            onClick={() => close(true)}
+            className={state.tone === 'danger' ? 'btn-danger' : 'btn-primary'}
+          >
+            {state.confirmLabel ?? t('common.confirm')}
+          </button>
+        </>
+      }
+    >
+      <p className="text-sm leading-relaxed text-neutral-300">{state.message}</p>
+    </Modal>
+  ) : null;
+
+  return { confirm, dialog };
+}
+
+export function ResourceMeter({
+  label,
+  used,
+  limit,
+  unit,
+  hint,
+  formatValue,
+  inUse,
+  inUseValue,
+}: {
+  label: string;
+  used: number;
+  limit: number;
+  unit: string;
+  hint?: ReactNode;
+  formatValue?: (value: number) => string;
+  /** Real-time consumption label shown next to the allocated value. */
+  inUse?: ReactNode;
+  /** Numeric consumption (same unit as limit) used to draw the bar marker. */
+  inUseValue?: number;
+}) {
+  const { t } = useI18n();
+  const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+  const value = formatValue
+    ? `${formatValue(used)} / ${formatValue(limit)}`
+    : `${used} / ${limit} ${unit}`;
+  const tone =
+    pct >= 90 ? 'bg-red-400' : pct >= 75 ? 'bg-amber-400' : 'bg-emerald-400';
+  // Fraction of the allocation currently consumed (best-effort overlay marker).
+  const inUsePct =
+    inUseValue != null && limit > 0
+      ? Math.min(100, Math.round((inUseValue / limit) * 100))
+      : null;
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className="font-medium text-neutral-400">{label}</span>
+        <span className="font-mono text-neutral-300">
+          {value}
+          {inUse != null && (
+            <span className="text-neutral-500">
+              {' '}| {inUse} {t('resources.inUse')}
+            </span>
+          )}
+        </span>
+      </div>
+      <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
+        {inUsePct != null && (
+          <span
+            className="absolute top-1/2 h-2.5 w-0.5 -translate-y-1/2 rounded-full bg-white/70"
+            style={{ left: `calc(${inUsePct}% - 1px)` }}
+          />
+        )}
+      </div>
+      {hint && <p className="mt-1.5 text-xs text-neutral-600">{hint}</p>}
+    </div>
+  );
+}
+
+export function formatCpu(value: number) {
+  const cores = value / 100;
+  return `${Number.isInteger(cores) ? cores.toFixed(0) : cores.toFixed(1)} cores`;
+}
+
+export function ResourceSlider({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  onChange,
+  formatValue,
+  hint,
+  recommendedValue,
+  recommendedLabel,
+  disabled = false,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (value: number) => void;
+  formatValue: (value: number) => string;
+  hint?: ReactNode;
+  recommendedValue?: number;
+  recommendedLabel?: string;
+  disabled?: boolean;
+}) {
+  const safeMax = Math.max(min, max);
+  const safeValue = Math.min(Math.max(value, min), safeMax);
+  const recommended =
+    recommendedValue === undefined
+      ? undefined
+      : Math.min(Math.max(recommendedValue, min), safeMax);
+  const recommendedPct =
+    recommended === undefined || safeMax === min
+      ? 0
+      : ((recommended - min) / (safeMax - min)) * 100;
+  const marks = [min, min + (safeMax - min) * 0.25, min + (safeMax - min) * 0.5, min + (safeMax - min) * 0.75, safeMax];
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-xs font-medium text-neutral-400">{label}</span>
+        <span className="font-mono text-sm text-neutral-200">
+          {formatValue(safeValue)}
+        </span>
+      </div>
+      <div className="relative pt-3">
+        {recommended !== undefined && (
+          <div
+            className="pointer-events-none absolute top-0 -translate-x-1/2"
+            style={{ left: `${recommendedPct}%` }}
+          >
+            <span className="block h-3 w-px bg-emerald-400" />
+          </div>
+        )}
+        <input
+          type="range"
+          min={min}
+          max={safeMax}
+          step={step}
+          value={safeValue}
+          onChange={(e) => onChange(Number(e.target.value))}
+          disabled={disabled}
+          className="w-full accent-indigo-500 disabled:opacity-50"
+        />
+      </div>
+      <div className="mt-1 grid grid-cols-5 gap-1 font-mono text-[10px] text-neutral-600">
+        {marks.map((mark, idx) => (
+          <span
+            key={idx}
+            className={
+              idx === 0
+                ? 'text-left'
+                : idx === marks.length - 1
+                  ? 'text-right'
+                  : 'text-center'
+            }
+          >
+            {formatValue(Math.round(mark / step) * step)}
+          </span>
+        ))}
+      </div>
+      {recommended !== undefined && (
+        <p className="mt-1 text-xs text-emerald-400">
+          {(recommendedLabel ?? 'recommended')}: {formatValue(recommended)}
+        </p>
+      )}
+      {hint && <p className="mt-1.5 text-xs text-neutral-600">{hint}</p>}
     </div>
   );
 }
@@ -113,6 +544,128 @@ export function Field({
       {children}
       {hint && <span className="mt-1 block text-xs text-neutral-600">{hint}</span>}
     </label>
+  );
+}
+
+export interface GuideStep {
+  title: string;
+  body: string;
+}
+
+/**
+ * A collapsible explainer card: what a screen is for and how to use it.
+ * Collapse state is remembered per screen via localStorage (key `guide:<id>`).
+ */
+export function GuideCard({
+  storageKey,
+  title,
+  body,
+  steps,
+  note,
+}: {
+  storageKey: string;
+  title: string;
+  body: string;
+  steps?: GuideStep[];
+  note?: { title: string; body: string };
+}) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(`guide:${storageKey}`) === '0') setOpen(false);
+    } catch {
+      /* localStorage may be unavailable */
+    }
+  }, [storageKey]);
+
+  function toggle() {
+    setOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(`guide:${storageKey}`, next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
+  const cols =
+    steps && steps.length >= 3
+      ? 'sm:grid-cols-3'
+      : steps && steps.length === 2
+        ? 'sm:grid-cols-2'
+        : 'sm:grid-cols-1';
+
+  return (
+    <Card className="mb-6 border-white/10 bg-white/[0.025]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-indigo-400/30 bg-indigo-400/10 text-indigo-300">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
+            </svg>
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-white">{title}</h3>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-neutral-400">
+              {body}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={toggle}
+          className="shrink-0 text-xs text-neutral-400 transition-colors hover:text-white"
+        >
+          {open ? t('common.guideHide') : t('common.guideShow')}
+        </button>
+      </div>
+
+      {open && (steps?.length || note) && (
+        <>
+          {steps && steps.length > 0 && (
+            <ol className={`mt-5 grid gap-3 ${cols}`}>
+              {steps.map((s, i) => (
+                <li
+                  key={i}
+                  className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-semibold text-indigo-300">
+                    {i + 1}
+                  </span>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    {s.title}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                    {s.body}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          )}
+          {note && (
+            <div className="mt-3 rounded-xl border border-white/5 bg-white/[0.02] p-3">
+              <p className="text-xs font-medium text-neutral-300">
+                {note.title}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                {note.body}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </Card>
   );
 }
 

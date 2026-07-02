@@ -34,6 +34,10 @@ export interface Service {
   gitCredId: string | null;
   containerId: string | null;
   currentImage: string | null;
+  zeroDowntime: boolean;
+  activeColor: string | null;
+  healthcheckPath: string | null;
+  healthTimeoutS: number;
   // Present only on the detail endpoint (getService).
   node?: { id: string; name: string; fqdn: string; agentPort: number } | null;
   template?: {
@@ -54,11 +58,16 @@ export interface UpdateServiceBody {
   port?: number;
   cpuLimit?: number;
   memLimit?: number;
+  zeroDowntime?: boolean;
+  healthcheckPath?: string;
+  healthTimeoutS?: number;
 }
 
 export interface Project {
   id: string;
   name: string;
+  cpuLimit: number;
+  memLimit: number;
   createdAt: string;
   services: Service[];
 }
@@ -68,6 +77,8 @@ export interface Node {
   name: string;
   fqdn: string;
   agentPort: number;
+  cpuTotal: number | null;
+  memTotal: number | null;
   status: 'ONLINE' | 'OFFLINE';
   createdAt: string;
 }
@@ -169,10 +180,42 @@ export async function login(email: string, password: string) {
 
 export const listProjects = () => api<Project[]>('/projects');
 export const getProject = (id: string) => api<Project>(`/projects/${id}`);
-export const createProject = (name: string) =>
-  api<Project>('/projects', { method: 'POST', body: JSON.stringify({ name }) });
+export const createProject = (body: {
+  name: string;
+  cpuLimit?: number;
+  memLimit?: number;
+}) => api<Project>('/projects', { method: 'POST', body: JSON.stringify(body) });
+export const updateProjectLimits = (
+  id: string,
+  body: { cpuLimit: number; memLimit: number },
+) =>
+  api<Project>(`/projects/${id}/limits`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
 export const deleteProject = (id: string) =>
   api<{ ok: boolean }>(`/projects/${id}`, { method: 'DELETE' });
+
+export interface PlatformResourceSummary {
+  nodes: number;
+  projects: number;
+  services: number;
+  hostCpuCores: number;
+  hostMemMb: number;
+  capacityCpu: number;
+  capacityMemMb: number;
+  projectCpuLimit: number;
+  projectMemLimit: number;
+  serviceCpuAllocated: number;
+  serviceMemAllocated: number;
+  availableProjectCpu: number;
+  availableProjectMemMb: number;
+  currentCpuPerc: number;
+  currentMemMb: number;
+}
+
+export const getPlatformResourceSummary = () =>
+  api<PlatformResourceSummary>('/projects/resource-summary/platform');
 
 // ---- Nodes ----
 
@@ -181,8 +224,18 @@ export const createNode = (body: {
   name: string;
   fqdn: string;
   agentPort?: number;
+  cpuTotal?: number;
+  memTotal?: number;
 }) =>
   api<NodeWithToken>('/nodes', { method: 'POST', body: JSON.stringify(body) });
+export const updateNodeCapacity = (
+  id: string,
+  body: { cpuTotal: number; memTotal: number },
+) =>
+  api<Node>(`/nodes/${id}/capacity`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
 export const deleteNode = (id: string) =>
   api<{ ok: boolean }>(`/nodes/${id}`, { method: 'DELETE' });
 
@@ -238,6 +291,8 @@ export interface CreateServiceBody {
   gitCredId?: string;
   useRepoDockerfile?: boolean;
   port?: number;
+  cpuLimit?: number;
+  memLimit?: number;
   env?: Record<string, string>;
 }
 
@@ -305,6 +360,7 @@ export async function streamDeploymentLogs(
 export interface ServiceStats {
   running: boolean;
   state: string;
+  error?: string;
   health?: string;
   cpuPerc?: string;
   memUsage?: string;
@@ -319,6 +375,8 @@ export const getServiceStats = (id: string) =>
 
 export interface NodeSystem {
   version: string;
+  reachable?: boolean;
+  error?: string;
   containersRunning?: number;
   containersTotal?: number;
   imagesCount?: string;
@@ -330,6 +388,80 @@ export interface NodeSystem {
 
 export const getNodeSystem = (id: string) =>
   api<NodeSystem>(`/nodes/${id}/system`);
+
+export interface NodeStats {
+  reachable: boolean;
+  /** Aggregate CPU across all containers, in Docker units (100 = one core). */
+  cpuPerc: number;
+  /** Aggregate used memory across all containers, in MB. */
+  memUsageMb: number;
+  containers: number;
+}
+
+export const getNodeStats = (id: string) =>
+  api<NodeStats>(`/nodes/${id}/stats`);
+
+export interface NodePruneResult {
+  ok: boolean;
+  error?: string;
+  system?: string;
+  builder?: string;
+  volumes?: string;
+  imagesReclaimable?: string;
+}
+
+export const pruneNode = (
+  id: string,
+  opts: { all?: boolean; volumes?: boolean } = {},
+) =>
+  api<NodePruneResult>(`/nodes/${id}/prune`, {
+    method: 'POST',
+    body: JSON.stringify(opts),
+  });
+
+export interface NodeWorkloadService {
+  id: string;
+  name: string;
+  type: ServiceType;
+  status: ServiceStatus;
+  projectId: string;
+  projectName: string | null;
+}
+
+export interface NodeWorkloadDatabase {
+  id: string;
+  name: string;
+  engine: DbEngine;
+  status: ServiceStatus;
+  projectId: string;
+  projectName: string | null;
+}
+
+export interface NodeWorkloads {
+  services: NodeWorkloadService[];
+  databases: NodeWorkloadDatabase[];
+}
+
+export const getNodeWorkloads = (id: string) =>
+  api<NodeWorkloads>(`/nodes/${id}/workloads`);
+
+export interface ProjectResourceSummary {
+  servicesTotal: number;
+  servicesRunning: number;
+  allocatedCpu: number;
+  allocatedMemMb: number;
+  cpuLimit: number;
+  memLimit: number;
+  availableCpu: number;
+  availableMemMb: number;
+  currentCpuPerc: number;
+  currentMemMb: number;
+  partial: boolean;
+  unavailable: { serviceId: string; name: string; error: string }[];
+}
+
+export const getProjectResourceSummary = (id: string) =>
+  api<ProjectResourceSummary>(`/projects/${id}/resource-summary`);
 
 export const updateService = (id: string, body: UpdateServiceBody) =>
   api<Service>(`/services/${id}`, {

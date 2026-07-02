@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Template, listTemplates } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { Card, ErrorBox, PageHeader, Spinner } from '@/components/ui';
+import { Card, ErrorBox, GuideCard, PageHeader, Spinner } from '@/components/ui';
 import { TKey, useI18n, useTypeLabel } from '@/i18n';
 
 // Maps a built-in template name to a localized description key.
@@ -34,6 +34,13 @@ export default function TemplatesPage() {
       <PageHeader
         title={t('templates.title')}
         subtitle={t('templates.subtitle')}
+      />
+
+      <GuideCard
+        storageKey="templates"
+        title={t('templates.aboutTitle')}
+        body={t('templates.aboutBody')}
+        note={{ title: t('templates.noteTitle'), body: t('templates.noteBody') }}
       />
 
       {error && <ErrorBox message={error} />}

@@ -12,9 +12,13 @@ export interface CreateNodeDto {
     name: string;
     fqdn: string;
     agentPort?: number;
+    cpuTotal?: number;
+    memTotal?: number;
 }
 export interface CreateProjectDto {
     name: string;
+    cpuLimit?: number;
+    memLimit?: number;
 }
 export interface CreateGitCredentialDto {
     name: string;

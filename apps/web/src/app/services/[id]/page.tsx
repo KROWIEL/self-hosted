@@ -12,6 +12,7 @@ import {
   deleteService,
   deployService,
   getService,
+  getProjectResourceSummary,
   getServiceStats,
   getWebhook,
   listDeployments,
@@ -40,7 +41,21 @@ import {
 import '@xterm/xterm/css/xterm.css';
 import { AppShell } from '@/components/shell';
 import { BackupsPanel } from '@/components/backups-panel';
-import { Card, EmptyState, ErrorBox, Spinner, StatusBadge } from '@/components/ui';
+import {
+  Card,
+  EmptyState,
+  ErrorBox,
+  GuideCard,
+  KpiCard,
+  PanelCard,
+  ResponsiveGrid,
+  ResourceSlider,
+  Spinner,
+  StatusText,
+  statusTone,
+  formatCpu,
+  useConfirmDialog,
+} from '@/components/ui';
 import { useI18n, useTypeLabel } from '@/i18n';
 
 export default function ServicePage() {
@@ -48,6 +63,7 @@ export default function ServicePage() {
   const id = params.id;
   const { t } = useI18n();
   const typeLabel = useTypeLabel();
+  const { confirm, dialog } = useConfirmDialog();
 
   const [service, setService] = useState<Service | null>(null);
   const [deployments, setDeployments] = useState<Deployment[]>([]);
@@ -141,9 +157,12 @@ export default function ServicePage() {
         <>
           <header className="mb-6 mt-3 flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight text-white">
-                {service.name}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  {service.name}
+                </h1>
+                <StatusText status={service.status} className="text-sm" />
+              </div>
               <p className="mt-1 font-mono text-sm text-neutral-500">
                 {typeLabel(service.type)} · {service.repoUrl} · {service.branch}
               </p>
@@ -153,133 +172,112 @@ export default function ServicePage() {
                 </p>
               )}
             </div>
-            <StatusBadge status={service.status} />
           </header>
 
-          <Card className="mb-8 flex flex-wrap items-center gap-2 p-3">
-            <button
-              onClick={() => act(() => deployService(id))}
-              disabled={busy}
-              className="btn-primary"
-            >
-              ⟳ {t('service.deploy')}
-            </button>
-            <button
-              onClick={() => act(() => powerService(id, 'start'))}
-              disabled={busy}
-              className="btn-ghost"
-            >
-              {t('service.start')}
-            </button>
-            <button
-              onClick={() => act(() => powerService(id, 'stop'))}
-              disabled={busy}
-              className="btn-ghost"
-            >
-              {t('service.stop')}
-            </button>
-            <button
-              onClick={() => act(() => powerService(id, 'restart'))}
-              disabled={busy}
-              className="btn-ghost"
-            >
-              {t('service.restart')}
-            </button>
-            <button
-              onClick={() => setTermOpen(true)}
-              disabled={service.status !== 'RUNNING'}
-              title={
-                service.status !== 'RUNNING'
-                  ? t('service.terminalNotRunning')
-                  : undefined
-              }
-              className="btn-ghost"
-            >
-              &gt;_ {t('service.terminal')}
-            </button>
-            <button onClick={() => setSetupOpen(true)} className="btn-ghost">
-              ⚙ {t('setup.button')}
-            </button>
-            <button
-              onClick={() => {
-                if (confirm(t('service.confirmDelete')))
-                  act(() => deleteService(id)).then(() => {
-                    window.location.href = `/projects/${service.projectId}`;
-                  });
-              }}
-              disabled={busy}
-              className="btn-danger ml-auto"
-            >
-              {t('service.delete')}
-            </button>
-          </Card>
+          <GuideCard
+            storageKey="service"
+            title={t('service.aboutTitle')}
+            body={t('service.aboutBody')}
+            steps={[
+              { title: t('service.step1Title'), body: t('service.step1Body') },
+              { title: t('service.step2Title'), body: t('service.step2Body') },
+              { title: t('service.step3Title'), body: t('service.step3Body') },
+            ]}
+          />
 
-          <OverviewPanel service={service} />
+          <ServiceActionBar
+            busy={busy}
+            service={service}
+            onDeploy={() => {
+              void (async () => {
+                if (!(await confirm({
+                  title: t('service.deploy'),
+                  message: t('service.deployConfirm'),
+                  confirmLabel: t('service.deploy'),
+                  tone: 'warning',
+                }))) return;
+                act(() => deployService(id));
+              })();
+            }}
+            onStart={() => {
+              void (async () => {
+                if (!(await confirm({
+                  title: t('service.start'),
+                  message: t('service.startConfirm'),
+                  confirmLabel: t('service.start'),
+                  tone: 'warning',
+                }))) return;
+                act(() => powerService(id, 'start'));
+              })();
+            }}
+            onStop={() => {
+              void (async () => {
+                if (!(await confirm({
+                  title: t('service.stop'),
+                  message: t('service.stopConfirm'),
+                  confirmLabel: t('service.stop'),
+                  tone: 'warning',
+                }))) return;
+                act(() => powerService(id, 'stop'));
+              })();
+            }}
+            onRestart={() => {
+              void (async () => {
+                if (!(await confirm({
+                  title: t('service.restart'),
+                  message: t('service.restartConfirm'),
+                  confirmLabel: t('service.restart'),
+                  tone: 'warning',
+                }))) return;
+                act(() => powerService(id, 'restart'));
+              })();
+            }}
+            onTerminal={() => setTermOpen(true)}
+            onSetup={() => setSetupOpen(true)}
+            onDelete={() => {
+              void (async () => {
+                if (!(await confirm({
+                  title: t('service.delete'),
+                  message: t('service.confirmDelete'),
+                  confirmLabel: t('service.delete'),
+                  tone: 'danger',
+                }))) return;
+                act(() => deleteService(id)).then(() => {
+                  window.location.href = `/projects/${service.projectId}`;
+                });
+              })();
+            }}
+          />
 
-          <MetricsPanel id={id} status={service.status} />
+          <ServiceResourceSummary service={service} id={id} />
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-6">
-              <section>
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-                  {t('service.deployments')}
-                </h2>
-                {deployments.length === 0 ? (
-                  <EmptyState>{t('service.noDeployments')}</EmptyState>
-                ) : (
-                  <div className="space-y-2">
-                    <DeploymentCard
-                      d={deployments[0]}
-                      openLog={openLog}
-                      setOpenLog={setOpenLog}
-                      busy={busy}
-                      onRollback={(dep) => act(() => rollbackDeployment(dep))}
-                    />
-                    {deployments.length > 1 && (
-                      <>
-                        <button
-                          onClick={() => setShowHistory((s) => !s)}
-                          className="w-full rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-xs text-neutral-400 transition-colors hover:text-white"
-                        >
-                          {showHistory
-                            ? t('service.deploymentsHide')
-                            : t('service.deploymentsShowAll', {
-                                count: deployments.length - 1,
-                              })}
-                        </button>
-                        {showHistory &&
-                          deployments.slice(1).map((d) => (
-                            <DeploymentCard
-                              key={d.id}
-                              d={d}
-                              openLog={openLog}
-                              setOpenLog={setOpenLog}
-                              busy={busy}
-                              onRollback={(dep) =>
-                                act(() => rollbackDeployment(dep))
-                              }
-                            />
-                          ))}
-                      </>
-                    )}
-                  </div>
-                )}
-              </section>
-
-              <SettingsBox service={service} onSaved={refresh} />
+          <ResponsiveGrid>
+            <div className="md:col-span-2 xl:col-span-2">
+              <OverviewPanel service={service} />
             </div>
 
-            <section className="space-y-6">
-              <EnvEditor id={id} env={env} onSaved={refresh} />
-              <VolumesBox id={id} />
-              <DomainBox id={id} onSaved={refresh} />
-              <WebhookBox id={id} />
-            </section>
-          </div>
+            <div className="md:col-span-2 xl:col-span-2">
+              <DeploymentsPanel
+                deployments={deployments}
+                openLog={openLog}
+                setOpenLog={setOpenLog}
+                busy={busy}
+                showHistory={showHistory}
+                setShowHistory={setShowHistory}
+                onRollback={(depId) => act(() => rollbackDeployment(depId))}
+              />
+            </div>
 
-          <section className="mt-6">
-            <LogViewer id={id} />
-          </section>
+            <SettingsBox service={service} onSaved={refresh} />
+            <EnvEditor id={id} env={env} onSaved={refresh} />
+            <DomainBox id={id} onSaved={refresh} />
+            <VolumesBox id={id} />
+            <WebhookBox id={id} />
+
+            <section className="md:col-span-2 xl:col-span-3">
+              <LogViewer id={id} />
+            </section>
+          </ResponsiveGrid>
 
           {termOpen && (
             <TerminalModal serviceId={id} onClose={() => setTermOpen(false)} />
@@ -295,9 +293,234 @@ export default function ServicePage() {
               }}
             />
           )}
+          {dialog}
         </>
       )}
     </AppShell>
+  );
+}
+
+function ServiceActionBar({
+  busy,
+  service,
+  onDeploy,
+  onStart,
+  onStop,
+  onRestart,
+  onTerminal,
+  onSetup,
+  onDelete,
+}: {
+  busy: boolean;
+  service: Service;
+  onDeploy: () => void;
+  onStart: () => void;
+  onStop: () => void;
+  onRestart: () => void;
+  onTerminal: () => void;
+  onSetup: () => void;
+  onDelete: () => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <Card className="mb-6 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button onClick={onDeploy} disabled={busy} className="btn-primary">
+          {t('service.deploy')}
+        </button>
+        <button onClick={onStart} disabled={busy} className="btn-ghost">
+          {t('service.start')}
+        </button>
+        <button onClick={onStop} disabled={busy} className="btn-ghost">
+          {t('service.stop')}
+        </button>
+        <button onClick={onRestart} disabled={busy} className="btn-ghost">
+          {t('service.restart')}
+        </button>
+        <button
+          onClick={onTerminal}
+          disabled={service.status !== 'RUNNING'}
+          title={
+            service.status !== 'RUNNING'
+              ? t('service.terminalNotRunning')
+              : undefined
+          }
+          className="btn-ghost"
+        >
+          {t('service.terminal')}
+        </button>
+        <button onClick={onSetup} className="btn-ghost">
+          {t('setup.button')}
+        </button>
+        <button onClick={onDelete} disabled={busy} className="btn-danger ml-auto">
+          {t('service.delete')}
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+function ServiceResourceSummary({ service, id }: { service: Service; id: string }) {
+  const { t } = useI18n();
+  const [stats, setStats] = useState<ServiceStats | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const tick = () =>
+      getServiceStats(id)
+        .then((s) => {
+          if (!alive) return;
+          setStats(s);
+          setErr(null);
+        })
+        .catch((e) => {
+          if (alive) setErr(e instanceof Error ? e.message : t('common.failed'));
+        });
+    tick();
+    const timer = setInterval(tick, 3000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [id, t]);
+
+  const health =
+    stats?.health && stats.health !== 'none'
+      ? `${stats.state} · ${stats.health}`
+      : (stats?.state ?? service.status);
+  const running = stats?.running ?? service.status === 'RUNNING';
+
+  return (
+    <PanelCard
+      title={t('resources.serviceTitle')}
+      description={t('resources.serviceHint')}
+      action={
+        <button
+          onClick={() =>
+            document
+              .getElementById('service-settings')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+          className="btn-ghost btn-sm"
+        >
+          {t('resources.editServiceLimits')}
+        </button>
+      }
+      className="mb-6"
+    >
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label={t('resources.allocatedCpu')}
+          value={formatCpu(service.cpuLimit)}
+          sub={t('resources.cpuUnit')}
+          tone="sky"
+        />
+        <KpiCard
+          label={t('resources.allocatedRam')}
+          value={`${service.memLimit} MB`}
+          sub={t('resources.limitConfigured')}
+          tone="sky"
+        />
+        <KpiCard
+          label={t('resources.currentCpu')}
+          value={running ? (stats?.cpuPerc ?? '—') : '—'}
+          sub={running ? t('resources.liveFromAgent') : t('metrics.notRunning')}
+          tone={running ? 'green' : 'neutral'}
+        />
+        <KpiCard
+          label={t('resources.currentRam')}
+          value={running ? (stats?.memPerc ?? '—') : '—'}
+          sub={running ? (stats?.memUsage ?? t('resources.liveFromAgent')) : t('metrics.notRunning')}
+          tone={running ? 'green' : 'neutral'}
+        />
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+          <p className="text-xs text-neutral-500">{t('metrics.health')}</p>
+          <p className="mt-0.5 font-mono text-sm text-neutral-200">{health}</p>
+        </div>
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+          <p className="text-xs text-neutral-500">{t('metrics.network')}</p>
+          <p className="mt-0.5 font-mono text-sm text-neutral-200">
+            {running ? (stats?.netIO ?? '—') : '—'}
+          </p>
+        </div>
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+          <p className="text-xs text-neutral-500">{t('metrics.pids')}</p>
+          <p className="mt-0.5 font-mono text-sm text-neutral-200">
+            {running ? (stats?.pids ?? '—') : '—'}
+          </p>
+        </div>
+      </div>
+      {(err || stats?.error) && (
+        <p className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3 text-xs text-amber-300">
+          {t('resources.agentStatsUnavailable')}: {err ?? stats?.error}
+        </p>
+      )}
+    </PanelCard>
+  );
+}
+
+function DeploymentsPanel({
+  deployments,
+  openLog,
+  setOpenLog,
+  busy,
+  showHistory,
+  setShowHistory,
+  onRollback,
+}: {
+  deployments: Deployment[];
+  openLog: string | null;
+  setOpenLog: (id: string | null) => void;
+  busy: boolean;
+  showHistory: boolean;
+  setShowHistory: React.Dispatch<React.SetStateAction<boolean>>;
+  onRollback: (id: string) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <PanelCard title={t('service.deployments')}>
+      {deployments.length === 0 ? (
+        <EmptyState>{t('service.noDeployments')}</EmptyState>
+      ) : (
+        <div className="space-y-2">
+          <DeploymentCard
+            d={deployments[0]}
+            openLog={openLog}
+            setOpenLog={setOpenLog}
+            busy={busy}
+            onRollback={onRollback}
+          />
+          {deployments.length > 1 && (
+            <>
+              <button
+                onClick={() => setShowHistory((s) => !s)}
+                className="w-full rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-xs text-neutral-400 transition-colors hover:text-white"
+              >
+                {showHistory
+                  ? t('service.deploymentsHide')
+                  : t('service.deploymentsShowAll', {
+                      count: deployments.length - 1,
+                    })}
+              </button>
+              {showHistory &&
+                deployments.slice(1).map((d) => (
+                  <DeploymentCard
+                    key={d.id}
+                    d={d}
+                    openLog={openLog}
+                    setOpenLog={setOpenLog}
+                    busy={busy}
+                    onRollback={onRollback}
+                  />
+                ))}
+            </>
+          )}
+        </div>
+      )}
+    </PanelCard>
   );
 }
 
@@ -311,6 +534,7 @@ function ScanSetupModal({
   onApplied: () => void;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -350,6 +574,16 @@ function ScanSetupModal({
 
   async function apply() {
     if (!result) return;
+    if (
+      !(await confirm({
+        title: t('setup.button'),
+        message: t('setup.applyConfirm'),
+        confirmLabel: t('setup.apply'),
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setApplying(true);
     setErr(null);
     try {
@@ -479,6 +713,7 @@ function ScanSetupModal({
           </div>
         ) : null}
       </div>
+      {dialog}
     </div>
   );
 }
@@ -646,25 +881,38 @@ function DeploymentCard({
   onRollback: (id: string) => void;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const active =
     d.status === 'QUEUED' || d.status === 'BUILDING' || d.status === 'DEPLOYING';
   return (
-    <Card className="p-4">
+    <Card className="p-4" accentTone={statusTone(d.status)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm">
-          <StatusBadge status={d.status} />
+          <StatusText status={d.status} />
           <span className="font-mono text-neutral-500">
             {d.commitSha ? d.commitSha.slice(0, 7) : '—'}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="card-actions">
           {!active && d.status === 'SUCCESS' && (
             <button
               onClick={() => {
-                if (confirm(t('service.rollbackConfirm'))) onRollback(d.id);
+                void (async () => {
+                  if (
+                    !(await confirm({
+                      title: t('service.rollback'),
+                      message: t('service.rollbackConfirm'),
+                      confirmLabel: t('service.rollback'),
+                      tone: 'warning',
+                    }))
+                  ) {
+                    return;
+                  }
+                  onRollback(d.id);
+                })();
               }}
               disabled={busy}
-              className="text-xs text-neutral-400 transition-colors hover:text-indigo-300"
+              className="btn-ghost btn-sm"
             >
               {t('service.rollback')}
             </button>
@@ -672,7 +920,7 @@ function DeploymentCard({
           {!active && (d.buildLog || d.errorMsg) && (
             <button
               onClick={() => setOpenLog(openLog === d.id ? null : d.id)}
-              className="text-xs text-neutral-400 transition-colors hover:text-white"
+              className="btn-ghost btn-sm"
             >
               {openLog === d.id ? t('service.hideLog') : t('service.showLog')}
             </button>
@@ -689,6 +937,7 @@ function DeploymentCard({
           </pre>
         )
       )}
+      {dialog}
     </Card>
   );
 }
@@ -703,22 +952,21 @@ function OverviewPanel({ service }: { service: Service }) {
       : null;
 
   return (
-    <Card className="mb-8 p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-          {t('service.info')}
-        </h2>
-        {appUrl && service.status === 'RUNNING' && (
+    <PanelCard
+      title={t('service.info')}
+      action={
+        appUrl && service.status === 'RUNNING' ? (
           <a
             href={appUrl}
             target="_blank"
             rel="noreferrer"
-            className="btn-ghost py-1.5 text-xs"
+            className="btn-ghost btn-sm"
           >
             {t('service.open')} ↗
           </a>
-        )}
-      </div>
+        ) : null
+      }
+    >
       <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
         <Fact label={t('service.node')}>
           {service.node ? (
@@ -760,7 +1008,7 @@ function OverviewPanel({ service }: { service: Service }) {
           </span>
         </Fact>
       </dl>
-    </Card>
+    </PanelCard>
   );
 }
 
@@ -787,11 +1035,17 @@ function SettingsBox({
   onSaved: () => Promise<unknown>;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [editing, setEditing] = useState(false);
   const [creds, setCreds] = useState<GitCredential[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [hasVolumes, setHasVolumes] = useState(false);
+  const [availableCpu, setAvailableCpu] = useState(0);
+  const [availableMemMb, setAvailableMemMb] = useState(0);
+  const [recommendedCpu, setRecommendedCpu] = useState<number | undefined>();
+  const [recommendedMemMb, setRecommendedMemMb] = useState<number | undefined>();
 
   const initialForm = useCallback(
     () => ({
@@ -803,6 +1057,9 @@ function SettingsBox({
       useRepoDockerfile: service.useRepoDockerfile,
       cpuLimit: service.cpuLimit,
       memLimit: service.memLimit,
+      zeroDowntime: service.zeroDowntime,
+      healthcheckPath: service.healthcheckPath ?? '',
+      healthTimeoutS: service.healthTimeoutS,
     }),
     [service],
   );
@@ -811,7 +1068,28 @@ function SettingsBox({
 
   useEffect(() => {
     listGitCredentials().then(setCreds).catch(() => {});
-  }, []);
+    listVolumes(service.id)
+      .then((v) => setHasVolumes(v.length > 0))
+      .catch(() => {});
+    getProjectResourceSummary(service.projectId)
+      .then((summary) => {
+        setAvailableCpu(summary.availableCpu);
+        setAvailableMemMb(summary.availableMemMb);
+      })
+      .catch(() => {});
+    getServiceStats(service.id)
+      .then((stats) => {
+        const cpu = parseCpuUnits(stats.cpuPerc);
+        const mem = parseMemMb(stats.memUsage);
+        if (cpu > 0) {
+          setRecommendedCpu(Math.max(10, Math.ceil((cpu * 1.25) / 10) * 10));
+        }
+        if (mem > 0) {
+          setRecommendedMemMb(Math.max(128, Math.ceil((mem * 1.25) / 128) * 128));
+        }
+      })
+      .catch(() => {});
+  }, [service.id, service.projectId]);
 
   function cancel() {
     setForm(initialForm());
@@ -821,6 +1099,16 @@ function SettingsBox({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (
+      !(await confirm({
+        title: t('service.settings'),
+        message: t('service.settingsConfirm'),
+        confirmLabel: t('common.save'),
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -833,6 +1121,9 @@ function SettingsBox({
         useRepoDockerfile: form.useRepoDockerfile,
         cpuLimit: Number(form.cpuLimit),
         memLimit: Number(form.memLimit),
+        zeroDowntime: form.zeroDowntime,
+        healthcheckPath: form.healthcheckPath.trim(),
+        healthTimeoutS: Number(form.healthTimeoutS),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
@@ -849,30 +1140,30 @@ function SettingsBox({
   const field = `field w-full disabled:cursor-not-allowed disabled:opacity-60`;
 
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-          {t('service.settings')}
-        </h2>
-        {editing ? (
+    <PanelCard
+      id="service-settings"
+      title={t('service.settings')}
+      className="scroll-mt-6"
+      action={
+        editing ? (
           <button
             onClick={cancel}
-            className="text-xs text-neutral-400 transition-colors hover:text-white"
+            className="btn-ghost btn-sm"
           >
             {t('common.cancel')}
           </button>
         ) : (
           <button
             onClick={() => setEditing(true)}
-            className="text-xs text-neutral-400 transition-colors hover:text-white"
+            className="btn-ghost btn-sm"
           >
             {t('common.edit')}
           </button>
-        )}
-      </div>
-      <Card>
-        {err && <ErrorBox message={err} />}
-        <form onSubmit={save} className="space-y-3">
+        )
+      }
+    >
+      {err && <ErrorBox message={err} />}
+      <form onSubmit={save} className="space-y-3">
           <Labeled label={t('service.name')}>
             <input
               value={form.name}
@@ -911,28 +1202,32 @@ function SettingsBox({
             </Labeled>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Labeled label={t('service.cpu')}>
-              <input
-                type="number"
-                value={form.cpuLimit}
-                onChange={(e) =>
-                  setForm({ ...form, cpuLimit: Number(e.target.value) })
-                }
-                disabled={ro}
-                className={field}
-              />
-            </Labeled>
-            <Labeled label={t('service.mem')}>
-              <input
-                type="number"
-                value={form.memLimit}
-                onChange={(e) =>
-                  setForm({ ...form, memLimit: Number(e.target.value) })
-                }
-                disabled={ro}
-                className={field}
-              />
-            </Labeled>
+            <ResourceSlider
+              label={t('service.cpu')}
+              value={form.cpuLimit}
+              min={10}
+              max={Math.max(form.cpuLimit, form.cpuLimit + availableCpu)}
+              step={10}
+              onChange={(value) => setForm({ ...form, cpuLimit: value })}
+              formatValue={formatCpu}
+              hint={t('resources.cpuUnit')}
+              recommendedValue={recommendedCpu}
+              recommendedLabel={t('resources.recommended')}
+              disabled={ro}
+            />
+            <ResourceSlider
+              label={t('service.mem')}
+              value={form.memLimit}
+              min={128}
+              max={Math.max(form.memLimit, form.memLimit + availableMemMb)}
+              step={128}
+              onChange={(value) => setForm({ ...form, memLimit: value })}
+              formatValue={(value) => `${value} MB`}
+              hint={t('resources.ramUnit')}
+              recommendedValue={recommendedMemMb}
+              recommendedLabel={t('resources.recommended')}
+              disabled={ro}
+            />
           </div>
           <Labeled label={t('project.gitCred')}>
             <select
@@ -963,6 +1258,64 @@ function SettingsBox({
             />
             <span>{t('project.useRepoDockerfile')}</span>
           </label>
+          <div className="rounded-lg border border-white/5 bg-white/[0.02] p-3">
+            <label className="flex items-start gap-2 text-sm text-neutral-300">
+              <input
+                type="checkbox"
+                checked={form.zeroDowntime}
+                onChange={(e) =>
+                  setForm({ ...form, zeroDowntime: e.target.checked })
+                }
+                disabled={ro || (hasVolumes && !form.zeroDowntime)}
+                className="mt-0.5 accent-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+              <span>
+                <span className="block">{t('service.zeroDowntime')}</span>
+                <span className="mt-0.5 block text-xs text-neutral-500">
+                  {t('service.zeroDowntimeHint')}
+                </span>
+                {hasVolumes && (
+                  <span className="mt-1 block text-xs text-amber-400/80">
+                    {t('service.zeroDowntimeVolumeWarn')}
+                  </span>
+                )}
+              </span>
+            </label>
+            {form.zeroDowntime && (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <Labeled label={t('service.healthcheckPath')}>
+                  <input
+                    value={form.healthcheckPath}
+                    onChange={(e) =>
+                      setForm({ ...form, healthcheckPath: e.target.value })
+                    }
+                    placeholder="/health"
+                    disabled={ro}
+                    className={field}
+                  />
+                </Labeled>
+                <Labeled label={t('service.healthTimeout')}>
+                  <input
+                    type="number"
+                    value={form.healthTimeoutS}
+                    onChange={(e) =>
+                      setForm({ ...form, healthTimeoutS: Number(e.target.value) })
+                    }
+                    disabled={ro}
+                    className={field}
+                  />
+                </Labeled>
+              </div>
+            )}
+            {service.activeColor && (
+              <p className="mt-2 text-xs text-neutral-500">
+                {t('service.activeColor')}:{' '}
+                <span className="font-mono text-neutral-300">
+                  {service.activeColor}
+                </span>
+              </p>
+            )}
+          </div>
           {editing && (
             <div className="flex items-center justify-between">
               <span className="text-xs text-neutral-500">
@@ -974,28 +1327,53 @@ function SettingsBox({
             </div>
           )}
         </form>
-      </Card>
-    </div>
+      {dialog}
+    </PanelCard>
   );
 }
 
 function Labeled({
   label,
+  hint,
   children,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs text-neutral-500">{label}</span>
       {children}
+      {hint && <span className="mt-1 block text-xs text-neutral-600">{hint}</span>}
     </label>
   );
 }
 
+function parseCpuUnits(value?: string): number {
+  if (!value) return 0;
+  const n = Number(value.replace('%', '').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+function parseMemMb(value?: string): number {
+  if (!value) return 0;
+  const used = value.split('/')[0]?.trim();
+  if (!used) return 0;
+  const match = used.match(/^([\d.]+)\s*([KMG]i?B|B)?$/i);
+  if (!match) return 0;
+  const n = Number(match[1]);
+  const unit = (match[2] ?? 'MB').toLowerCase();
+  if (!Number.isFinite(n)) return 0;
+  if (unit.startsWith('g')) return n * 1024;
+  if (unit.startsWith('k')) return n / 1024;
+  if (unit === 'b') return n / 1024 / 1024;
+  return n;
+}
+
 function VolumesBox({ id }: { id: string }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [vols, setVols] = useState<Volume[]>([]);
   const [mountPath, setMountPath] = useState('');
   const [busy, setBusy] = useState(false);
@@ -1014,6 +1392,16 @@ function VolumesBox({ id }: { id: string }) {
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
+    if (
+      !(await confirm({
+        title: t('volume.add'),
+        message: t('volume.addConfirm'),
+        confirmLabel: t('volume.add'),
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -1028,7 +1416,16 @@ function VolumesBox({ id }: { id: string }) {
   }
 
   async function remove(volumeId: string) {
-    if (!confirm(t('volume.removeConfirm'))) return;
+    if (
+      !(await confirm({
+        title: t('common.delete'),
+        message: t('volume.removeConfirm'),
+        confirmLabel: t('common.delete'),
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
     try {
       await removeVolume(id, volumeId);
@@ -1039,11 +1436,7 @@ function VolumesBox({ id }: { id: string }) {
   }
 
   return (
-    <div>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-        {t('volume.title')}
-      </h2>
-      <Card>
+    <PanelCard title={t('volume.title')}>
         {err && <ErrorBox message={err} />}
         {vols.length === 0 ? (
           <p className="mb-3 text-sm text-neutral-500">{t('volume.none')}</p>
@@ -1096,8 +1489,8 @@ function VolumesBox({ id }: { id: string }) {
           </button>
         </form>
         <p className="mt-2 text-xs text-neutral-500">{t('volume.hint')}</p>
-      </Card>
-    </div>
+      {dialog}
+    </PanelCard>
   );
 }
 
@@ -1123,11 +1516,7 @@ function WebhookBox({ id }: { id: string }) {
   }
 
   return (
-    <div>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-        {t('service.webhook')}
-      </h2>
-      <Card>
+    <PanelCard title={t('service.webhook')}>
         <div className="flex items-center gap-2">
           <input
             readOnly
@@ -1140,8 +1529,7 @@ function WebhookBox({ id }: { id: string }) {
           </button>
         </div>
         <p className="mt-2 text-xs text-neutral-500">{t('service.webhookHint')}</p>
-      </Card>
-    </div>
+    </PanelCard>
   );
 }
 
@@ -1392,6 +1780,7 @@ function EnvEditor({
   onSaved: () => Promise<unknown>;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [key, setKey] = useState('');
   const [value, setValue] = useState('');
   const [secret, setSecret] = useState(false);
@@ -1404,6 +1793,16 @@ function EnvEditor({
     const parsed = parseDotenv(bulk);
     if (parsed.length === 0) {
       setErr(t('service.envImportEmpty'));
+      return;
+    }
+    if (
+      !(await confirm({
+        title: t('service.envImport'),
+        message: t('service.envImportConfirm'),
+        confirmLabel: t('service.envImportBtn'),
+        tone: 'warning',
+      }))
+    ) {
       return;
     }
     setBusy(true);
@@ -1423,6 +1822,16 @@ function EnvEditor({
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!key.trim()) return;
+    if (
+      !(await confirm({
+        title: t('service.environment'),
+        message: t('service.envSetConfirm'),
+        confirmLabel: t('common.save'),
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -1439,7 +1848,16 @@ function EnvEditor({
   }
 
   async function remove(k: string) {
-    if (!confirm(t('service.envDeleteConfirm'))) return;
+    if (
+      !(await confirm({
+        title: t('service.envDelete'),
+        message: t('service.envDeleteConfirm'),
+        confirmLabel: t('common.delete'),
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -1453,11 +1871,9 @@ function EnvEditor({
   }
 
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-          {t('service.environment')}
-        </h2>
+    <PanelCard
+      title={t('service.environment')}
+      action={
         <button
           type="button"
           onClick={() => setShowImport((v) => !v)}
@@ -1465,8 +1881,8 @@ function EnvEditor({
         >
           {t('service.envImport')}
         </button>
-      </div>
-      <Card>
+      }
+    >
         {err && <ErrorBox message={err} />}
         {showImport && (
           <div className="mb-4 rounded-xl border border-white/5 bg-white/[0.02] p-3">
@@ -1553,8 +1969,8 @@ function EnvEditor({
             </button>
           </div>
         </form>
-      </Card>
-    </div>
+      {dialog}
+    </PanelCard>
   );
 }
 
@@ -1566,6 +1982,7 @@ function DomainBox({
   onSaved: () => Promise<unknown>;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [host, setHost] = useState('');
   const [https, setHttps] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -1574,6 +1991,16 @@ function DomainBox({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!host.trim()) return;
+    if (
+      !(await confirm({
+        title: t('service.domain'),
+        message: t('service.domainConfirm'),
+        confirmLabel: t('common.save'),
+        tone: 'warning',
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -1587,11 +2014,7 @@ function DomainBox({
   }
 
   return (
-    <div>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-        {t('service.domain')}
-      </h2>
-      <Card>
+    <PanelCard title={t('service.domain')}>
         {err && <ErrorBox message={err} />}
         <form onSubmit={save} className="space-y-2">
           <input
@@ -1616,7 +2039,7 @@ function DomainBox({
             </button>
           </div>
         </form>
-      </Card>
-    </div>
+      {dialog}
+    </PanelCard>
   );
 }

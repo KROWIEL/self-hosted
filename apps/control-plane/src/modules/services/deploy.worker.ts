@@ -162,29 +162,64 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
         });
       }
 
-      const run = await this.agent.run(node, {
-        serviceId,
-        image: imageTag,
-        port: svc.port ?? tpl.defaultPort,
-        cpuLimit: svc.cpuLimit,
-        memLimit: svc.memLimit,
-        env,
-        domain: domainRow?.host,
-        https: domainRow?.https,
-        volumes: volumeRows.map((v) => ({
-          name: v.name,
-          mountPath: v.mountPath,
-        })),
-      });
-      if (!run.ok) {
-        throw new Error(run.error ?? 'agent run failed');
+      const port = svc.port ?? tpl.defaultPort;
+      const volumeMounts = volumeRows.map((v) => ({
+        name: v.name,
+        mountPath: v.mountPath,
+      }));
+
+      // Zero-downtime needs a domain (Traefik does the smooth switchover) and is
+      // unsafe with volumes (two instances would share the same RW volume), so
+      // any such service falls back to the classic replace-in-place run.
+      if (svc.zeroDowntime && volumeRows.length > 0) {
+        await this.buildLog.publish(
+          deploymentId,
+          '>> note: zero-downtime skipped — service has persistent volumes; ' +
+            'using in-place deploy\n',
+        );
+      }
+      if (svc.zeroDowntime && domainRow?.host && volumeRows.length === 0) {
+        await this.zeroDowntimeDeploy({
+          node,
+          svc,
+          tpl,
+          deploymentId,
+          imageTag,
+          port,
+          env,
+          domain: domainRow.host,
+          https: domainRow.https,
+          volumes: volumeMounts,
+        });
+      } else {
+        const run = await this.agent.run(node, {
+          serviceId,
+          image: imageTag,
+          port,
+          cpuLimit: svc.cpuLimit,
+          memLimit: svc.memLimit,
+          env,
+          domain: domainRow?.host,
+          https: domainRow?.https,
+          volumes: volumeMounts,
+        });
+        if (!run.ok) {
+          throw new Error(run.error ?? 'agent run failed');
+        }
+        // Sweep any leftover blue-green instances from a prior ZDD run.
+        try {
+          await this.agent.promote(node, serviceId, '');
+        } catch {
+          // best-effort cleanup
+        }
+        await this.setService(serviceId, {
+          status: 'RUNNING',
+          containerId: run.containerId,
+          currentImage: imageTag,
+          activeColor: null,
+        });
       }
 
-      await this.setService(serviceId, {
-        status: 'RUNNING',
-        containerId: run.containerId,
-        currentImage: imageTag,
-      });
       await this.setDeploy(deploymentId, {
         status: 'SUCCESS',
         finishedAt: new Date(),
@@ -215,6 +250,133 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
     } finally {
       await this.buildLog.end(deploymentId);
     }
+  }
+
+  /**
+   * Blue-green switchover: start the opposite color, health-gate it, then retire
+   * the old color. On health failure the new color is removed and the old one is
+   * left serving (auto-rollback, deployment marked FAILED by the caller).
+   */
+  private async zeroDowntimeDeploy(ctx: {
+    node: typeof nodes.$inferSelect;
+    svc: typeof services.$inferSelect;
+    tpl: typeof templates.$inferSelect;
+    deploymentId: string;
+    imageTag: string;
+    port: number;
+    env: Record<string, string>;
+    domain: string;
+    https: boolean;
+    volumes: { name: string; mountPath: string }[];
+  }) {
+    const { node, svc, tpl, deploymentId, imageTag, port, env } = ctx;
+    const newColor = svc.activeColor === 'blue' ? 'green' : 'blue';
+    const healthPath = svc.healthcheckPath ?? tpl.healthcheckPath ?? '/';
+    const timeoutS = svc.healthTimeoutS ?? 60;
+
+    await this.buildLog.publish(
+      deploymentId,
+      `>> zero-downtime: starting ${newColor} instance\n`,
+    );
+    const run = await this.agent.run(node, {
+      serviceId: svc.id,
+      image: imageTag,
+      port,
+      cpuLimit: svc.cpuLimit,
+      memLimit: svc.memLimit,
+      env,
+      domain: ctx.domain,
+      https: ctx.https,
+      volumes: ctx.volumes,
+      color: newColor,
+      healthPath,
+    });
+    if (!run.ok) {
+      throw new Error(run.error ?? 'agent run failed');
+    }
+
+    await this.buildLog.publish(
+      deploymentId,
+      `>> health-gating ${newColor} at ${healthPath} (timeout ${timeoutS}s)\n`,
+    );
+    const healthy = await this.waitHealthy(
+      node,
+      svc.id,
+      newColor,
+      port,
+      healthPath,
+      timeoutS,
+      deploymentId,
+    );
+    if (!healthy) {
+      await this.buildLog.publish(
+        deploymentId,
+        `!! ${newColor} did not become healthy — rolling back, old instance kept\n`,
+      );
+      try {
+        await this.agent.removeColor(node, svc.id, newColor);
+      } catch {
+        // best-effort cleanup of the failed color
+      }
+      throw new Error(`health check failed for ${newColor} instance`);
+    }
+
+    await this.buildLog.publish(
+      deploymentId,
+      `>> ${newColor} healthy — switching traffic and retiring old instance\n`,
+    );
+    await this.agent.promote(node, svc.id, newColor);
+
+    await this.setService(svc.id, {
+      status: 'RUNNING',
+      containerId: run.containerId,
+      currentImage: imageTag,
+      activeColor: newColor,
+    });
+  }
+
+  /** Polls the agent health probe until the color is healthy or timeout. */
+  private async waitHealthy(
+    node: typeof nodes.$inferSelect,
+    serviceId: string,
+    color: string,
+    port: number,
+    path: string,
+    timeoutS: number,
+    deploymentId: string,
+  ): Promise<boolean> {
+    const deadline = Date.now() + timeoutS * 1000;
+    let attempt = 0;
+    while (Date.now() < deadline) {
+      attempt++;
+      try {
+        const res = await this.agent.health(node, {
+          serviceId,
+          color,
+          port,
+          path,
+          timeoutS: 5,
+        });
+        if (res.healthy) {
+          await this.buildLog.publish(
+            deploymentId,
+            `   health OK (HTTP ${res.code}) after ${attempt} attempt(s)\n`,
+          );
+          return true;
+        }
+        await this.buildLog.publish(
+          deploymentId,
+          `   attempt ${attempt}: HTTP ${res.code || 'no response'}\n`,
+        );
+      } catch (e) {
+        await this.buildLog.publish(
+          deploymentId,
+          `   attempt ${attempt}: ${e instanceof Error ? e.message : String(e)}\n`,
+        );
+      }
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    return false;
   }
 
   private async resolveEnv(serviceId: string): Promise<Record<string, string>> {

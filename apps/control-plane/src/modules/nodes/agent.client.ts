@@ -39,6 +39,24 @@ export interface AgentSystem {
   buildCacheSize?: string;
 }
 
+export interface AgentPruneResult {
+  ok: boolean;
+  error?: string;
+  system?: string;
+  builder?: string;
+  volumes?: string;
+  imagesReclaimable?: string;
+}
+
+export interface AgentNodeStats {
+  reachable: boolean;
+  /** Aggregate CPU across all containers, in Docker units (100 = one core). */
+  cpuPerc: number;
+  /** Aggregate used memory across all containers, in MB. */
+  memUsageMb: number;
+  containers: number;
+}
+
 export interface AgentStats {
   running: boolean;
   state: string;
@@ -67,6 +85,26 @@ export interface AgentRunInput {
   https?: boolean;
   network?: string;
   volumes?: AgentVolumeMount[];
+  /** Blue-green color ('blue' | 'green'); omit for legacy single-container run. */
+  color?: string;
+  /** Adds a Traefik LB healthcheck so the proxy skips a still-starting backend. */
+  healthPath?: string;
+}
+
+export interface AgentHealthInput {
+  serviceId: string;
+  color?: string;
+  port: number;
+  path?: string;
+  network?: string;
+  timeoutS?: number;
+}
+
+export interface AgentHealthResult {
+  ok: boolean;
+  healthy: boolean;
+  code: number;
+  error?: string;
 }
 
 export interface AgentDbCreateInput {
@@ -167,6 +205,19 @@ export class AgentClient {
 
   getSystem(node: NodeRow) {
     return this.request<AgentSystem>(node, '/system');
+  }
+
+  /** Aggregate live CPU/RAM usage across all containers on the node. */
+  getNodeStats(node: NodeRow) {
+    return this.request<AgentNodeStats>(node, '/stats');
+  }
+
+  /** Reclaims disk on the node (docker system/builder/volume prune). */
+  prune(node: NodeRow, opts: { all?: boolean; volumes?: boolean } = {}) {
+    return this.request<AgentPruneResult>(node, '/system/prune', {
+      method: 'POST',
+      body: JSON.stringify({ all: !!opts.all, volumes: !!opts.volumes }),
+    });
   }
 
   /** Clones the repo on the node and detects env keys + databases. */
@@ -329,8 +380,46 @@ export class AgentClient {
           https: input.https ?? false,
           network: input.network ?? '',
           volumes: input.volumes ?? [],
+          color: input.color ?? '',
+          healthPath: input.healthPath ?? '',
         }),
       },
+    );
+  }
+
+  /** Single HTTP health probe of a color instance from inside the node network. */
+  health(node: NodeRow, input: AgentHealthInput) {
+    return this.request<AgentHealthResult>(
+      node,
+      `/servers/${input.serviceId}/health`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          color: input.color ?? '',
+          port: input.port,
+          path: input.path ?? '/',
+          network: input.network ?? '',
+          timeoutS: input.timeoutS ?? 5,
+        }),
+      },
+    );
+  }
+
+  /** Retires every instance of the service except keepColor (blue-green swap). */
+  promote(node: NodeRow, serviceId: string, keepColor: string) {
+    return this.request<{ ok: boolean }>(
+      node,
+      `/servers/${serviceId}/promote`,
+      { method: 'POST', body: JSON.stringify({ keepColor }) },
+    );
+  }
+
+  /** Removes a single color instance of a service (blue-green cleanup). */
+  removeColor(node: NodeRow, serviceId: string, color: string) {
+    return this.request<{ ok: boolean }>(
+      node,
+      `/servers/${serviceId}?color=${encodeURIComponent(color)}`,
+      { method: 'DELETE' },
     );
   }
 

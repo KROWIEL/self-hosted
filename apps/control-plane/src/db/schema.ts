@@ -70,6 +70,8 @@ export const nodes = pgTable('nodes', {
 export const projects = pgTable('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  cpuLimit: integer('cpu_limit').notNull().default(400),
+  memLimit: integer('mem_limit').notNull().default(4096),
   ownerId: uuid('owner_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -136,6 +138,15 @@ export const services = pgTable('services', {
   memLimit: integer('mem_limit').notNull().default(512),
   containerId: text('container_id'),
   currentImage: text('current_image'),
+  // Blue-green zero-downtime deploy: when true, a new container of the opposite
+  // color is started + health-gated before the old one is retired.
+  zeroDowntime: boolean('zero_downtime').notNull().default(false),
+  // Currently live color ('blue' | 'green'); null = legacy single-container run.
+  activeColor: text('active_color'),
+  // Overrides template.healthcheckPath for the health gate (e.g. '/actuator/health').
+  healthcheckPath: text('healthcheck_path'),
+  // How long (seconds) to wait for the new color to become healthy before abort.
+  healthTimeoutS: integer('health_timeout_s').notNull().default(60),
   status: serviceStatusEnum('status').notNull().default('CREATED'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

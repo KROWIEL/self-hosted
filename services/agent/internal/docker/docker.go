@@ -112,6 +112,27 @@ func (c *Client) RunEphemeral(ctx context.Context, args ...string) error {
 	return c.run(ctx, io.Discard, full...)
 }
 
+// HTTPProbe hits http://<target><path> from inside the given Docker network via
+// an ephemeral curl container and returns the HTTP status code. Works without
+// publishing ports and regardless of the target image (no curl needed inside).
+func (c *Client) HTTPProbe(ctx context.Context, network, target, path string, timeoutS int) (int, error) {
+	if timeoutS <= 0 {
+		timeoutS = 5
+	}
+	url := fmt.Sprintf("http://%s%s", target, path)
+	out, err := c.runCapture(ctx, io.Discard,
+		"run", "--rm", "--network", network, "curlimages/curl:latest",
+		"-s", "-o", "/dev/null", "-w", "%{http_code}",
+		"--max-time", fmt.Sprintf("%d", timeoutS), url,
+	)
+	if err != nil {
+		return 0, err
+	}
+	var code int
+	_, _ = fmt.Sscanf(strings.TrimSpace(out), "%d", &code)
+	return code, nil
+}
+
 func (c *Client) Power(ctx context.Context, name, action string) error {
 	switch action {
 	case "start":
@@ -135,6 +156,12 @@ func (c *Client) Logs(ctx context.Context, name string, w io.Writer) error {
 // Stats returns a one-shot resource snapshot as a JSON line ({{json .}}).
 func (c *Client) Stats(ctx context.Context, name string) (string, error) {
 	return c.runCapture(ctx, io.Discard, "stats", "--no-stream", "--format", "{{json .}}", name)
+}
+
+// StatsAll returns one-shot resource snapshots for all running containers,
+// one JSON line each ({{json .}}).
+func (c *Client) StatsAll(ctx context.Context) (string, error) {
+	return c.runCapture(ctx, io.Discard, "stats", "--no-stream", "--format", "{{json .}}")
 }
 
 // Inspect returns a single formatted field from `docker inspect`.
@@ -164,6 +191,29 @@ func (c *Client) ImagesByRepo(ctx context.Context, repo string) (string, error) 
 // RemoveImage force-removes an image by reference (ignores errors via caller).
 func (c *Client) RemoveImage(ctx context.Context, ref string) error {
 	return c.run(ctx, io.Discard, "rmi", "-f", ref)
+}
+
+// SystemPrune runs `docker system prune -f`, removing stopped containers,
+// unused networks, dangling images and build cache. When all is true it also
+// removes ALL unused images (not just dangling ones) via `-a`. Returns the
+// command's stdout, which contains a "Total reclaimed space" line.
+func (c *Client) SystemPrune(ctx context.Context, all bool) (string, error) {
+	args := []string{"system", "prune", "-f"}
+	if all {
+		args = append(args, "-a")
+	}
+	return c.runCapture(ctx, io.Discard, args...)
+}
+
+// BuilderPrune runs `docker builder prune -f`, clearing the build cache.
+func (c *Client) BuilderPrune(ctx context.Context) (string, error) {
+	return c.runCapture(ctx, io.Discard, "builder", "prune", "-f")
+}
+
+// VolumePrune runs `docker volume prune -f`, removing volumes not used by any
+// container. Destructive for data — only call when explicitly requested.
+func (c *Client) VolumePrune(ctx context.Context) (string, error) {
+	return c.runCapture(ctx, io.Discard, "volume", "prune", "-f")
 }
 
 func (c *Client) run(ctx context.Context, w io.Writer, args ...string) error {

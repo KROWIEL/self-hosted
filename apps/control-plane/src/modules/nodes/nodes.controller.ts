@@ -4,10 +4,18 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { IsInt, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { NodesService } from './nodes.service';
 import { AgentRunnerService } from './agent-runner.service';
@@ -23,6 +31,36 @@ class CreateNodeDto {
   @IsOptional()
   @IsInt()
   agentPort?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  cpuTotal?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(16)
+  memTotal?: number;
+}
+
+class UpdateNodeCapacityDto {
+  @IsInt()
+  @Min(1)
+  cpuTotal: number;
+
+  @IsInt()
+  @Min(16)
+  memTotal: number;
+}
+
+class PruneNodeDto {
+  @IsOptional()
+  @IsBoolean()
+  all?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  volumes?: boolean;
 }
 
 @UseGuards(JwtAuthGuard)
@@ -46,6 +84,11 @@ export class NodesController {
   @Get(':id')
   get(@Param('id') id: string) {
     return this.nodes.get(id);
+  }
+
+  @Patch(':id/capacity')
+  updateCapacity(@Param('id') id: string, @Body() dto: UpdateNodeCapacityDto) {
+    return this.nodes.updateCapacity(id, dto);
   }
 
   /** Configuration the agent fetches on boot. */
@@ -81,5 +124,23 @@ export class NodesController {
   @Get(':id/system')
   system(@Param('id') id: string) {
     return this.nodes.systemInfo(id);
+  }
+
+  /** Aggregate live CPU/RAM usage across all containers on the node. */
+  @Get(':id/stats')
+  stats(@Param('id') id: string) {
+    return this.nodes.stats(id);
+  }
+
+  /** Reclaim disk on the node (docker prune). */
+  @Post(':id/prune')
+  prune(@Param('id') id: string, @Body() dto: PruneNodeDto) {
+    return this.nodes.prune(id, { all: dto.all, volumes: dto.volumes });
+  }
+
+  /** Services + managed databases hosted on this node. */
+  @Get(':id/workloads')
+  workloads(@Param('id') id: string) {
+    return this.nodes.workloads(id);
   }
 }

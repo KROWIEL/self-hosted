@@ -9,12 +9,43 @@ export const ru: Dict = {
   'common.create': 'Создать',
   'common.creating': 'Создание…',
   'common.save': 'Сохранить',
+  'common.saving': 'Сохранение…',
   'common.set': 'Задать',
   'common.dismiss': 'Скрыть',
+  'common.guideHide': 'Скрыть гайд',
+  'common.guideShow': 'Показать гайд',
+  'common.collapse': 'Свернуть',
+  'common.expand': 'Развернуть',
   'common.signOut': 'Выйти',
   'common.edit': 'Изменить',
   'common.cancel': 'Отмена',
+  'common.confirm': 'Подтвердить',
   'common.saved': 'Сохранено',
+  'common.close': 'Закрыть',
+
+  // Cleanup / prune
+  'cleanup.button': 'Очистить',
+  'cleanup.title': 'Освободить место на диске',
+  'cleanup.subtitle':
+    'Удаляет мусор Docker, который накапливается со временем — остановленные контейнеры, dangling-образы, кэш сборки и неиспользуемые сети.',
+  'cleanup.always':
+    'Всегда удаляется: остановленные контейнеры, неиспользуемые сети, dangling-образы и кэш сборки.',
+  'cleanup.allImages': 'Также удалить все неиспользуемые образы',
+  'cleanup.allImagesHint':
+    'Удаляет все образы, не занятые запущенным контейнером. Они будут заново скачаны/собраны при следующем деплое.',
+  'cleanup.volumes': 'Также удалить неиспользуемые тома',
+  'cleanup.volumesHint':
+    'Опасно: удаляет тома, не подключённые ни к одному контейнеру. Может стереть данные остановленных баз.',
+  'cleanup.confirm':
+    'Запустить очистку этой ноды? Будут удалены остановленные контейнеры, dangling-образы и кэш сборки.',
+  'cleanup.confirmVolumes':
+    'Запустить очистку вместе с неиспользуемыми томами? Это может безвозвратно удалить данные из томов, не подключённых к запущенному контейнеру.',
+  'cleanup.confirmTitle': 'Подтвердите очистку',
+  'cleanup.running': 'Очистка…',
+  'cleanup.done': 'Очистка завершена.',
+  'cleanup.freedSystem': 'System prune',
+  'cleanup.freedBuilder': 'Кэш сборки',
+  'cleanup.freedVolumes': 'Тома',
 
   // Language switcher
   'lang.ru': 'RU',
@@ -49,27 +80,69 @@ export const ru: Dict = {
   // Projects (dashboard)
   'projects.title': 'Проекты',
   'projects.subtitle': 'Группируйте сервисы. Каждый разворачивается из git в контейнер.',
+  'projects.aboutTitle': 'Что такое проект?',
+  'projects.aboutBody':
+    'Проект объединяет связанные сервисы (например, бэкенд и фронтенд) и общие управляемые БД. Это единица организации — вы создаёте сервисы внутри проекта, и они могут обращаться к одной базе.',
+  'projects.step1Title': 'Создайте проект',
+  'projects.step1Body':
+    'Назовите по приложению или окружению («Магазин», «Staging»). Создавайте столько, сколько нужно.',
+  'projects.step2Title': 'Добавьте сервисы и БД',
+  'projects.step2Body':
+    'Откройте проект, чтобы добавить сервисы (из git) и, при необходимости, управляемые БД для подключения.',
+  'projects.step3Title': 'Деплойте и следите',
+  'projects.step3Body':
+    'Задеплойте каждый сервис, задайте env и домен — статус виден прямо здесь, на обзоре.',
   'projects.newPlaceholder': 'Название нового проекта',
   'projects.nameLabel': 'Название проекта',
+  'projects.create': 'Создать проект',
   'projects.empty': 'Проектов пока нет. Создайте один выше.',
   'projects.noServices': 'Нет сервисов',
   'projects.confirmDelete': 'Удалить этот проект и все его сервисы?',
 
   // Nodes
   'nodes.title': 'Ноды',
-  'nodes.subtitle': 'Серверы с агентом. Зарегистрируйте ноду и запустите её агент.',
+  'nodes.subtitle':
+    'Серверы, на которых реально собираются и работают ваши приложения. Зарегистрируйте сервер, запустите его агент — и деплойте на него сервисы.',
+  'nodes.aboutTitle': 'Что такое нода и как это работает?',
+  'nodes.aboutBody':
+    'Нода — это любой сервер (VPS или железо) с Docker и лёгким агентом. Панель никогда не работает с Docker напрямую — она шлёт команды агенту каждой ноды, а тот собирает образы, запускает контейнеры и возвращает статус. Любой развёрнутый сервис живёт на конкретной ноде.',
+  'nodes.step1Title': 'Зарегистрируйте ноду',
+  'nodes.step1Body':
+    'Добавьте сервер ниже: название, хост/IP и порт агента. Вы получите одноразовый daemon-токен — по нему панель авторизуется у агента.',
+  'nodes.step2Title': 'Установите и запустите агент',
+  'nodes.step2Body':
+    'На сервере запустите агент с этим токеном (показанной командой или как systemd-сервис). Он слушает порт агента и связывает ноду с панелью.',
+  'nodes.step3Title': 'Запустите и деплойте',
+  'nodes.step3Body':
+    'Когда агент поднят, нода показывает статус «Работает» и живые метрики. Выберите эту ноду при создании сервиса и задеплойте из git.',
+  'nodes.manageTitle': 'Управление нодами',
+  'nodes.manageBody':
+    'Кнопки «Запустить» / «Остановить» управляют агентом, «Лог» показывает его вывод, а метрики отражают контейнеры, размер образов и что можно освободить. «Удалить» убирает ноду из панели (сам сервер не затрагивается). Ноду с работающими сервисами удалить нельзя, пока они не сняты.',
+  'nodes.guideHide': 'Скрыть гайд',
+  'nodes.guideShow': 'Показать гайд',
+  'nodes.addTitle': 'Регистрация ноды',
+  'nodes.connectionSection': 'Подключение',
+  'nodes.capacitySection': 'Ресурсный бюджет',
   'nodes.tokenOnce': 'Daemon-токен для {name} — показан только один раз.',
-  'nodes.namePlaceholder': 'Название',
-  'nodes.fqdnPlaceholder': 'FQDN / хост',
-  'nodes.portPlaceholder': 'Порт агента',
+  'nodes.namePlaceholder': 'напр. prod-eu-1',
+  'nodes.fqdnPlaceholder': 'напр. 203.0.113.5 или node.example.com',
+  'nodes.portPlaceholder': '8443',
   'nodes.nameLabel': 'Название',
+  'nodes.nameHint': 'Метка, по которой узнаёте сервер в панели.',
   'nodes.fqdnLabel': 'Хост / адрес',
+  'nodes.fqdnHint': 'Публичный IP или домен, по которому панель достучится до агента.',
   'nodes.portLabel': 'Порт агента',
+  'nodes.portHint': 'Порт, который слушает агент (по умолчанию 8443).',
+  'nodes.capacityHint':
+    'Capacity — это сколько ресурсов этой машины платформа может использовать под нагрузки. Отметка «рекомендовано» здесь — небольшой baseline под агент/служебный overhead ноды, а не лимит для всех сервисов.',
   'nodes.add': 'Добавить ноду',
   'nodes.adding': 'Добавление…',
   'nodes.empty': 'Ноды ещё не зарегистрированы.',
   'nodes.start': 'Запустить агент',
   'nodes.stop': 'Остановить агент',
+  'nodes.startConfirm': 'Запустить агент этой ноды?',
+  'nodes.stopConfirm':
+    'Остановить агент этой ноды? Работающие сервисы могут стать неуправляемыми из панели.',
   'nodes.log': 'Лог',
   'nodes.hideLog': 'Скрыть лог',
   'nodes.confirmDelete': 'Удалить эту ноду?',
@@ -77,14 +150,66 @@ export const ru: Dict = {
     'Управление локальным агентом отключено. Запустите его вручную или задайте LOCAL_AGENT_ENABLED=1.',
   'nodes.disabledTitle':
     'Задайте LOCAL_AGENT_ENABLED=1, чтобы управлять агентом из UI',
+  'nodes.agentUnreachable': 'Агент помечен как запущенный, но недоступен',
   'nodes.containers': 'Контейнеры',
   'nodes.images': 'Образы',
   'nodes.reclaimable': 'Можно освободить',
   'nodes.volumes': 'Тома',
+  'nodes.servicesOnNode': 'Сервисы',
+  'nodes.databasesOnNode': 'Базы данных',
+  'nodes.noServices': 'На этой ноде нет сервисов.',
+  'nodes.noDatabases': 'На этой ноде нет баз данных.',
+
+  // Resources
+  'resources.serviceTitle': 'Ресурсы',
+  'resources.serviceHint':
+    'Выделенные лимиты настроены у сервиса; текущее потребление приходит от агента ноды вживую.',
+  'resources.allocatedCpu': 'Выделено CPU',
+  'resources.allocatedRam': 'Выделено RAM',
+  'resources.currentCpu': 'Текущий CPU',
+  'resources.currentRam': 'Текущая RAM',
+  'resources.currentUsage': 'Текущее потребление',
+  'resources.allocated': 'Выделено',
+  'resources.cpuUnit': 'ядра CPU',
+  'resources.ramUnit': 'Лимит памяти в МБ',
+  'resources.limitConfigured': 'настроенный лимит',
+  'resources.liveFromAgent': 'данные от агента',
+  'resources.partialLive': 'частичные live-данные',
+  'resources.agentStatsUnavailable': 'Статистика агента недоступна',
+  'resources.services': 'Сервисы',
+  'resources.runningTotal': 'запущено / всего',
+  'resources.runningServices': 'Запущенные сервисы',
+  'resources.cpuRam': 'CPU / RAM',
+  'resources.cpu': 'CPU',
+  'resources.memory': 'Память',
+  'resources.cpuLimit': 'Лимит CPU',
+  'resources.memLimit': 'Лимит памяти (MB)',
+  'resources.cpuCapacity': 'CPU capacity',
+  'resources.memCapacity': 'Memory capacity (MB)',
+  'resources.available': 'доступно',
+  'resources.inUse': 'в работе',
+  'resources.recommended': 'рекомендовано',
+  'resources.nodeOverheadRecommended': 'baseline overhead ноды',
+  'resources.platformCapacity': 'Ресурсы платформы',
+  'resources.detectedHardware': 'обнаруженное железо',
+  'resources.projectResources': 'Ресурсы проекта',
+  'resources.configureProject': 'Настроить лимиты проекта',
+  'resources.configureCapacity': 'Настроить capacity',
+  'resources.editServiceLimits': 'Изменить лимиты сервиса',
+  'resources.projectLimitHint':
+    'Лимиты проекта резервируют часть capacity платформы. Сервисы внутри проекта не смогут превысить остаток квоты проекта.',
+  'resources.alreadyAllocated':
+    'Уже выделено сервисам: {cpu} CPU / {mem} MB RAM.',
 
   // Templates
   'templates.title': 'Шаблоны',
   'templates.subtitle': 'Определения стеков для сборки и запуска сервисов.',
+  'templates.aboutTitle': 'Что такое шаблоны?',
+  'templates.aboutBody':
+    'Шаблон — готовый рецепт стека: какой образ собирает код, какой его запускает, Dockerfile и порт по умолчанию. При создании сервиса вы выбираете шаблон, и агент ноды по нему собирает и запускает приложение. Порт или использование собственного Dockerfile репозитория можно переопределить у каждого сервиса.',
+  'templates.noteTitle': 'Встроенные шаблоны',
+  'templates.noteBody':
+    'Шаблоны ниже поставляются с панелью и доступны только для чтения. Они покрывают частые Java и JS/TS стеки — выбирайте ближайший при создании сервиса.',
   'templates.builtIn': 'встроенный',
   'templates.desc.javaMaven':
     'Собирает Maven-проект в JAR и запускает на Temurin 21.',
@@ -97,6 +222,18 @@ export const ru: Dict = {
 
   // Project detail
   'project.back': '← Проекты',
+  'project.aboutTitle': 'Работа внутри проекта',
+  'project.aboutBody':
+    'Здесь вы добавляете сервисы и управляемые БД, а затем деплоите. Сервис собирает образ из git и работает контейнером на ноде; база — общий сайдкар-контейнер, к которому подключаются другие сервисы проекта.',
+  'project.step1Title': 'Добавьте сервис',
+  'project.step1Body':
+    'Выберите ноду, шаблон и git-репозиторий. При желании используйте собственный Dockerfile репозитория.',
+  'project.step2Title': 'Добавьте БД (опционально)',
+  'project.step2Body':
+    'Разверните Postgres/MySQL один раз; несколько сервисов делят её через подставляемые env с подключением.',
+  'project.step3Title': 'Откройте сервис для деплоя',
+  'project.step3Body':
+    'Задайте env, домен и тома, затем деплойте и управляйте бэкапами со страницы сервиса.',
   'project.services': 'Сервисы',
   'project.noServices': 'Сервисов пока нет. Создайте один ниже.',
   'project.newService': 'Новый сервис',
@@ -106,6 +243,8 @@ export const ru: Dict = {
   'project.branch': 'Ветка',
   'project.port': 'Порт',
   'project.createService': 'Создать сервис',
+  'project.createServiceHint':
+    'Создайте сервис из git-репозитория, выберите ноду и задайте начальные лимиты CPU/RAM.',
   'project.useRepoDockerfile': 'Использовать Dockerfile из репозитория (если есть)',
   'project.useRepoDockerfileHint':
     'Выкл: сборка по выбранному шаблону. Вкл: использовать Dockerfile из репозитория (он должен собирать из исходников).',
@@ -117,6 +256,20 @@ export const ru: Dict = {
   'git.title': 'Git-доступы',
   'git.subtitle':
     'Personal Access Token для клонирования приватных репозиториев. Токены хранятся в зашифрованном виде и не возвращаются.',
+  'git.aboutTitle': 'Зачем git-доступы?',
+  'git.aboutBody':
+    'Публичные репозитории клонируются без авторизации, приватным нужен токен. Добавьте Personal Access Token (PAT) один раз и привяжите к сервису — нода использует его только при сборке для клонирования кода. Токены шифруются и больше не показываются.',
+  'git.step1Title': 'Создайте PAT',
+  'git.step1Body':
+    'На GitHub/GitLab создайте токен с доступом на чтение репозиториев (scope repo / read_repository).',
+  'git.step2Title': 'Добавьте его сюда',
+  'git.step2Body':
+    'Укажите название, выберите провайдера и вставьте токен. Добавьте логин, если провайдер требует.',
+  'git.step3Title': 'Используйте и проверьте',
+  'git.step3Body':
+    'Выберите этот доступ при создании сервиса, а кнопкой «Проверить» ниже протестируйте доступ к URL репозитория.',
+  'git.securityNote':
+    'Безопасность: вставляйте только read-only токены для репозиториев. После сохранения токен шифруется и дальше показывается только маской.',
   'git.name': 'Название',
   'git.namePlaceholder': 'напр. GitHub (личный)',
   'git.provider': 'Провайдер',
@@ -136,11 +289,28 @@ export const ru: Dict = {
 
   // Service detail
   'service.back': '← Проект',
+  'service.aboutTitle': 'Как сервис деплоится и работает',
+  'service.aboutBody':
+    'Сервис собирает Docker-образ из вашего git-репозитория и запускает его контейнером на своей ноде. Всё, что вы настраиваете здесь — env, домен, тома, ресурсы, деплой без простоя — применяется при следующем деплое.',
+  'service.step1Title': 'Настройте',
+  'service.step1Body':
+    'Задайте env и секреты, привяжите домен, добавьте тома и лимиты CPU/памяти в «Настройках».',
+  'service.step2Title': 'Задеплойте',
+  'service.step2Body':
+    'Нажмите «Деплой», чтобы собрать из git и запустить контейнер. Смотрите логи сборки и рантайма вживую.',
+  'service.step3Title': 'Управляйте',
+  'service.step3Body':
+    'Откатывайтесь на прошлый образ, открывайте терминал, стримьте логи и метрики или включите деплой без простоя.',
   'service.image': 'образ',
   'service.deploy': 'Деплой',
+  'service.deployConfirm':
+    'Запустить новый деплой сейчас? Будет сборка из git и возможная замена работающего контейнера.',
   'service.start': 'Запустить',
+  'service.startConfirm': 'Запустить контейнер этого сервиса?',
   'service.stop': 'Остановить',
+  'service.stopConfirm': 'Остановить контейнер этого сервиса? Приложение может стать недоступным.',
   'service.restart': 'Перезапустить',
+  'service.restartConfirm': 'Перезапустить контейнер этого сервиса сейчас?',
   'service.delete': 'Удалить',
   'service.confirmDelete': 'Удалить этот сервис и его контейнер?',
   'service.deployments': 'Деплои',
@@ -156,7 +326,11 @@ export const ru: Dict = {
   'service.envDelete': 'Удалить переменную',
   'service.envDeleteConfirm':
     'Удалить эту переменную? Применится при следующем деплое.',
+  'service.envSetConfirm':
+    'Задать эту переменную окружения? Это может повлиять на следующий деплой/рантайм.',
   'service.envImport': 'Импорт .env',
+  'service.envImportConfirm':
+    'Импортировать эти переменные окружения? Существующие ключи с тем же именем будут перезаписаны.',
   'service.envImportHint':
     'Вставьте .env-файл. По строке KEY=VALUE; #комментарии и кавычки обрабатываются. Существующие ключи перезапишутся. Секреты определяются по имени.',
   'service.envImportBtn': 'Импортировать',
@@ -176,10 +350,14 @@ export const ru: Dict = {
   'setup.envNone': 'Файл .env-примера не найден.',
   'setup.exists': 'уже есть',
   'setup.apply': 'Применить',
+  'setup.applyConfirm':
+    'Применить найденные изменения? Это может создать базы данных и перезаписать выбранные env-переменные.',
   'setup.applying': 'Применение…',
   'service.keyPlaceholder': 'КЛЮЧ',
   'service.valuePlaceholder': 'значение',
   'service.domain': 'Домен',
+  'service.domainConfirm':
+    'Сохранить настройку домена? Маршрутизация трафика и сертификаты могут измениться.',
   'service.domainPlaceholder': 'example.com',
   'service.domainHint':
     'Укажите корневой домен (example.com). Traefik маршрутизирует и все поддомены (admin.example.com, tenant.example.com). Для HTTPS добавьте DNS: A *.example.com → IP VDS. Для одного wildcard-сертификата: ACME_WILDCARD_CERTS=1 + Cloudflare DNS API token в .env.',
@@ -207,9 +385,19 @@ export const ru: Dict = {
   'service.open': 'Открыть приложение',
   'service.settings': 'Настройки',
   'service.settingsHint': 'Изменения применяются при следующем деплое.',
+  'service.settingsConfirm':
+    'Сохранить настройки сервиса? Изменения могут повлиять на следующий деплой и runtime-лимиты.',
   'service.name': 'Название',
-  'service.cpu': 'Лимит CPU (%)',
+  'service.cpu': 'Лимит CPU',
   'service.mem': 'Лимит памяти (МБ)',
+  'service.zeroDowntime': 'Деплой без простоя',
+  'service.zeroDowntimeHint':
+    'Поднять новый экземпляр и дождаться его health-check, прежде чем переключить трафик и остановить старый. Требуется домен.',
+  'service.healthcheckPath': 'Путь health-check',
+  'service.healthTimeout': 'Таймаут health (с)',
+  'service.activeColor': 'Активный экземпляр',
+  'service.zeroDowntimeVolumeWarn':
+    'Недоступно, пока у сервиса есть постоянные тома — два экземпляра будут делить один том.',
   'service.deploymentsShowAll': 'Показать историю ({count})',
   'service.deploymentsHide': 'Скрыть историю',
   'service.terminal': 'Терминал',
@@ -225,6 +413,8 @@ export const ru: Dict = {
   'volume.hint': 'Монтируются в контейнер. Данные переживают редеплой. Применяется при следующем деплое.',
   'volume.mountPath': 'Путь монтирования (напр. /data)',
   'volume.add': 'Добавить том',
+  'volume.addConfirm':
+    'Добавить этот постоянный том? Он будет смонтирован в сервис при следующем деплое.',
   'volume.none': 'Томов пока нет.',
   'volume.removeConfirm': 'Удалить том? Сохранённые данные могут быть потеряны.',
   // Управляемые базы данных
@@ -236,6 +426,8 @@ export const ru: Dict = {
   'db.dbName': 'Имя базы',
   'db.username': 'Пользователь',
   'db.create': 'Создать базу',
+  'db.createHint':
+    'Создаёт managed database контейнер на ноде. Подключить сервисы можно после создания.',
   'db.creating': 'Создаётся…',
   'db.none': 'Баз данных пока нет.',
   'db.host': 'Хост',
@@ -246,11 +438,18 @@ export const ru: Dict = {
   'db.password': 'Пароль',
   'db.url': 'URL подключения',
   'db.attach': 'Привязать к сервису',
+  'db.attachConfirm':
+    'Привязать эту базу к выбранному сервису? Env-переменные подключения будут записаны.',
   'db.attachHint': 'Прокидывает DATABASE_URL + DB_* в env. Применяется при следующем деплое сервиса.',
   'db.attached': 'Привязано',
   'db.selectService': 'Выберите сервис…',
   'db.deleteConfirm': 'Удалить эту базу данных?',
+  'db.startConfirm': 'Запустить контейнер этой базы данных?',
+  'db.stopConfirm':
+    'Остановить контейнер этой базы данных? Подключённые сервисы могут падать, пока база не запущена снова.',
   'db.keepVolume': 'Сохранить том с данными',
+  'db.keepVolumeTitle': 'Оставить volume базы?',
+  'db.keepVolumeConfirm': 'Оставить volume',
   'db.copy': 'Копировать',
   'db.copied': 'Скопировано',
   'db.internalNote': 'Доступна вашим сервисам внутри сети по этому хосту.',
@@ -289,6 +488,18 @@ export const ru: Dict = {
   'tunnel.title': 'Публикация',
   'tunnel.subtitle':
     'Опубликуйте панель через лёгкий публичный VDS-реле. VDS только перекладывает трафик на ваш локальный прокси — без Docker и без настройки под каждое приложение.',
+  'tunnel.aboutTitle': 'Что такое обратный туннель?',
+  'tunnel.aboutBody':
+    'Если нода за серым/NAT IP, из интернета она недоступна. Обратный туннель решает это: небольшой клиент с вашей стороны исходящим соединением подключается к серверу туннеля на дешёвом публичном VDS, а тот перекладывает публичные порты (например, 443) обратно на ваш Traefik. Посетители попадают на VDS, трафик уходит на вашу ноду.',
+  'tunnel.step1Title': 'Зарегистрируйте туннель',
+  'tunnel.step1Body':
+    'Укажите хост VDS, управляющий порт и какие порты перекладывать (обычно 443). Цель — ваш локальный прокси.',
+  'tunnel.step2Title': 'Установите клиент',
+  'tunnel.step2Body':
+    'Через «Установка» получите команду в одну строку. Выполните её на VDS (сервер) и запустите клиент у себя.',
+  'tunnel.step3Title': 'Запустите и настройте DNS',
+  'tunnel.step3Body':
+    'Запустите туннель, затем направьте A-запись домена на IP VDS. Статус станет «Онлайн» после подключения.',
   'tunnel.add': 'Добавить туннель',
   'tunnel.adding': 'Добавление…',
   'tunnel.empty':
@@ -328,6 +539,9 @@ export const ru: Dict = {
     'Локальное управление туннелем выключено. Установите LOCAL_AGENT_ENABLED=1, чтобы запускать клиент из панели.',
   'tunnel.log': 'Лог',
   'tunnel.hideLog': 'Скрыть лог',
+  'tunnel.startConfirm': 'Запустить этот туннель?',
+  'tunnel.stopConfirm':
+    'Остановить этот туннель? Публичный трафик через реле прекратится.',
   'tunnel.confirmDelete': 'Удалить этот туннель?',
   'tunnel.dnsHint':
     'DNS: A example.com and A *.example.com → VDS IP (ports 80/443 via tunnel). TLS on local Traefik: HTTP-01 per subdomain (default) or ACME_WILDCARD_CERTS=1 + Cloudflare token for *.example.com cert.',

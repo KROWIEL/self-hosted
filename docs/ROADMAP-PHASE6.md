@@ -192,10 +192,28 @@ export const backupSchedules = pgTable('backup_schedules', {
 
 ---
 
-## Трек 3 — Zero-downtime деплой (blue-green + health-gated)
+## Трек 3 — Zero-downtime деплой (blue-green + health-gated) ✅ MVP
 
 **Цель.** Новый контейнер поднимается рядом, проходит healthcheck, только потом
 Traefik переключается на него; старый гасится. При провале health — авто-rollback.
+
+**Реализовано.**
+
+- Схема `services`: `zeroDowntime`, `activeColor` (`blue`/`green`),
+  `healthcheckPath` (override), `healthTimeoutS`.
+- Агент: `run` принимает `color` → контейнер `svc-<id>-<color>`; router/service в
+  Traefik цвето-независимый (`svc-<id>`) + LB-healthcheck-лейблы → плавный overlap;
+  эндпоинты `POST /health` (HTTP-проба цвета изнутри сети через эфемерный curl) и
+  `POST /promote` (снять все инстансы кроме активного цвета); `DELETE ?color=` для
+  очистки; stats/logs/power/exec резолвят активный цвет автоматически.
+- Control-plane `DeployWorker`: build → run нового цвета → health-gate (поллинг до
+  `healthTimeoutS`) → promote (switchover) → GC. При фейле health — снос нового
+  цвета, старый остаётся жив, deployment=FAILED. Все стадии пишутся в build-log.
+- Web: тумблер «Zero-downtime» + `healthcheckPath`/timeout в настройках сервиса,
+  показ активного цвета.
+
+**TODO (доводка).** Блокировка ZDD для stateful (RW-том/эксклюзивная БД);
+отдельная визуализация стадий в карточке деплоя; тест на Linux-ноде.
 
 ### Модель данных
 

@@ -15,23 +15,21 @@ import {
   EmptyState,
   ErrorBox,
   Field,
+  GuideCard,
+  Modal,
   PageHeader,
   Spinner,
+  useConfirmDialog,
 } from '@/components/ui';
 import { useI18n } from '@/i18n';
 
 export default function GitCredentialsPage() {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [creds, setCreds] = useState<GitCredential[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState<{
-    name: string;
-    provider: GitProvider;
-    username: string;
-    pat: string;
-  }>({ name: '', provider: 'GITHUB', username: '', pat: '' });
+  const [createOpen, setCreateOpen] = useState(false);
 
   function load() {
     setLoading(true);
@@ -43,28 +41,17 @@ export default function GitCredentialsPage() {
 
   useEffect(load, []);
 
-  async function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-    setError(null);
-    try {
-      await createGitCredential({
-        name: form.name.trim(),
-        provider: form.provider,
-        username: form.username.trim() || undefined,
-        pat: form.pat.trim(),
-      });
-      setForm({ name: '', provider: 'GITHUB', username: '', pat: '' });
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t('common.failed'));
-    } finally {
-      setCreating(false);
-    }
-  }
-
   async function onDelete(id: string) {
-    if (!confirm(t('git.confirmDelete'))) return;
+    if (
+      !(await confirm({
+        title: t('common.delete'),
+        message: t('git.confirmDelete'),
+        confirmLabel: t('common.delete'),
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteGitCredential(id);
       load();
@@ -75,59 +62,28 @@ export default function GitCredentialsPage() {
 
   return (
     <AppShell>
-      <PageHeader title={t('git.title')} subtitle={t('git.subtitle')} />
+      <PageHeader
+        title={t('git.title')}
+        subtitle={t('git.subtitle')}
+        action={
+          <button onClick={() => setCreateOpen(true)} className="btn-primary">
+            {t('git.add')}
+          </button>
+        }
+      />
+
+      <GuideCard
+        storageKey="git"
+        title={t('git.aboutTitle')}
+        body={t('git.aboutBody')}
+        steps={[
+          { title: t('git.step1Title'), body: t('git.step1Body') },
+          { title: t('git.step2Title'), body: t('git.step2Body') },
+          { title: t('git.step3Title'), body: t('git.step3Body') },
+        ]}
+      />
 
       {error && <ErrorBox message={error} />}
-
-      <Card className="mb-8">
-        <form onSubmit={onCreate} className="grid items-end gap-3 sm:grid-cols-2">
-          <Field label={t('git.name')}>
-            <input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder={t('git.namePlaceholder')}
-              required
-              className="field w-full"
-            />
-          </Field>
-          <Field label={t('git.provider')}>
-            <select
-              value={form.provider}
-              onChange={(e) =>
-                setForm({ ...form, provider: e.target.value as GitProvider })
-              }
-              className="field w-full"
-            >
-              <option value="GITHUB">GitHub</option>
-              <option value="GITLAB">GitLab</option>
-            </select>
-          </Field>
-          <Field label={t('git.username')}>
-            <input
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              placeholder={t('git.usernamePlaceholder')}
-              className="field w-full"
-            />
-          </Field>
-          <Field label={t('git.pat')}>
-            <input
-              type="password"
-              value={form.pat}
-              onChange={(e) => setForm({ ...form, pat: e.target.value })}
-              placeholder={t('git.patPlaceholder')}
-              required
-              autoComplete="off"
-              className="field w-full"
-            />
-          </Field>
-          <div className="sm:col-span-2">
-            <button type="submit" disabled={creating} className="btn-primary">
-              {creating ? t('git.adding') : t('git.add')}
-            </button>
-          </div>
-        </form>
-      </Card>
 
       {loading && <Spinner />}
       {!loading && creds.length === 0 && <EmptyState>{t('git.empty')}</EmptyState>}
@@ -137,7 +93,110 @@ export default function GitCredentialsPage() {
           <CredItem key={c.id} cred={c} onDelete={() => onDelete(c.id)} />
         ))}
       </ul>
+      {createOpen && (
+        <CreateGitCredentialModal
+          onClose={() => setCreateOpen(false)}
+          onCreated={() => {
+            setCreateOpen(false);
+            load();
+          }}
+        />
+      )}
+      {dialog}
     </AppShell>
+  );
+}
+
+function CreateGitCredentialModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { t } = useI18n();
+  const [creating, setCreating] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [form, setForm] = useState<{
+    name: string;
+    provider: GitProvider;
+    username: string;
+    pat: string;
+  }>({ name: '', provider: 'GITHUB', username: '', pat: '' });
+
+  async function onCreate(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+    setErr(null);
+    try {
+      await createGitCredential({
+        name: form.name.trim(),
+        provider: form.provider,
+        username: form.username.trim() || undefined,
+        pat: form.pat.trim(),
+      });
+      onCreated();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('common.failed'));
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return (
+    <Modal title={t('git.add')} description={t('git.securityNote')} onClose={onClose}>
+      {err && <ErrorBox message={err} />}
+      <form onSubmit={onCreate} className="grid items-end gap-3 sm:grid-cols-2">
+        <Field label={t('git.name')}>
+          <input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder={t('git.namePlaceholder')}
+            required
+            className="field w-full"
+          />
+        </Field>
+        <Field label={t('git.provider')}>
+          <select
+            value={form.provider}
+            onChange={(e) =>
+              setForm({ ...form, provider: e.target.value as GitProvider })
+            }
+            className="field w-full"
+          >
+            <option value="GITHUB">GitHub</option>
+            <option value="GITLAB">GitLab</option>
+          </select>
+        </Field>
+        <Field label={t('git.username')}>
+          <input
+            value={form.username}
+            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            placeholder={t('git.usernamePlaceholder')}
+            className="field w-full"
+          />
+        </Field>
+        <Field label={t('git.pat')}>
+          <input
+            type="password"
+            value={form.pat}
+            onChange={(e) => setForm({ ...form, pat: e.target.value })}
+            placeholder={t('git.patPlaceholder')}
+            required
+            autoComplete="off"
+            className="field w-full"
+          />
+        </Field>
+        <div className="flex justify-end gap-2 sm:col-span-2">
+          <button type="button" onClick={onClose} className="btn-ghost">
+            {t('common.cancel')}
+          </button>
+          <button type="submit" disabled={creating} className="btn-primary">
+            {creating ? t('git.adding') : t('git.add')}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -150,6 +209,7 @@ function CredItem({
 }) {
   const { t } = useI18n();
   const [repoUrl, setRepoUrl] = useState('');
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(
     null,
@@ -195,31 +255,14 @@ function CredItem({
             </p>
           </div>
         </div>
-        <button
-          onClick={onDelete}
-          className="text-xs text-neutral-500 transition-colors hover:text-red-400"
-        >
+        <button onClick={onDelete} className="btn-danger-ghost">
           {t('common.delete')}
         </button>
       </div>
 
-      <form onSubmit={onVerify} className="mt-4 flex flex-wrap items-end gap-2">
-        <Field label={t('git.repoLabel')} className="flex-1 min-w-[16rem]">
-          <input
-            value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
-            placeholder={t('git.verifyRepoPlaceholder')}
-            className="field w-full"
-          />
-        </Field>
-        <button
-          type="submit"
-          disabled={verifying || repoUrl.trim().length === 0}
-          className="btn-ghost"
-        >
-          {verifying ? t('git.verifying') : t('git.verify')}
-        </button>
-      </form>
+      <button onClick={() => setVerifyOpen(true)} className="btn-ghost btn-sm mt-4">
+        {t('git.verify')}
+      </button>
       {result ? (
         <p
           className={`mt-2 text-xs ${
@@ -230,6 +273,40 @@ function CredItem({
         </p>
       ) : (
         <p className="mt-2 text-xs text-neutral-500">{t('git.verifyHint')}</p>
+      )}
+      {verifyOpen && (
+        <Modal
+          title={t('git.verify')}
+          description={t('git.verifyHint')}
+          onClose={() => setVerifyOpen(false)}
+        >
+          <form onSubmit={onVerify} className="space-y-4">
+            <Field label={t('git.repoLabel')}>
+              <input
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                placeholder={t('git.verifyRepoPlaceholder')}
+                className="field w-full"
+              />
+            </Field>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setVerifyOpen(false)}
+                className="btn-ghost"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={verifying || repoUrl.trim().length === 0}
+                className="btn-primary"
+              >
+                {verifying ? t('git.verifying') : t('git.verify')}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </Card>
   );

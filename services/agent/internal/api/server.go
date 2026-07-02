@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/self-hosted/agent/internal/builder"
@@ -41,9 +42,13 @@ func (s *Server) Run() error {
 
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/system", s.handleSystem)
+	s.mux.HandleFunc("GET /api/stats", s.handleNodeStats)
+	s.mux.HandleFunc("POST /api/system/prune", s.handlePrune)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/build", s.handleBuild)
 	s.mux.HandleFunc("POST /api/inspect", s.handleInspect)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/run", s.handleRun)
+	s.mux.HandleFunc("POST /api/servers/{uuid}/health", s.handleHealth)
+	s.mux.HandleFunc("POST /api/servers/{uuid}/promote", s.handlePromote)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/power", s.handlePower)
 	s.mux.HandleFunc("DELETE /api/servers/{uuid}", s.handleRemove)
 	s.mux.HandleFunc("GET /api/servers/{uuid}/logs", s.handleLogs)
@@ -110,6 +115,155 @@ func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, resp)
+}
+
+// handleNodeStats aggregates live CPU/RAM usage across all running containers
+// on the node. cpuPerc is in Docker units (100 = one core); memUsageMb is the
+// total used memory in MB. Used to show real consumption next to node capacity.
+func (s *Server) handleNodeStats(w http.ResponseWriter, r *http.Request) {
+	out, err := s.docker.StatsAll(r.Context())
+	if err != nil {
+		writeJSON(w, map[string]any{"reachable": true, "cpuPerc": 0, "memUsageMb": 0, "containers": 0})
+		return
+	}
+	var cpu, memMb float64
+	count := 0
+	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		var row struct {
+			CPUPerc  string `json:"CPUPerc"`
+			MemUsage string `json:"MemUsage"`
+		}
+		if json.Unmarshal([]byte(line), &row) != nil {
+			continue
+		}
+		cpu += parseStatsPercent(row.CPUPerc)
+		memMb += parseStatsMemMb(row.MemUsage)
+		count++
+	}
+	writeJSON(w, map[string]any{
+		"reachable":  true,
+		"cpuPerc":    round2(cpu),
+		"memUsageMb": round2(memMb),
+		"containers": count,
+	})
+}
+
+// parseStatsPercent parses "12.34%" -> 12.34.
+func parseStatsPercent(v string) float64 {
+	v = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(v), "%"))
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return 0
+	}
+	return f
+}
+
+// parseStatsMemMb parses the used side of "124MiB / 1.945GiB" into MB.
+func parseStatsMemMb(v string) float64 {
+	used := strings.TrimSpace(strings.Split(v, "/")[0])
+	if used == "" {
+		return 0
+	}
+	lower := strings.ToLower(used)
+	var mult float64 = 1.0 / (1024 * 1024) // default: bytes
+	switch {
+	case strings.HasSuffix(lower, "gib"):
+		mult = 1024
+		lower = strings.TrimSuffix(lower, "gib")
+	case strings.HasSuffix(lower, "mib"):
+		mult = 1
+		lower = strings.TrimSuffix(lower, "mib")
+	case strings.HasSuffix(lower, "kib"):
+		mult = 1.0 / 1024
+		lower = strings.TrimSuffix(lower, "kib")
+	case strings.HasSuffix(lower, "gb"):
+		mult = 1000
+		lower = strings.TrimSuffix(lower, "gb")
+	case strings.HasSuffix(lower, "mb"):
+		mult = 1
+		lower = strings.TrimSuffix(lower, "mb")
+	case strings.HasSuffix(lower, "kb"):
+		mult = 1.0 / 1000
+		lower = strings.TrimSuffix(lower, "kb")
+	case strings.HasSuffix(lower, "b"):
+		mult = 1.0 / (1024 * 1024)
+		lower = strings.TrimSuffix(lower, "b")
+	}
+	f, err := strconv.ParseFloat(strings.TrimSpace(lower), 64)
+	if err != nil {
+		return 0
+	}
+	return f * mult
+}
+
+func round2(f float64) float64 {
+	return float64(int64(f*100+0.5)) / 100
+}
+
+// handlePrune reclaims disk on the node: stopped containers, unused networks,
+// dangling images and build cache (docker system prune). Optionally removes all
+// unused images (all=true) and unused volumes (volumes=true, destructive).
+// Returns the "Total reclaimed space" summary of each step plus the fresh
+// reclaimable figure from `docker system df`.
+func (s *Server) handlePrune(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		All     bool `json:"all"`
+		Volumes bool `json:"volumes"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	ctx := r.Context()
+
+	resp := map[string]any{"ok": true}
+	if out, err := s.docker.SystemPrune(ctx, body.All); err == nil {
+		resp["system"] = reclaimedSpace(out)
+	} else {
+		resp["ok"] = false
+		resp["error"] = err.Error()
+	}
+	if out, err := s.docker.BuilderPrune(ctx); err == nil {
+		resp["builder"] = reclaimedSpace(out)
+	}
+	if body.Volumes {
+		if out, err := s.docker.VolumePrune(ctx); err == nil {
+			resp["volumes"] = reclaimedSpace(out)
+		}
+	}
+
+	// Report the remaining reclaimable image space so the UI can refresh.
+	if df, err := s.docker.SystemDf(ctx); err == nil {
+		for _, line := range strings.Split(strings.TrimSpace(df), "\n") {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			var row map[string]string
+			if json.Unmarshal([]byte(line), &row) != nil {
+				continue
+			}
+			if row["Type"] == "Images" {
+				resp["imagesReclaimable"] = row["Reclaimable"]
+			}
+		}
+	}
+	writeJSON(w, resp)
+}
+
+// reclaimedSpace extracts the human-readable size from a prune command's
+// output (e.g. "Total reclaimed space: 1.5GB" -> "1.5GB"). Falls back to "0B".
+func reclaimedSpace(out string) string {
+	for _, line := range strings.Split(out, "\n") {
+		line = strings.TrimSpace(line)
+		lower := strings.ToLower(line)
+		if strings.Contains(lower, "reclaimed space:") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				return strings.TrimSpace(parts[1])
+			}
+		}
+	}
+	return "0B"
 }
 
 // handleGC removes stale images of a service, keeping the currently used one.
@@ -236,6 +390,12 @@ type runBody struct {
 	HTTPS    bool              `json:"https"`
 	Network  string            `json:"network"`
 	Volumes  []volumeMount     `json:"volumes"`
+	// Color ('blue'|'green') runs the container as svc-<uuid>-<color> for
+	// blue-green deploys; empty keeps the legacy single-container name.
+	Color string `json:"color"`
+	// HealthPath, when set, adds a Traefik load-balancer healthcheck so the
+	// proxy never routes to a backend that is still starting.
+	HealthPath string `json:"healthPath"`
 }
 
 func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
@@ -263,7 +423,7 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 		mounts = append(mounts, docker.VolumeMount{Name: v.Name, MountPath: v.MountPath})
 	}
 
-	name := containerName(uuid)
+	name := coloredName(uuid, body.Color)
 	opts := docker.RunOptions{
 		Name:        name,
 		Image:       body.Image,
@@ -272,7 +432,7 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 		CPULimit:    body.CPULimit,
 		PublishPort: publishPort,
 		Env:         body.Env,
-		Labels:      traefikLabels(uuid, body.Domain, body.Port, body.HTTPS),
+		Labels:      traefikLabels(uuid, body.Domain, body.Port, body.HTTPS, body.HealthPath),
 		Volumes:     mounts,
 	}
 
@@ -292,7 +452,11 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 
 // traefikLabels wires a service container into the Traefik reverse proxy.
 // Returns no labels when no domain is attached (internal-only service).
-func traefikLabels(uuid, domain string, port int, https bool) []string {
+// The router/service name is color-agnostic (svc-<uuid>) so both blue and green
+// containers register as two servers of one Traefik service — enabling a smooth
+// overlap during blue-green switchover. When healthPath is set, a load-balancer
+// healthcheck keeps Traefik from routing to a backend that is still starting.
+func traefikLabels(uuid, domain string, port int, https bool, healthPath string) []string {
 	if domain == "" {
 		return nil
 	}
@@ -301,6 +465,13 @@ func traefikLabels(uuid, domain string, port int, https bool) []string {
 		"traefik.enable=true",
 		fmt.Sprintf("traefik.http.routers.%s.rule=%s", router, traefikHostRule(domain)),
 		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port=%d", router, port),
+	}
+	if healthPath != "" {
+		labels = append(labels,
+			fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.path=%s", router, healthPath),
+			fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.interval=3s", router),
+			fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.timeout=3s", router),
+		)
 	}
 	if https {
 		resolver := acmeCertResolver()
@@ -350,9 +521,80 @@ func traefikHostRule(domain string) string {
 
 func (s *Server) handleRemove(w http.ResponseWriter, r *http.Request) {
 	uuid := r.PathValue("uuid")
-	if err := s.docker.Remove(context.Background(), containerName(uuid)); err != nil {
-		writeJSON(w, map[string]any{"ok": false, "error": err.Error()})
+	// Optional ?color=blue|green removes a single color instance (blue-green
+	// cleanup); without it, all instances of the service are removed.
+	color := r.URL.Query().Get("color")
+	ctx := context.Background()
+	if color != "" {
+		if err := s.docker.Remove(ctx, coloredName(uuid, color)); err != nil {
+			writeJSON(w, map[string]any{"ok": false, "error": err.Error()})
+			return
+		}
+		writeJSON(w, map[string]any{"ok": true})
 		return
+	}
+	for _, name := range serviceContainers(uuid) {
+		_ = s.docker.Remove(ctx, name)
+	}
+	writeJSON(w, map[string]any{"ok": true})
+}
+
+type healthBody struct {
+	Color    string `json:"color"`
+	Port     int    `json:"port"`
+	Path     string `json:"path"`
+	Network  string `json:"network"`
+	TimeoutS int    `json:"timeoutS"`
+}
+
+// handleHealth performs a single HTTP probe against a color instance from inside
+// the Docker network. The control plane polls this endpoint to health-gate a
+// blue-green switchover.
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	uuid := r.PathValue("uuid")
+	var body healthBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	network := body.Network
+	if network == "" {
+		network = s.cfg.Network
+	}
+	path := body.Path
+	if path == "" {
+		path = "/"
+	}
+	target := fmt.Sprintf("%s:%d", coloredName(uuid, body.Color), body.Port)
+	code, err := s.docker.HTTPProbe(r.Context(), network, target, path, body.TimeoutS)
+	healthy := err == nil && code >= 200 && code < 400
+	resp := map[string]any{"ok": true, "healthy": healthy, "code": code}
+	if err != nil {
+		resp["error"] = err.Error()
+	}
+	writeJSON(w, resp)
+}
+
+type promoteBody struct {
+	KeepColor string `json:"keepColor"`
+}
+
+// handlePromote retires every instance of the service except the kept color
+// (the freshly health-checked one), completing a blue-green switchover.
+func (s *Server) handlePromote(w http.ResponseWriter, r *http.Request) {
+	uuid := r.PathValue("uuid")
+	var body promoteBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	keep := coloredName(uuid, body.KeepColor)
+	ctx := context.Background()
+	for _, name := range serviceContainers(uuid) {
+		if name == keep {
+			continue
+		}
+		_ = s.docker.Remove(ctx, name)
 	}
 	writeJSON(w, map[string]any{"ok": true})
 }
@@ -368,7 +610,8 @@ func (s *Server) handlePower(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	if err := s.docker.Power(context.Background(), containerName(uuid), body.Action); err != nil {
+	name := s.resolveContainer(context.Background(), uuid)
+	if err := s.docker.Power(context.Background(), name, body.Action); err != nil {
 		writeJSON(w, map[string]any{"ok": false, "error": err.Error()})
 		return
 	}
@@ -378,14 +621,15 @@ func (s *Server) handlePower(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
 	uuid := r.PathValue("uuid")
 	flusher, _ := w.(http.Flusher)
-	_ = s.docker.Logs(r.Context(), containerName(uuid), &flushWriter{w: w, f: flusher})
+	name := s.resolveContainer(r.Context(), uuid)
+	_ = s.docker.Logs(r.Context(), name, &flushWriter{w: w, f: flusher})
 }
 
 // handleStats returns a live resource + health snapshot for a service container.
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 	uuid := r.PathValue("uuid")
-	name := containerName(uuid)
 	ctx := r.Context()
+	name := s.resolveContainer(ctx, uuid)
 
 	state, err := s.docker.Inspect(ctx, name, "{{.State.Status}}")
 	if err != nil || state == "" {
@@ -418,6 +662,48 @@ func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func containerName(uuid string) string { return "svc-" + uuid }
+
+// coloredName is the container name for a blue-green color; an empty color maps
+// to the legacy single-container name.
+func coloredName(uuid, color string) string {
+	if color == "" {
+		return containerName(uuid)
+	}
+	return "svc-" + uuid + "-" + color
+}
+
+// serviceContainers lists every possible container name for a service (legacy +
+// both colors), used for cleanup/promotion.
+func serviceContainers(uuid string) []string {
+	return []string{
+		containerName(uuid),
+		coloredName(uuid, "blue"),
+		coloredName(uuid, "green"),
+	}
+}
+
+// resolveContainer picks the live container name for a service: prefer a running
+// instance, else any that exists, else the legacy name. Lets stats/logs/power/
+// exec work regardless of blue-green color without the caller knowing it.
+func (s *Server) resolveContainer(ctx context.Context, uuid string) string {
+	existing := ""
+	for _, name := range serviceContainers(uuid) {
+		state, err := s.docker.Inspect(ctx, name, "{{.State.Running}}")
+		if err != nil {
+			continue
+		}
+		if strings.TrimSpace(state) == "true" {
+			return name
+		}
+		if existing == "" {
+			existing = name
+		}
+	}
+	if existing != "" {
+		return existing
+	}
+	return containerName(uuid)
+}
 
 func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")

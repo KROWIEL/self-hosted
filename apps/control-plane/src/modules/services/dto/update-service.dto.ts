@@ -36,4 +36,17 @@ export class UpdateServiceDto {
   @IsInt()
   @Min(16)
   memLimit?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  zeroDowntime?: boolean;
+
+  @IsOptional()
+  @IsString()
+  healthcheckPath?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(5)
+  healthTimeoutS?: number;
 }

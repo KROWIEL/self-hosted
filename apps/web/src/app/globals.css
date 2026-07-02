@@ -77,6 +77,18 @@
     @apply inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-300 transition-all duration-200 hover:bg-red-500/20 active:scale-[0.98] disabled:opacity-50;
   }
 
+  .btn-sm {
+    @apply h-9 rounded-lg px-3 py-1.5 text-xs;
+  }
+
+  .btn-danger-ghost {
+    @apply inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-red-500/20 bg-red-500/[0.04] px-3 py-1.5 text-xs font-medium text-red-300 transition-all duration-200 hover:border-red-400/35 hover:bg-red-500/10 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .card-actions {
+    @apply flex flex-wrap items-center justify-end gap-2;
+  }
+
   .field {
     @apply w-full rounded-xl border border-white/10 bg-ink-900/60 px-3.5 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 outline-none transition-all duration-200 focus:border-indigo-400/60 focus:bg-ink-900 focus:ring-2 focus:ring-indigo-500/20;
   }

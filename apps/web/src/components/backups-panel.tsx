@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useI18n } from '@/i18n';
+import { useConfirmDialog } from '@/components/ui';
 import {
   Backup,
   BackupKind,
@@ -36,6 +37,7 @@ export function BackupsPanel({
   refId: string;
 }) {
   const { t } = useI18n();
+  const { confirm, dialog } = useConfirmDialog();
   const [items, setItems] = useState<Backup[]>([]);
   const [schedules, setSchedules] = useState<BackupSchedule[]>([]);
   const [busy, setBusy] = useState(false);
@@ -69,7 +71,16 @@ export function BackupsPanel({
   }
 
   async function onRestore(b: Backup) {
-    if (!confirm(t('backup.restoreConfirm'))) return;
+    if (
+      !(await confirm({
+        title: t('backup.restore'),
+        message: t('backup.restoreConfirm'),
+        confirmLabel: t('backup.restore'),
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     setBusyId(b.id);
     try {
       await restoreBackup(b.id);
@@ -82,7 +93,16 @@ export function BackupsPanel({
   }
 
   async function onDelete(b: Backup) {
-    if (!confirm(t('backup.deleteConfirm'))) return;
+    if (
+      !(await confirm({
+        title: t('backup.delete'),
+        message: t('backup.deleteConfirm'),
+        confirmLabel: t('backup.delete'),
+        tone: 'danger',
+      }))
+    ) {
+      return;
+    }
     setBusyId(b.id);
     try {
       await deleteBackup(b.id);
@@ -111,7 +131,7 @@ export function BackupsPanel({
         <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
           {t('backup.title')}
         </span>
-        <button onClick={onBackup} disabled={busy} className="btn-ghost text-xs">
+        <button onClick={onBackup} disabled={busy} className="btn-ghost btn-sm">
           {busy ? t('backup.running') : t('backup.now')}
         </button>
       </div>
@@ -166,7 +186,7 @@ export function BackupsPanel({
                 <button
                   onClick={() => onDelete(b)}
                   disabled={busyId === b.id}
-                  className="btn-danger px-2 py-0.5 text-xs"
+                  className="btn-danger-ghost"
                 >
                   {t('backup.delete')}
                 </button>
@@ -195,7 +215,7 @@ export function BackupsPanel({
                 </span>
                 <button
                   onClick={() => deleteBackupSchedule(s.id).then(refresh)}
-                  className="btn-danger ml-auto px-2 py-0.5 text-xs"
+                  className="btn-danger-ghost ml-auto"
                 >
                   {t('backup.delete')}
                 </button>
@@ -218,12 +238,13 @@ export function BackupsPanel({
             className="field w-20 text-xs"
             title={t('backup.keepLast')}
           />
-          <button onClick={onAddSchedule} disabled={busy} className="btn-ghost text-xs">
+          <button onClick={onAddSchedule} disabled={busy} className="btn-ghost btn-sm">
             {t('backup.addSchedule')}
           </button>
         </div>
         <p className="mt-1 text-xs text-neutral-500">{t('backup.scheduleHint')}</p>
       </div>
+      {dialog}
     </div>
   );
 }
