@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   Deployment,
+  DeployPhase,
+  DeployStatus,
   EnvVar,
   GitCredential,
   Service,
@@ -259,6 +261,7 @@ export default function ServicePage() {
             <div className="md:col-span-2 xl:col-span-2">
               <DeploymentsPanel
                 deployments={deployments}
+                zeroDowntime={service.zeroDowntime}
                 openLog={openLog}
                 setOpenLog={setOpenLog}
                 busy={busy}
@@ -464,6 +467,7 @@ function ServiceResourceSummary({ service, id }: { service: Service; id: string 
 
 function DeploymentsPanel({
   deployments,
+  zeroDowntime,
   openLog,
   setOpenLog,
   busy,
@@ -472,6 +476,7 @@ function DeploymentsPanel({
   onRollback,
 }: {
   deployments: Deployment[];
+  zeroDowntime: boolean;
   openLog: string | null;
   setOpenLog: (id: string | null) => void;
   busy: boolean;
@@ -488,6 +493,7 @@ function DeploymentsPanel({
         <div className="space-y-2">
           <DeploymentCard
             d={deployments[0]}
+            zeroDowntime={zeroDowntime}
             openLog={openLog}
             setOpenLog={setOpenLog}
             busy={busy}
@@ -510,6 +516,7 @@ function DeploymentsPanel({
                   <DeploymentCard
                     key={d.id}
                     d={d}
+                    zeroDowntime={zeroDowntime}
                     openLog={openLog}
                     setOpenLog={setOpenLog}
                     busy={busy}
@@ -867,14 +874,100 @@ function TerminalModal({
   );
 }
 
+/**
+ * Compact horizontal stepper for a deployment's pipeline. Blue-green deploys
+ * show Build → Health → Switchover → Live; in-place deploys show Build →
+ * Deploy → Live. The current phase is highlighted; a failed phase turns red.
+ */
+function DeployStepper({
+  phase,
+  status,
+  zeroDowntime,
+}: {
+  phase: DeployPhase;
+  status: DeployStatus;
+  zeroDowntime: boolean;
+}) {
+  const { t } = useI18n();
+  const isZdd =
+    phase === 'start' || phase === 'health' || phase === 'switch'
+      ? true
+      : phase === 'run'
+        ? false
+        : zeroDowntime;
+
+  const steps = isZdd
+    ? [
+        { key: 'build', label: t('service.stepBuild') },
+        { key: 'health', label: t('service.stepHealth') },
+        { key: 'switch', label: t('service.stepSwitchover') },
+        { key: 'live', label: t('service.stepLive') },
+      ]
+    : [
+        { key: 'build', label: t('service.stepBuild') },
+        { key: 'run', label: t('service.stepDeploy') },
+        { key: 'live', label: t('service.stepLive') },
+      ];
+
+  // Map the persisted phase onto a step index within the chosen template.
+  const phaseIndex: Record<DeployPhase, number> = isZdd
+    ? { build: 0, start: 1, health: 1, switch: 2, run: 1 }
+    : { build: 0, run: 1, start: 1, health: 1, switch: 1 };
+  const succeeded = status === 'SUCCESS';
+  const failed = status === 'FAILED';
+  const current = succeeded ? steps.length - 1 : phaseIndex[phase];
+
+  return (
+    <ol className="mt-3 flex items-center gap-1.5 text-xs">
+      {steps.map((step, i) => {
+        const state =
+          succeeded || i < current
+            ? 'done'
+            : i === current
+              ? failed
+                ? 'failed'
+                : 'active'
+              : 'pending';
+        const dot =
+          state === 'done'
+            ? 'bg-emerald-400 border-emerald-400'
+            : state === 'active'
+              ? 'border-indigo-400 bg-indigo-400/20 animate-pulse'
+              : state === 'failed'
+                ? 'bg-red-400 border-red-400'
+                : 'border-white/15 bg-transparent';
+        const text =
+          state === 'pending'
+            ? 'text-neutral-600'
+            : state === 'failed'
+              ? 'text-red-300'
+              : state === 'active'
+                ? 'text-indigo-300'
+                : 'text-neutral-300';
+        return (
+          <li key={step.key} className="flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full border ${dot}`} />
+            <span className={text}>{step.label}</span>
+            {i < steps.length - 1 && (
+              <span className="mx-0.5 h-px w-4 bg-white/10" />
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function DeploymentCard({
   d,
+  zeroDowntime,
   openLog,
   setOpenLog,
   busy,
   onRollback,
 }: {
   d: Deployment;
+  zeroDowntime: boolean;
   openLog: string | null;
   setOpenLog: (id: string | null) => void;
   busy: boolean;
@@ -927,6 +1020,13 @@ function DeploymentCard({
           )}
         </div>
       </div>
+      {d.phase && (
+        <DeployStepper
+          phase={d.phase}
+          status={d.status}
+          zeroDowntime={zeroDowntime}
+        />
+      )}
       {active ? (
         <BuildLogStream deploymentId={d.id} />
       ) : (

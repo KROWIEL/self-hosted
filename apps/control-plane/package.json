@@ -36,6 +36,7 @@
     "postgres": "^3.4.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "undici": "^8.7.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

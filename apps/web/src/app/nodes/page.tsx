@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   AgentStatus,
   Node,
+  NodeInstall,
   NodePruneResult,
   NodeStats,
   NodeSystem,
@@ -12,7 +13,9 @@ import {
   NodeWorkloads,
   PlatformResourceSummary,
   createNode,
+  createRemoteNode,
   deleteNode,
+  getNodeInstall,
   getPlatformResourceSummary,
   getNodeSystem,
   getNodeStats,
@@ -52,6 +55,7 @@ export default function NodesPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [remoteOpen, setRemoteOpen] = useState(false);
   const [newToken, setNewToken] = useState<NodeWithToken | null>(null);
 
   function load() {
@@ -65,7 +69,19 @@ export default function NodesPage() {
       .finally(() => setLoading(false));
   }
 
-  useEffect(load, []);
+  // Silent refresh (no spinner) so remote heartbeat status stays current.
+  function refreshQuiet() {
+    listNodes()
+      .then(setNodes)
+      .catch(() => undefined);
+  }
+
+  useEffect(() => {
+    load();
+    const timer = setInterval(refreshQuiet, 8000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onDelete(id: string) {
     if (
@@ -92,9 +108,20 @@ export default function NodesPage() {
         title={t('nodes.title')}
         subtitle={t('nodes.subtitle')}
         action={
-          <button onClick={() => setCreateOpen(true)} className="btn-primary">
-            {t('nodes.add')}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="btn-ghost whitespace-nowrap"
+            >
+              {t('nodes.addLocal')}
+            </button>
+            <button
+              onClick={() => setRemoteOpen(true)}
+              className="btn-primary whitespace-nowrap"
+            >
+              {t('nodes.addRemote')}
+            </button>
+          </div>
         }
       />
 
@@ -153,6 +180,15 @@ AGENT_PORT=${newToken.agentPort} go run ./cmd/agent`}
           onCreated={(node) => {
             setCreateOpen(false);
             setNewToken(node);
+            load();
+          }}
+        />
+      )}
+      {remoteOpen && (
+        <RemoteNodeModal
+          onClose={() => setRemoteOpen(false)}
+          onCreated={() => {
+            setRemoteOpen(false);
             load();
           }}
         />
@@ -308,6 +344,187 @@ function CreateNodeModal({
   );
 }
 
+function CmdBlock({ label, cmd }: { label: string; cmd: string }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(cmd);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard may be unavailable */
+    }
+  }
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-xs font-medium text-neutral-400">{label}</p>
+        <button
+          onClick={copy}
+          className="text-xs text-indigo-300 transition-colors hover:text-indigo-200"
+        >
+          {copied ? t('service.copied') : t('service.copy')}
+        </button>
+      </div>
+      <pre className="overflow-x-auto rounded-xl bg-ink-950/80 p-3 font-mono text-xs text-neutral-300 ring-1 ring-white/5">
+        {cmd}
+      </pre>
+    </div>
+  );
+}
+
+function RemoteNodeModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const { t } = useI18n();
+  const [form, setForm] = useState({ name: '', fqdn: '', agentPort: 8443 });
+  const [creating, setCreating] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [install, setInstall] = useState<NodeInstall | null>(null);
+
+  async function onCreate(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+    setErr(null);
+    try {
+      const node = await createRemoteNode({
+        name: form.name.trim(),
+        fqdn: form.fqdn.trim(),
+        agentPort: Number(form.agentPort),
+      });
+      const info = await getNodeInstall(node.id);
+      setInstall(info);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t('common.failed'));
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return (
+    <Modal
+      title={t('nodes.addRemoteTitle')}
+      description={t('nodes.addRemoteHint')}
+      onClose={install ? onCreated : onClose}
+      className="max-w-2xl"
+      footer={
+        install ? (
+          <button type="button" onClick={onCreated} className="btn-primary">
+            {t('common.done')}
+          </button>
+        ) : (
+          <>
+            <button type="button" onClick={onClose} className="btn-ghost">
+              {t('common.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="remote-node-form"
+              disabled={creating}
+              className="btn-primary"
+            >
+              {creating ? t('nodes.adding') : t('nodes.add')}
+            </button>
+          </>
+        )
+      }
+    >
+      {err && <ErrorBox message={err} />}
+      {!install ? (
+        <form id="remote-node-form" onSubmit={onCreate} className="space-y-3">
+          <div className="grid items-start gap-3 sm:grid-cols-2">
+            <Field label={t('nodes.nameLabel')} hint={t('nodes.nameHint')}>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder={t('nodes.namePlaceholder')}
+                required
+                className="field w-full"
+              />
+            </Field>
+            <Field label={t('nodes.fqdnLabel')} hint={t('nodes.fqdnHint')}>
+              <input
+                value={form.fqdn}
+                onChange={(e) => setForm({ ...form, fqdn: e.target.value })}
+                placeholder={t('nodes.fqdnPlaceholder')}
+                required
+                className="field w-full"
+              />
+            </Field>
+            <Field label={t('nodes.portLabel')} hint={t('nodes.portHint')}>
+              <input
+                type="number"
+                value={form.agentPort}
+                onChange={(e) =>
+                  setForm({ ...form, agentPort: Number(e.target.value) })
+                }
+                placeholder={t('nodes.portPlaceholder')}
+                className="field w-full"
+              />
+            </Field>
+          </div>
+        </form>
+      ) : (
+        <div className="space-y-4">
+          <p className="rounded-xl border border-amber-400/30 bg-amber-400/[0.06] p-3 text-sm text-amber-200">
+            {t('nodes.installBody')}
+          </p>
+          <CmdBlock label={t('nodes.installCommand')} cmd={install.commands.linux} />
+          <p className="text-xs text-neutral-500">{t('nodes.joinTokenNote')}</p>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function NodeInstallModal({
+  node,
+  onClose,
+}: {
+  node: Node;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const [install, setInstall] = useState<NodeInstall | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    getNodeInstall(node.id)
+      .then(setInstall)
+      .catch((e) => setErr(e instanceof Error ? e.message : t('common.failed')));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node.id]);
+
+  return (
+    <Modal
+      title={t('nodes.installTitle')}
+      description={t('nodes.installBody')}
+      onClose={onClose}
+      className="max-w-2xl"
+      footer={
+        <button type="button" onClick={onClose} className="btn-primary">
+          {t('common.close')}
+        </button>
+      }
+    >
+      {err && <ErrorBox message={err} />}
+      {!install ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-4">
+          <CmdBlock label={t('nodes.installCommand')} cmd={install.commands.linux} />
+          <p className="text-xs text-neutral-500">{t('nodes.joinTokenNote')}</p>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 function NodeItem({
   node,
   platform,
@@ -331,6 +548,9 @@ function NodeItem({
   const [showLogs, setShowLogs] = useState(false);
   const [capacityOpen, setCapacityOpen] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+
+  const isRemote = node.remote;
 
   useEffect(() => {
     getNodeWorkloads(node.id)
@@ -339,6 +559,17 @@ function NodeItem({
   }, [node.id]);
 
   async function refresh() {
+    // Remote agents run elsewhere: poll their Docker metrics directly (over the
+    // pinned TLS channel). Local dev agents are gated on the panel-side runner.
+    if (isRemote) {
+      getNodeSystem(node.id)
+        .then(setSystem)
+        .catch(() => setSystem(null));
+      getNodeStats(node.id)
+        .then(setStats)
+        .catch(() => setStats(null));
+      return;
+    }
     try {
       const status = await nodeAgentStatus(node.id);
       setAgent(status);
@@ -390,7 +621,11 @@ function NodeItem({
   }
 
   const disabled = busy || agent?.enabled === false;
-  const nodeStatus = agent?.running ? 'RUNNING' : 'STOPPED';
+  const nodeStatus = isRemote
+    ? node.status
+    : agent?.running
+      ? 'RUNNING'
+      : 'STOPPED';
 
   return (
     <Card hover accentTone={statusTone(nodeStatus)}>
@@ -422,6 +657,21 @@ function NodeItem({
             <p className="font-mono text-xs text-neutral-500">
               {node.fqdn}:{node.agentPort}
             </p>
+            {isRemote && (
+              <p className="mt-0.5 text-xs text-neutral-600">
+                {node.agentVersion
+                  ? t('nodes.agentVersion', { version: node.agentVersion })
+                  : t('nodes.notEnrolled')}
+                {node.lastSeen && (
+                  <>
+                    {' · '}
+                    {t('nodes.lastSeen', {
+                      time: new Date(node.lastSeen).toLocaleString(),
+                    })}
+                  </>
+                )}
+              </p>
+            )}
             <p className="mt-1 font-mono text-xs text-neutral-600">
               {formatCpu(node.cpuTotal ?? 0)} CPU
               {stats?.reachable && (node.cpuTotal ?? 0) > 0 && (
@@ -440,21 +690,36 @@ function NodeItem({
           </div>
         </div>
         <div className="card-actions">
-          <button
-            onClick={toggle}
-            disabled={disabled}
-            title={agent?.enabled === false ? t('nodes.disabledTitle') : undefined}
-            className={agent?.running ? 'btn-ghost btn-sm' : 'btn-primary btn-sm'}
-          >
-            {busy ? '…' : agent?.running ? t('nodes.stop') : t('nodes.start')}
-          </button>
-          {agent && agent.logs.length > 0 && (
+          {isRemote ? (
             <button
-              onClick={() => setShowLogs((s) => !s)}
+              onClick={() => setInstallOpen(true)}
               className="btn-ghost btn-sm"
             >
-              {showLogs ? t('nodes.hideLog') : t('nodes.log')}
+              {t('nodes.installCommand')}
             </button>
+          ) : (
+            <>
+              <button
+                onClick={toggle}
+                disabled={disabled}
+                title={
+                  agent?.enabled === false ? t('nodes.disabledTitle') : undefined
+                }
+                className={
+                  agent?.running ? 'btn-ghost btn-sm' : 'btn-primary btn-sm'
+                }
+              >
+                {busy ? '…' : agent?.running ? t('nodes.stop') : t('nodes.start')}
+              </button>
+              {agent && agent.logs.length > 0 && (
+                <button
+                  onClick={() => setShowLogs((s) => !s)}
+                  className="btn-ghost btn-sm"
+                >
+                  {showLogs ? t('nodes.hideLog') : t('nodes.log')}
+                </button>
+              )}
+            </>
           )}
           <button
             onClick={() => setCapacityOpen(true)}
@@ -462,7 +727,7 @@ function NodeItem({
           >
             {t('resources.configureCapacity')}
           </button>
-          {agent?.running && (
+          {(agent?.running || (isRemote && system?.reachable !== false)) && (
             <button
               onClick={() => setCleanupOpen(true)}
               className="btn-ghost btn-sm"
@@ -591,6 +856,9 @@ function NodeItem({
           onClose={() => setCleanupOpen(false)}
           onDone={refresh}
         />
+      )}
+      {installOpen && (
+        <NodeInstallModal node={node} onClose={() => setInstallOpen(false)} />
       )}
       {dialog}
     </Card>

@@ -21,6 +21,7 @@ export const en = {
   'common.confirm': 'Confirm',
   'common.saved': 'Saved',
   'common.close': 'Close',
+  'common.done': 'Done',
 
   // Cleanup / prune
   'cleanup.button': 'Clean up',
@@ -135,6 +136,20 @@ export const en = {
   'nodes.capacityHint':
     'Capacity is how much of this machine you allow the platform to use for workloads. The recommended mark is only a small baseline for the node agent/runtime overhead, not a limit for all services.',
   'nodes.add': 'Add node',
+  'nodes.addLocal': 'Local agent',
+  'nodes.addRemote': 'Add remote node',
+  'nodes.addRemoteTitle': 'Add a remote node',
+  'nodes.addRemoteHint':
+    'Register a server, then run one command on it to install and enroll the agent over TLS.',
+  'nodes.installTitle': 'Install command',
+  'nodes.installBody':
+    'Run this on the target server (Docker + root required). The agent generates a TLS identity, enrolls with the panel using a one-time token, and comes online automatically.',
+  'nodes.installCommand': 'Install command (Linux)',
+  'nodes.joinTokenNote':
+    'The join token is one-time and expires in 1 hour. Re-open this dialog to generate a fresh command.',
+  'nodes.agentVersion': 'agent {version}',
+  'nodes.lastSeen': 'last seen {time}',
+  'nodes.notEnrolled': 'awaiting enrollment',
   'nodes.adding': 'Adding…',
   'nodes.empty': 'No nodes registered yet.',
   'nodes.start': 'Start agent',
@@ -396,6 +411,11 @@ export const en = {
   'service.activeColor': 'Active instance',
   'service.zeroDowntimeVolumeWarn':
     'Unavailable while the service has persistent volumes — two instances would share the same volume.',
+  'service.stepBuild': 'Build',
+  'service.stepHealth': 'Health',
+  'service.stepSwitchover': 'Switchover',
+  'service.stepDeploy': 'Deploy',
+  'service.stepLive': 'Live',
   'service.deploymentsShowAll': 'Show history ({count})',
   'service.deploymentsHide': 'Hide history',
   'service.terminal': 'Terminal',

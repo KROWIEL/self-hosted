@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PowerAction } from '@selfhosted/shared';
+import { Agent } from 'undici';
+import { connect as tlsConnect } from 'node:tls';
 import { nodes } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
 
 export type NodeRow = typeof nodes.$inferSelect;
+
+// The dispatcher type accepted by Node's global fetch (from undici-types).
+type FetchDispatcher = NonNullable<Parameters<typeof fetch>[1]>['dispatcher'];
 
 export interface AgentBuildInput {
   serviceId: string;
@@ -176,9 +181,56 @@ export interface AgentBackupInput {
 export class AgentClient {
   constructor(private readonly crypto: CryptoService) {}
 
+  // Per-node undici dispatchers that pin the agent's self-signed cert by its
+  // SHA-256 fingerprint (captured at enrollment). Cached to reuse connections.
+  private readonly dispatchers = new Map<string, Agent>();
+
   private baseUrl(node: NodeRow): string {
     const scheme = process.env.AGENT_INSECURE_HTTP === '1' ? 'http' : 'https';
     return `${scheme}://${node.fqdn}:${node.agentPort}/api`;
+  }
+
+  /**
+   * Returns a fetch dispatcher that verifies the node's pinned TLS fingerprint.
+   * Undefined for local http dev or nodes that haven't enrolled a fingerprint
+   * yet (in which case standard TLS verification applies).
+   */
+  private dispatcher(node: NodeRow): FetchDispatcher {
+    if (process.env.AGENT_INSECURE_HTTP === '1') return undefined;
+    if (!node.tlsFingerprint) return undefined;
+    const key = `${node.fqdn}:${node.agentPort}:${node.tlsFingerprint}`;
+    const cached = this.dispatchers.get(key);
+    if (cached) return cached as unknown as FetchDispatcher;
+    const expected = node.tlsFingerprint.toLowerCase().replace(/:/g, '');
+    const agent = new Agent({
+      connect: (opts, cb) => {
+        const socket = tlsConnect(
+          {
+            host: opts.hostname,
+            port: Number(opts.port),
+            servername: node.fqdn,
+            rejectUnauthorized: false,
+          },
+          () => {
+            const fp = (socket.getPeerCertificate().fingerprint256 || '')
+              .toLowerCase()
+              .replace(/:/g, '');
+            if (fp !== expected) {
+              socket.destroy();
+              cb(new Error(`agent ${node.name}: TLS fingerprint mismatch`), null);
+              return;
+            }
+            cb(null, socket);
+          },
+        );
+        socket.on('error', (err) => cb(err, null));
+      },
+    });
+    this.dispatchers.set(key, agent);
+    // The `undici` package's Agent type differs nominally from the Dispatcher
+    // baked into Node's global fetch (undici-types); they are compatible at
+    // runtime, so bridge the type here.
+    return agent as unknown as FetchDispatcher;
   }
 
   private async request<T>(
@@ -187,14 +239,16 @@ export class AgentClient {
     init: RequestInit = {},
   ): Promise<T> {
     const token = this.crypto.decrypt(node.daemonToken);
-    const res = await fetch(`${this.baseUrl(node)}${path}`, {
+    const init2 = {
       ...init,
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
         ...(init.headers ?? {}),
       },
-    });
+      dispatcher: this.dispatcher(node),
+    };
+    const res = await fetch(`${this.baseUrl(node)}${path}`, init2);
     if (!res.ok) {
       throw new Error(
         `Agent ${node.name} responded ${res.status}: ${await res.text()}`,
@@ -282,6 +336,7 @@ export class AgentClient {
       `${this.baseUrl(node)}/servers/${input.serviceId}/build`,
       {
         method: 'POST',
+        dispatcher: this.dispatcher(node),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -503,7 +558,11 @@ export class AgentClient {
     const token = this.crypto.decrypt(node.daemonToken);
     const res = await fetch(
       `${this.baseUrl(node)}/backups/download?file=${encodeURIComponent(file)}`,
-      { headers: { Authorization: `Bearer ${token}` }, signal },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+        dispatcher: this.dispatcher(node),
+      },
     );
     if (!res.ok || !res.body) {
       throw new Error(`Agent ${node.name} download HTTP ${res.status}`);
@@ -538,6 +597,7 @@ export class AgentClient {
     const res = await fetch(`${this.baseUrl(node)}/servers/${serviceId}/logs`, {
       headers: { Authorization: `Bearer ${token}` },
       signal,
+      dispatcher: this.dispatcher(node),
     });
     if (!res.ok || !res.body) {
       throw new Error(`Agent ${node.name} logs HTTP ${res.status}`);

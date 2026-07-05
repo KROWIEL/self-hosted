@@ -134,7 +134,7 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
         });
         await this.setService(serviceId, { status: 'BUILDING' });
       } else {
-        await this.setDeploy(deploymentId, { status: 'BUILDING' });
+        await this.setDeploy(deploymentId, { status: 'BUILDING', phase: 'build' });
         await this.setService(serviceId, { status: 'BUILDING' });
 
         const build = await this.agent.build(
@@ -192,6 +192,7 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
           volumes: volumeMounts,
         });
       } else {
+        await this.setDeploy(deploymentId, { phase: 'run' });
         const run = await this.agent.run(node, {
           serviceId,
           image: imageTag,
@@ -274,6 +275,7 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
     const healthPath = svc.healthcheckPath ?? tpl.healthcheckPath ?? '/';
     const timeoutS = svc.healthTimeoutS ?? 60;
 
+    await this.setDeploy(deploymentId, { phase: 'start' });
     await this.buildLog.publish(
       deploymentId,
       `>> zero-downtime: starting ${newColor} instance\n`,
@@ -295,6 +297,7 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
       throw new Error(run.error ?? 'agent run failed');
     }
 
+    await this.setDeploy(deploymentId, { phase: 'health' });
     await this.buildLog.publish(
       deploymentId,
       `>> health-gating ${newColor} at ${healthPath} (timeout ${timeoutS}s)\n`,
@@ -321,6 +324,7 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
       throw new Error(`health check failed for ${newColor} instance`);
     }
 
+    await this.setDeploy(deploymentId, { phase: 'switch' });
     await this.buildLog.publish(
       deploymentId,
       `>> ${newColor} healthy — switching traffic and retiring old instance\n`,

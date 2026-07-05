@@ -40,7 +40,15 @@ func (s *Server) Run() error {
 	return http.ListenAndServe(addr, s.auth(s.mux))
 }
 
+// RunTLS serves over HTTPS using the agent's persistent self-signed cert. The
+// control plane trusts it via a pinned fingerprint captured at enrollment.
+func (s *Server) RunTLS(certPath, keyPath string) error {
+	addr := fmt.Sprintf(":%d", s.cfg.Port)
+	return http.ListenAndServeTLS(addr, certPath, keyPath, s.auth(s.mux))
+}
+
 func (s *Server) routes() {
+	s.mux.HandleFunc("GET /api/version", s.handleVersion)
 	s.mux.HandleFunc("GET /api/system", s.handleSystem)
 	s.mux.HandleFunc("GET /api/stats", s.handleNodeStats)
 	s.mux.HandleFunc("POST /api/system/prune", s.handlePrune)
@@ -81,9 +89,13 @@ func (s *Server) auth(next http.Handler) http.Handler {
 	})
 }
 
+func (s *Server) handleVersion(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, map[string]any{"version": config.Version})
+}
+
 func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	resp := map[string]any{"version": "0.1.0"}
+	resp := map[string]any{"version": config.Version}
 
 	if running, err := s.docker.Ps(ctx, false); err == nil {
 		resp["containersRunning"] = countLines(running)

@@ -6,8 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import {
   IsBoolean,
   IsInt,
@@ -41,6 +43,19 @@ class CreateNodeDto {
   @IsInt()
   @Min(16)
   memTotal?: number;
+}
+
+class CreateRemoteNodeDto {
+  @IsString()
+  @MinLength(1)
+  name: string;
+
+  @IsString()
+  fqdn: string;
+
+  @IsOptional()
+  @IsInt()
+  agentPort?: number;
 }
 
 class UpdateNodeCapacityDto {
@@ -79,6 +94,18 @@ export class NodesController {
   @Post()
   create(@Body() dto: CreateNodeDto) {
     return this.nodes.create(dto);
+  }
+
+  /** Register a remote node (agent installed on another server). */
+  @Post('remote')
+  createRemote(@Body() dto: CreateRemoteNodeDto) {
+    return this.nodes.createRemote(dto);
+  }
+
+  /** One-time join token + ready-to-paste install command for a remote node. */
+  @Get(':id/install')
+  install(@Param('id') id: string, @Req() req: Request) {
+    return this.nodes.installInfo(id, this.origin(req));
   }
 
   @Get(':id')
@@ -142,5 +169,11 @@ export class NodesController {
   @Get(':id/workloads')
   workloads(@Param('id') id: string) {
     return this.nodes.workloads(id);
+  }
+
+  private origin(req: Request): string {
+    if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL;
+    const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol;
+    return `${proto}://${req.get('host')}`;
   }
 }

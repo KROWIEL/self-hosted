@@ -63,8 +63,29 @@ export const nodes = pgTable('nodes', {
   cpuTotal: integer('cpu_total'),
   memTotal: integer('mem_total'),
   diskTotal: integer('disk_total'),
+  // Remote-node fields (Track 4). `remote` marks a node whose agent runs on
+  // another server (self-enrolls) vs the local dev agent spawned by the panel.
+  // Pinned self-signed cert fingerprint (SHA-256 hex) captured at enrollment;
+  // reported agent version; last heartbeat time.
+  remote: boolean('remote').notNull().default(false),
+  tlsFingerprint: text('tls_fingerprint'),
+  agentVersion: text('agent_version'),
+  lastSeen: timestamp('last_seen'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/// One-time join token that lets a fresh agent enroll itself with the panel.
+/// Only the SHA-256 hash is stored; the plaintext is shown once at creation.
+export const nodeEnrollments = pgTable('node_enrollments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nodeId: uuid('node_id')
+    .notNull()
+    .references(() => nodes.id, { onDelete: 'cascade' }),
+  tokenHash: text('token_hash').notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const projects = pgTable('projects', {
@@ -181,6 +202,9 @@ export const deployments = pgTable('deployments', {
   commitSha: text('commit_sha'),
   imageTag: text('image_tag'),
   status: deployStatusEnum('status').notNull().default('QUEUED'),
+  // Fine-grained pipeline stage for the UI stepper: 'build' | 'run' (in-place)
+  // | 'start' | 'health' | 'switch' (blue-green). Null for legacy rows.
+  phase: text('phase'),
   buildLog: text('build_log'),
   errorMsg: text('error_msg'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -304,6 +328,7 @@ export const tunnels = pgTable('tunnels', {
 export type DbSchema = {
   users: typeof users;
   nodes: typeof nodes;
+  nodeEnrollments: typeof nodeEnrollments;
   projects: typeof projects;
   gitCredentials: typeof gitCredentials;
   templates: typeof templates;

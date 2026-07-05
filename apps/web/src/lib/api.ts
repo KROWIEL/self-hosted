@@ -80,11 +80,23 @@ export interface Node {
   cpuTotal: number | null;
   memTotal: number | null;
   status: 'ONLINE' | 'OFFLINE';
+  remote: boolean;
+  tlsFingerprint: string | null;
+  agentVersion: string | null;
+  lastSeen: string | null;
   createdAt: string;
 }
 
 export interface NodeWithToken extends Node {
   daemonTokenPlaintext: string;
+}
+
+export interface NodeInstall {
+  nodeId: string;
+  joinToken: string;
+  agentPort: number;
+  binUrls: Record<string, string>;
+  commands: { linux: string };
 }
 
 export interface Template {
@@ -96,10 +108,13 @@ export interface Template {
   isBuiltIn: boolean;
 }
 
+export type DeployPhase = 'build' | 'run' | 'start' | 'health' | 'switch';
+
 export interface Deployment {
   id: string;
   serviceId: string;
   status: DeployStatus;
+  phase: DeployPhase | null;
   commitSha: string | null;
   imageTag: string | null;
   buildLog: string | null;
@@ -238,6 +253,16 @@ export const updateNodeCapacity = (
   });
 export const deleteNode = (id: string) =>
   api<{ ok: boolean }>(`/nodes/${id}`, { method: 'DELETE' });
+
+export const createRemoteNode = (body: {
+  name: string;
+  fqdn: string;
+  agentPort?: number;
+}) =>
+  api<Node>('/nodes/remote', { method: 'POST', body: JSON.stringify(body) });
+
+export const getNodeInstall = (id: string) =>
+  api<NodeInstall>(`/nodes/${id}/install`);
 
 export interface AgentStatus {
   enabled: boolean;

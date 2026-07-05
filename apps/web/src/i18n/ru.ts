@@ -22,6 +22,7 @@ export const ru: Dict = {
   'common.confirm': 'Подтвердить',
   'common.saved': 'Сохранено',
   'common.close': 'Закрыть',
+  'common.done': 'Готово',
 
   // Cleanup / prune
   'cleanup.button': 'Очистить',
@@ -136,6 +137,20 @@ export const ru: Dict = {
   'nodes.capacityHint':
     'Capacity — это сколько ресурсов этой машины платформа может использовать под нагрузки. Отметка «рекомендовано» здесь — небольшой baseline под агент/служебный overhead ноды, а не лимит для всех сервисов.',
   'nodes.add': 'Добавить ноду',
+  'nodes.addLocal': 'Локальный агент',
+  'nodes.addRemote': 'Добавить удалённую ноду',
+  'nodes.addRemoteTitle': 'Добавление удалённой ноды',
+  'nodes.addRemoteHint':
+    'Зарегистрируйте сервер, затем выполните на нём одну команду — агент установится и подключится по TLS.',
+  'nodes.installTitle': 'Команда установки',
+  'nodes.installBody':
+    'Выполните на целевом сервере (нужны Docker и root). Агент создаст TLS-идентичность, подключится к панели по одноразовому токену и автоматически выйдет в онлайн.',
+  'nodes.installCommand': 'Команда установки (Linux)',
+  'nodes.joinTokenNote':
+    'Токен подключения одноразовый и действует 1 час. Откройте это окно снова, чтобы сгенерировать новую команду.',
+  'nodes.agentVersion': 'агент {version}',
+  'nodes.lastSeen': 'был(а) в сети {time}',
+  'nodes.notEnrolled': 'ожидает подключения',
   'nodes.adding': 'Добавление…',
   'nodes.empty': 'Ноды ещё не зарегистрированы.',
   'nodes.start': 'Запустить агент',
@@ -398,6 +413,11 @@ export const ru: Dict = {
   'service.activeColor': 'Активный экземпляр',
   'service.zeroDowntimeVolumeWarn':
     'Недоступно, пока у сервиса есть постоянные тома — два экземпляра будут делить один том.',
+  'service.stepBuild': 'Сборка',
+  'service.stepHealth': 'Health-check',
+  'service.stepSwitchover': 'Переключение',
+  'service.stepDeploy': 'Запуск',
+  'service.stepLive': 'В строю',
   'service.deploymentsShowAll': 'Показать историю ({count})',
   'service.deploymentsHide': 'Скрыть историю',
   'service.terminal': 'Терминал',
