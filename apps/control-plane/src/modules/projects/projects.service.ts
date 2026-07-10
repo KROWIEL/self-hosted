@@ -1,28 +1,37 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { desc, eq, inArray } from 'drizzle-orm';
 import os from 'node:os';
 import { DRIZZLE, Database } from '../../db/database.module';
 import { managedDatabases, nodes, projects, services } from '../../db/schema';
 import { AgentClient } from '../nodes/agent.client';
+import { Actor, MembersService } from '../members/members.service';
+import { ProjectErrors } from '../../common/errors/app-errors';
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly agent: AgentClient,
+    private readonly members: MembersService,
   ) {}
 
-  async list(ownerId: string) {
-    const rows = await this.db
-      .select()
-      .from(projects)
-      .where(eq(projects.ownerId, ownerId))
-      .orderBy(desc(projects.createdAt));
+  async list(actor: Actor) {
+    const ids = await this.members.accessibleProjectIds(actor);
+    let rows: (typeof projects.$inferSelect)[];
+    if (ids === 'ALL') {
+      rows = await this.db
+        .select()
+        .from(projects)
+        .orderBy(desc(projects.createdAt));
+    } else if (ids.length === 0) {
+      return [];
+    } else {
+      rows = await this.db
+        .select()
+        .from(projects)
+        .where(inArray(projects.id, ids))
+        .orderBy(desc(projects.createdAt));
+    }
     return this.attachServices(rows);
   }
 
@@ -35,7 +44,7 @@ export class ProjectsService {
     const cpuLimit = limits?.cpuLimit ?? available.cpu;
     const memLimit = limits?.memLimit ?? available.memMb;
     await this.ensurePlatformCapacity(cpuLimit, memLimit);
-    return this.db
+    const project = await this.db
       .insert(projects)
       .values({
         name,
@@ -45,21 +54,24 @@ export class ProjectsService {
       })
       .returning()
       .then((r) => r[0]);
+    await this.members.ensureOwner(project.id, ownerId);
+    return project;
   }
 
-  async get(id: string, ownerId: string) {
+  async get(id: string, actor?: Actor) {
     const rows = await this.db
       .select()
       .from(projects)
-      .where(and(eq(projects.id, id), eq(projects.ownerId, ownerId)))
+      .where(eq(projects.id, id))
       .limit(1);
     if (!rows[0]) throw new NotFoundException('Project not found');
     const [withServices] = await this.attachServices(rows);
-    return withServices;
+    const myRole = actor ? await this.members.roleFor(actor, id) : null;
+    return { ...withServices, myRole };
   }
 
-  async remove(id: string, ownerId: string) {
-    await this.get(id, ownerId);
+  async remove(id: string) {
+    await this.get(id);
     // Free node resources (containers, images, DB volumes) before dropping the
     // rows. Best-effort per workload so an unreachable node can't block delete.
     await this.freeProjectResources(id);
@@ -124,10 +136,9 @@ export class ProjectsService {
 
   async updateLimits(
     id: string,
-    ownerId: string,
     limits: { cpuLimit: number; memLimit: number },
   ) {
-    await this.get(id, ownerId);
+    await this.get(id);
     const svc = await this.db
       .select()
       .from(services)
@@ -135,9 +146,7 @@ export class ProjectsService {
     const allocatedCpu = svc.reduce((sum, s) => sum + s.cpuLimit, 0);
     const allocatedMemMb = svc.reduce((sum, s) => sum + s.memLimit, 0);
     if (limits.cpuLimit < allocatedCpu || limits.memLimit < allocatedMemMb) {
-      throw new BadRequestException(
-        'Project limit cannot be lower than resources already allocated to services.',
-      );
+      throw ProjectErrors.limitBelowAllocated();
     }
     await this.ensurePlatformCapacity(limits.cpuLimit, limits.memLimit, id);
     const rows = await this.db
@@ -147,14 +156,19 @@ export class ProjectsService {
         memLimit: limits.memLimit,
         updatedAt: new Date(),
       })
-      .where(and(eq(projects.id, id), eq(projects.ownerId, ownerId)))
+      .where(eq(projects.id, id))
       .returning();
     return rows[0];
   }
 
-  async platformResourceSummary(ownerId: string) {
+  async platformResourceSummary(actor: Actor) {
+    const ids = await this.members.accessibleProjectIds(actor);
     const [projectRows, nodeRows] = await Promise.all([
-      this.db.select().from(projects).where(eq(projects.ownerId, ownerId)),
+      ids === 'ALL'
+        ? this.db.select().from(projects)
+        : ids.length === 0
+          ? Promise.resolve([] as (typeof projects.$inferSelect)[])
+          : this.db.select().from(projects).where(inArray(projects.id, ids)),
       this.db.select().from(nodes),
     ]);
     const servicesRows = projectRows.length
@@ -228,10 +242,10 @@ export class ProjectsService {
       .filter((p) => p.id !== excludeProjectId)
       .reduce((sum, p) => sum + p.memLimit, 0);
     if (capacityCpu > 0 && reservedCpu + cpuLimit > capacityCpu) {
-      throw new BadRequestException('Project CPU limit exceeds platform capacity.');
+      throw ProjectErrors.cpuOverCapacity();
     }
     if (capacityMemMb > 0 && reservedMemMb + memLimit > capacityMemMb) {
-      throw new BadRequestException('Project memory limit exceeds platform capacity.');
+      throw ProjectErrors.memOverCapacity();
     }
   }
 

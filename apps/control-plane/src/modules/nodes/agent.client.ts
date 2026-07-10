@@ -62,6 +62,20 @@ export interface AgentNodeStats {
   containers: number;
 }
 
+/** OS-level host metrics (fields present depend on the node's platform). */
+export interface AgentHost {
+  cpuCores: number;
+  load1?: number;
+  load5?: number;
+  load15?: number;
+  memTotalMb?: number;
+  memUsedMb?: number;
+  memUsedPerc?: number;
+  diskTotalGb?: number;
+  diskUsedGb?: number;
+  diskUsedPerc?: number;
+}
+
 export interface AgentStats {
   running: boolean;
   state: string;
@@ -264,6 +278,11 @@ export class AgentClient {
   /** Aggregate live CPU/RAM usage across all containers on the node. */
   getNodeStats(node: NodeRow) {
     return this.request<AgentNodeStats>(node, '/stats');
+  }
+
+  /** OS-level host metrics: CPU cores/load, RAM, disk. */
+  getHost(node: NodeRow) {
+    return this.request<AgentHost>(node, '/host');
   }
 
   /** Reclaims disk on the node (docker system/builder/volume prune). */

@@ -364,7 +364,7 @@ function TunnelItem({
       {status?.enabled === false && (
         <p className="mt-3 text-xs text-amber-300">{t('tunnel.disabledHint')}</p>
       )}
-      {err && <p className="mt-3 text-xs text-red-400">{err}</p>}
+      {err && <ErrorBox message={err} />}
       {showLogs && status && (
         <pre className="mt-4 max-h-56 overflow-auto rounded-xl bg-ink-950/80 p-3 font-mono text-xs text-neutral-300">
           {status.logs.join('\n')}

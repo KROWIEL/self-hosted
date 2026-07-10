@@ -3,6 +3,14 @@ import type { ConnectionOptions } from 'bullmq';
 export const DEPLOY_QUEUE = 'DEPLOY_QUEUE';
 export const DEPLOY_QUEUE_NAME = 'deploy';
 
+/** Redis key guarding against concurrent deploys of the same service. */
+export function deployLockKey(serviceId: string): string {
+  return `deploy:lock:${serviceId}`;
+}
+
+/** Auto-expiry so a crashed worker can't wedge a service permanently. */
+export const DEPLOY_LOCK_TTL_MS = 15 * 60 * 1000;
+
 export interface DeployJobData {
   deploymentId: string;
   serviceId: string;

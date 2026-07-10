@@ -6,6 +6,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Job, Worker } from 'bullmq';
+import Redis from 'ioredis';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE, Database } from '../../db/database.module';
 import {
@@ -25,6 +26,7 @@ import {
   DEPLOY_QUEUE_NAME,
   DeployJobData,
   createRedisConnection,
+  deployLockKey,
 } from './deploy.constants';
 
 /**
@@ -35,13 +37,19 @@ import {
 export class DeployWorker implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DeployWorker.name);
   private worker?: Worker<DeployJobData>;
+  private readonly lockRedis: Redis;
 
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly crypto: CryptoService,
     private readonly agent: AgentClient,
     private readonly buildLog: BuildLogService,
-  ) {}
+  ) {
+    this.lockRedis = new Redis(
+      process.env.REDIS_URL ?? 'redis://localhost:6379',
+      { maxRetriesPerRequest: null },
+    );
+  }
 
   onModuleInit() {
     this.worker = new Worker<DeployJobData>(
@@ -56,6 +64,7 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     await this.worker?.close();
+    this.lockRedis.disconnect();
   }
 
   private async process(job: Job<DeployJobData>) {
@@ -250,6 +259,10 @@ export class DeployWorker implements OnModuleInit, OnModuleDestroy {
       throw err;
     } finally {
       await this.buildLog.end(deploymentId);
+      // Release the per-service deploy lock so the next deploy can proceed.
+      await this.lockRedis
+        .del(deployLockKey(serviceId))
+        .catch(() => undefined);
     }
   }
 

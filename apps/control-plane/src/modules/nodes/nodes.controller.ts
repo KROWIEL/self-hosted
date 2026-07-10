@@ -159,6 +159,12 @@ export class NodesController {
     return this.nodes.stats(id);
   }
 
+  /** OS-level host metrics (CPU load, RAM, disk). */
+  @Get(':id/host')
+  host(@Param('id') id: string) {
+    return this.nodes.host(id);
+  }
+
   /** Reclaim disk on the node (docker prune). */
   @Post(':id/prune')
   prune(@Param('id') id: string, @Body() dto: PruneNodeDto) {

@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useI18n, useStatusLabel } from '@/i18n';
+import { useToast } from '@/components/toast';
 
 export type Tone = 'green' | 'amber' | 'sky' | 'neutral' | 'red';
 
@@ -669,12 +670,19 @@ export function GuideCard({
   );
 }
 
+/**
+ * Surfaces an error only as a bottom-screen toast — no inline body box — so the
+ * message doesn't linger in the page. Renders nothing; each new message value
+ * (per mount) fires one auto-dismissing toast.
+ */
 export function ErrorBox({ message }: { message: string }) {
-  return (
-    <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-      {message}
-    </div>
-  );
+  const toast = useToast();
+  useEffect(() => {
+    if (message) toast.error(message);
+    // toast is stable (memoized); re-fire only when the message changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message]);
+  return null;
 }
 
 export function Spinner({ label }: { label?: string }) {

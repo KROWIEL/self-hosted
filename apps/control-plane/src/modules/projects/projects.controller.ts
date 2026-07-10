@@ -9,9 +9,14 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { MemberRole } from '@selfhosted/shared';
 import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ProjectRole } from '../../common/rbac/project-role.decorator';
+import { ProjectRolesGuard } from '../../common/rbac/project-roles.guard';
 import { ProjectsService } from './projects.service';
+
+type Actor = { id: string; role: string };
 
 class CreateProjectDto {
   @IsString()
@@ -39,21 +44,18 @@ class UpdateProjectLimitsDto {
   memLimit: number;
 }
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projects: ProjectsService) {}
 
   @Get()
-  list(@Request() req: { user: { id: string } }) {
-    return this.projects.list(req.user.id);
+  list(@Request() req: { user: Actor }) {
+    return this.projects.list(req.user);
   }
 
   @Post()
-  create(
-    @Request() req: { user: { id: string } },
-    @Body() dto: CreateProjectDto,
-  ) {
+  create(@Request() req: { user: Actor }, @Body() dto: CreateProjectDto) {
     return this.projects.create(req.user.id, dto.name, {
       cpuLimit: dto.cpuLimit,
       memLimit: dto.memLimit,
@@ -61,26 +63,25 @@ export class ProjectsController {
   }
 
   @Get('resource-summary/platform')
-  platformResourceSummary(@Request() req: { user: { id: string } }) {
-    return this.projects.platformResourceSummary(req.user.id);
+  platformResourceSummary(@Request() req: { user: Actor }) {
+    return this.projects.platformResourceSummary(req.user);
   }
 
   @Get(':id')
-  get(@Param('id') id: string, @Request() req: { user: { id: string } }) {
-    return this.projects.get(id, req.user.id);
+  @ProjectRole(MemberRole.VIEWER, 'project')
+  get(@Param('id') id: string, @Request() req: { user: Actor }) {
+    return this.projects.get(id, req.user);
   }
 
   @Patch(':id/limits')
-  updateLimits(
-    @Param('id') id: string,
-    @Request() req: { user: { id: string } },
-    @Body() dto: UpdateProjectLimitsDto,
-  ) {
-    return this.projects.updateLimits(id, req.user.id, dto);
+  @ProjectRole(MemberRole.ADMIN, 'project')
+  updateLimits(@Param('id') id: string, @Body() dto: UpdateProjectLimitsDto) {
+    return this.projects.updateLimits(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Request() req: { user: { id: string } }) {
-    return this.projects.remove(id, req.user.id);
+  @ProjectRole(MemberRole.OWNER, 'project')
+  remove(@Param('id') id: string) {
+    return this.projects.remove(id);
   }
 }

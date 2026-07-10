@@ -7,6 +7,7 @@ import {
   Node,
   NodeInstall,
   NodePruneResult,
+  NodeHost,
   NodeStats,
   NodeSystem,
   NodeWithToken,
@@ -17,6 +18,7 @@ import {
   deleteNode,
   getNodeInstall,
   getPlatformResourceSummary,
+  getNodeHost,
   getNodeSystem,
   getNodeStats,
   getNodeWorkloads,
@@ -542,6 +544,7 @@ function NodeItem({
   const [agent, setAgent] = useState<AgentStatus | null>(null);
   const [system, setSystem] = useState<NodeSystem | null>(null);
   const [stats, setStats] = useState<NodeStats | null>(null);
+  const [host, setHost] = useState<NodeHost | null>(null);
   const [workloads, setWorkloads] = useState<NodeWorkloads | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -568,6 +571,9 @@ function NodeItem({
       getNodeStats(node.id)
         .then(setStats)
         .catch(() => setStats(null));
+      getNodeHost(node.id)
+        .then(setHost)
+        .catch(() => setHost(null));
       return;
     }
     try {
@@ -580,9 +586,13 @@ function NodeItem({
         getNodeStats(node.id)
           .then(setStats)
           .catch(() => setStats(null));
+        getNodeHost(node.id)
+          .then(setHost)
+          .catch(() => setHost(null));
       } else {
         setSystem(null);
         setStats(null);
+        setHost(null);
       }
     } catch {
       /* ignore polling errors */
@@ -769,6 +779,50 @@ function NodeItem({
         </div>
       )}
 
+      {host && host.reachable !== false && host.memTotalMb != null && (
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <KpiCard
+            label={t('nodes.hostLoad')}
+            value={
+              host.load1 != null
+                ? `${host.load1.toFixed(2)} / ${host.cpuCores ?? '?'}`
+                : '—'
+            }
+            tone={
+              host.load1 != null &&
+              host.cpuCores != null &&
+              host.load1 > host.cpuCores
+                ? 'amber'
+                : undefined
+            }
+          />
+          <KpiCard
+            label={t('nodes.hostRam')}
+            value={`${Math.round((host.memUsedMb ?? 0) / 1024 * 10) / 10}/${
+              Math.round((host.memTotalMb ?? 0) / 1024 * 10) / 10
+            } GB`}
+            tone={(host.memUsedPerc ?? 0) > 90 ? 'amber' : undefined}
+          />
+          <KpiCard
+            label={t('nodes.hostDisk')}
+            value={
+              host.diskTotalGb != null
+                ? `${Math.round(host.diskUsedGb ?? 0)}/${Math.round(
+                    host.diskTotalGb,
+                  )} GB`
+                : '—'
+            }
+            tone={(host.diskUsedPerc ?? 0) > 90 ? 'amber' : undefined}
+          />
+          <KpiCard
+            label={t('nodes.hostMemPerc')}
+            value={
+              host.memUsedPerc != null ? `${Math.round(host.memUsedPerc)}%` : '—'
+            }
+          />
+        </div>
+      )}
+
       {workloads &&
         (workloads.services.length > 0 || workloads.databases.length > 0) && (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -832,7 +886,7 @@ function NodeItem({
       {agent?.enabled === false && (
         <p className="mt-3 text-xs text-amber-300">{t('nodes.disabledHint')}</p>
       )}
-      {err && <p className="mt-3 text-xs text-red-400">{err}</p>}
+      {err && <ErrorBox message={err} />}
       {showLogs && agent && (
         <pre className="mt-4 max-h-56 overflow-auto rounded-xl bg-ink-950/80 p-3 font-mono text-xs text-neutral-300">
           {agent.logs.join('\n')}

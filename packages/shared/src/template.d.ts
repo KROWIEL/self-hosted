@@ -23,6 +23,7 @@ export interface Template {
     id: string;
     name: string;
     description?: string;
+    category?: string;
     type: ServiceType;
     baseImage: string;
     dockerfilePath?: string;

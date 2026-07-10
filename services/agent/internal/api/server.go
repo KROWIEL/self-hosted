@@ -50,6 +50,7 @@ func (s *Server) RunTLS(certPath, keyPath string) error {
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/version", s.handleVersion)
 	s.mux.HandleFunc("GET /api/system", s.handleSystem)
+	s.mux.HandleFunc("GET /api/host", s.handleHost)
 	s.mux.HandleFunc("GET /api/stats", s.handleNodeStats)
 	s.mux.HandleFunc("POST /api/system/prune", s.handlePrune)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/build", s.handleBuild)

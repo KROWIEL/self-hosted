@@ -1,9 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { MemberRole } from '@selfhosted/shared';
 import type { Server } from 'node:http';
 import { WebSocket, WebSocketServer, type RawData } from 'ws';
 import { CryptoService } from './common/crypto/crypto.service';
 import { ServicesService } from './modules/services/services.service';
+import { MembersService } from './modules/members/members.service';
+import { ProjectResolver } from './modules/members/project-resolver.service';
 
 const EXEC_PATH = /^\/api\/v1\/services\/([^/]+)\/exec$/;
 
@@ -12,13 +15,38 @@ const EXEC_PATH = /^\/api\/v1\/services\/([^/]+)\/exec$/;
  *   browser (JWT in ?token) ⟷ control plane ⟷ agent (daemon token) ⟷ docker exec.
  * Kept off the Nest gateway layer so we can stream raw PTY frames untouched.
  */
-export function setupExecProxy(app: INestApplication): void {
+type LiveSocket = WebSocket & { isAlive?: boolean };
+
+/**
+ * Sets up the exec proxy and returns a disposer that tears down all live
+ * sessions (used on graceful shutdown).
+ */
+export function setupExecProxy(app: INestApplication): () => void {
   const server = app.getHttpServer() as Server;
   const jwt = app.get(JwtService, { strict: false });
   const services = app.get(ServicesService, { strict: false });
   const crypto = app.get(CryptoService, { strict: false });
+  const members = app.get(MembersService, { strict: false });
+  const resolver = app.get(ProjectResolver, { strict: false });
   const wss = new WebSocketServer({ noServer: true });
   const secret = process.env.JWT_SECRET ?? 'change-me-access-secret';
+
+  // Heartbeat: drop clients that stopped answering (closed tab, dead network)
+  // so their upstream docker-exec sessions get cleaned up too.
+  const heartbeat = setInterval(() => {
+    for (const ws of wss.clients as Set<LiveSocket>) {
+      if (ws.isAlive === false) {
+        ws.terminate();
+        continue;
+      }
+      ws.isAlive = false;
+      try {
+        ws.ping();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, 30_000);
 
   server.on('upgrade', (req, socket, head) => {
     let url: URL;
@@ -36,18 +64,48 @@ export function setupExecProxy(app: INestApplication): void {
     }
 
     const token = url.searchParams.get('token') ?? '';
+    let actor: { id: string; role: string };
     try {
-      jwt.verify(token, { secret });
+      const payload = jwt.verify<{ sub: string; role: string }>(token, {
+        secret,
+      });
+      actor = { id: payload.sub, role: payload.role };
     } catch {
       socket.destroy();
       return;
     }
 
     const serviceId = match[1];
-    wss.handleUpgrade(req, socket, head, (client) => {
-      void bridge(client, serviceId, services, crypto);
-    });
+    // Interactive shell = powerful; require project ADMIN (global admins pass).
+    void (async () => {
+      try {
+        const projectId = await resolver.resolve('service', serviceId);
+        await members.assertRole(actor, projectId, MemberRole.ADMIN);
+      } catch {
+        socket.destroy();
+        return;
+      }
+      wss.handleUpgrade(req, socket, head, (client: LiveSocket) => {
+        client.isAlive = true;
+        client.on('pong', () => {
+          client.isAlive = true;
+        });
+        void bridge(client, serviceId, services, crypto);
+      });
+    })();
   });
+
+  return () => {
+    clearInterval(heartbeat);
+    for (const ws of wss.clients) {
+      try {
+        ws.close(1001, 'server shutting down');
+      } catch {
+        /* ignore */
+      }
+    }
+    wss.close();
+  };
 }
 
 async function bridge(

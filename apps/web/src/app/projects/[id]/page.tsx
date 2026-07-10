@@ -4,16 +4,20 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
+  AuditLog,
   CreateDatabaseBody,
   CreateServiceBody,
   DbCredentials,
   GitCredential,
   ManagedDatabase,
+  Member,
+  MemberRole,
   Node,
   Project,
   ProjectResourceSummary,
   Service,
   Template,
+  addMember,
   attachDatabase,
   createDatabase,
   createService,
@@ -23,9 +27,13 @@ import {
   getProjectResourceSummary,
   listDatabases,
   listGitCredentials,
+  listMembers,
   listNodes,
+  listProjectAudit,
   listTemplates,
   powerDatabase,
+  removeMember,
+  updateMember,
   updateProjectLimits,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
@@ -46,7 +54,8 @@ import {
   formatCpu,
   useConfirmDialog,
 } from '@/components/ui';
-import { useI18n, useTypeLabel } from '@/i18n';
+import { useToast } from '@/components/toast';
+import { useErrorText, useI18n, useTypeLabel } from '@/i18n';
 
 export default function ProjectPage() {
   const params = useParams<{ id: string }>();
@@ -196,6 +205,10 @@ export default function ProjectPage() {
             nodes={nodes}
             services={project.services}
           />
+
+          <MembersPanel projectId={id} myRole={project.myRole ?? null} />
+
+          <AuditPanel projectId={id} canView={canManage(project.myRole)} />
 
           {createServiceOpen && (
             <CreateServiceModal
@@ -1031,6 +1044,225 @@ function DatabaseCard({
       )}
       {dialog}
     </Card>
+  );
+}
+
+const ROLE_RANK: Record<MemberRole, number> = {
+  VIEWER: 1,
+  MEMBER: 2,
+  ADMIN: 3,
+  OWNER: 4,
+};
+
+/** ADMIN and OWNER may manage members/settings. */
+function canManage(role: MemberRole | null | undefined): boolean {
+  return !!role && ROLE_RANK[role] >= ROLE_RANK.ADMIN;
+}
+
+const ASSIGNABLE_ROLES: MemberRole[] = ['VIEWER', 'MEMBER', 'ADMIN'];
+
+function MembersPanel({
+  projectId,
+  myRole,
+}: {
+  projectId: string;
+  myRole: MemberRole | null;
+}) {
+  const { t } = useI18n();
+  const toast = useToast();
+  const errText = useErrorText();
+  const manage = canManage(myRole);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<MemberRole>('MEMBER');
+  const [busy, setBusy] = useState(false);
+
+  const refresh = () =>
+    listMembers(projectId)
+      .then(setMembers)
+      .catch((e) => toast.error(errText(e)));
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  async function onAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setBusy(true);
+    try {
+      await addMember(projectId, email.trim().toLowerCase(), role);
+      setEmail('');
+      toast.success(t('members.added'));
+      await refresh();
+    } catch (e) {
+      toast.error(errText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRole(userId: string, next: MemberRole) {
+    try {
+      await updateMember(projectId, userId, next);
+      await refresh();
+    } catch (e) {
+      toast.error(errText(e));
+    }
+  }
+
+  async function onRemove(userId: string) {
+    try {
+      await removeMember(projectId, userId);
+      await refresh();
+    } catch (e) {
+      toast.error(errText(e));
+    }
+  }
+
+  return (
+    <PanelCard title={t('members.title')} className="mb-10">
+      <p className="mb-4 text-xs text-neutral-500">{t('members.hint')}</p>
+
+      <ul className="space-y-2">
+        {members.map((m) => (
+          <Card key={m.userId} className="flex flex-wrap items-center gap-3 p-3">
+            <span className="min-w-0 flex-1 truncate text-sm text-white">
+              {m.email}
+            </span>
+            {m.role === 'OWNER' || !manage ? (
+              <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-neutral-300">
+                {t(`members.role.${m.role}`)}
+              </span>
+            ) : (
+              <>
+                <select
+                  value={m.role}
+                  onChange={(e) => onRole(m.userId, e.target.value as MemberRole)}
+                  className="field text-xs"
+                >
+                  {ASSIGNABLE_ROLES.map((r) => (
+                    <option key={r} value={r} className="bg-ink-850">
+                      {t(`members.role.${r}`)}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => onRemove(m.userId)}
+                  className="btn-danger-ghost btn-sm"
+                >
+                  {t('common.remove')}
+                </button>
+              </>
+            )}
+          </Card>
+        ))}
+      </ul>
+
+      {manage && (
+        <form onSubmit={onAdd} className="mt-4 flex flex-wrap items-end gap-2">
+          <Field label={t('members.email')} className="min-w-[220px] flex-1">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="user@example.com"
+              className="field w-full"
+            />
+          </Field>
+          <Field label={t('members.roleLabel')}>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as MemberRole)}
+              className="field"
+            >
+              {ASSIGNABLE_ROLES.map((r) => (
+                <option key={r} value={r} className="bg-ink-850">
+                  {t(`members.role.${r}`)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <button type="submit" disabled={busy} className="btn-primary">
+            {t('members.add')}
+          </button>
+        </form>
+      )}
+    </PanelCard>
+  );
+}
+
+function AuditPanel({
+  projectId,
+  canView,
+}: {
+  projectId: string;
+  canView: boolean;
+}) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [logs, setLogs] = useState<AuditLog[] | null>(null);
+
+  useEffect(() => {
+    if (!open || logs) return;
+    listProjectAudit(projectId)
+      .then(setLogs)
+      .catch(() => setLogs([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, projectId]);
+
+  if (!canView) return null;
+
+  return (
+    <PanelCard
+      title={t('audit.title')}
+      action={
+        <button onClick={() => setOpen((v) => !v)} className="btn-ghost btn-sm">
+          {open ? t('audit.hide') : t('audit.show')}
+        </button>
+      }
+      className="mb-10"
+    >
+      {open &&
+        (logs && logs.length > 0 ? (
+          <AuditTable logs={logs} />
+        ) : (
+          <EmptyState>{t('audit.empty')}</EmptyState>
+        ))}
+    </PanelCard>
+  );
+}
+
+function AuditTable({ logs }: { logs: AuditLog[] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-xs">
+        <tbody className="divide-y divide-white/5">
+          {logs.map((l) => (
+            <tr key={l.id} className="text-neutral-400">
+              <td className="whitespace-nowrap py-2 pr-3 text-neutral-500">
+                {new Date(l.createdAt).toLocaleString()}
+              </td>
+              <td className="py-2 pr-3 text-neutral-300">{l.userEmail ?? '—'}</td>
+              <td className="py-2 pr-3 font-mono text-indigo-300">{l.action}</td>
+              <td className="py-2 pr-3">{l.targetType}</td>
+              <td className="py-2 text-right font-mono">
+                <span
+                  className={
+                    l.status && l.status >= 400
+                      ? 'text-red-400'
+                      : 'text-emerald-400'
+                  }
+                >
+                  {l.status ?? ''}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

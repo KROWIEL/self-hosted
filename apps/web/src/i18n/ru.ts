@@ -23,6 +23,27 @@ export const ru: Dict = {
   'common.saved': 'Сохранено',
   'common.close': 'Закрыть',
   'common.done': 'Готово',
+  'common.remove': 'Удалить',
+
+  // Участники / роли
+  'members.title': 'Участники',
+  'members.hint':
+    'Пользователи с доступом к проекту. Роли: Наблюдатель (только чтение), Участник (деплой и управление), Админ (настройки и участники), Владелец (полный контроль).',
+  'members.email': 'Email',
+  'members.roleLabel': 'Роль',
+  'members.add': 'Добавить',
+  'members.added': 'Участник добавлен',
+  'members.role.OWNER': 'Владелец',
+  'members.role.ADMIN': 'Админ',
+  'members.role.MEMBER': 'Участник',
+  'members.role.VIEWER': 'Наблюдатель',
+  'members.role.NONE': 'нет',
+
+  // Журнал аудита
+  'audit.title': 'Журнал аудита',
+  'audit.show': 'Показать',
+  'audit.hide': 'Скрыть',
+  'audit.empty': 'Пока нет записей активности.',
 
   // Cleanup / prune
   'cleanup.button': 'Очистить',
@@ -62,6 +83,11 @@ export const ru: Dict = {
   'nav.tunnels': 'Публикация',
   'nav.templates': 'Шаблоны',
   'nav.git': 'Git-доступы',
+  'nav.settings': 'Настройки',
+  'nav.openMenu': 'Открыть меню',
+  'nav.closeMenu': 'Закрыть меню',
+  'nav.collapse': 'Скрыть панель',
+  'nav.expand': 'Показать панель',
 
   // Home
   'home.subtitle':
@@ -77,6 +103,115 @@ export const ru: Dict = {
   'login.signIn': 'Войти',
   'login.signingIn': 'Вход…',
   'login.failed': 'Не удалось войти',
+  'login.totp': 'Код двухфакторной аутентификации',
+  'login.totpHint': 'Введите 6-значный код из приложения-аутентификатора.',
+  'login.noAccount': 'Нет аккаунта?',
+  'login.register': 'Создать',
+
+  // Регистрация (этап 1)
+  'register.title': 'Создание аккаунта',
+  'register.subtitle': 'Шаг 1 из 2 — данные аккаунта',
+  'register.passwordHint': 'Минимум 8 символов.',
+  'register.continue': 'Продолжить',
+  'register.creating': 'Создание…',
+  'register.haveAccount': 'Уже есть аккаунт?',
+  'register.signIn': 'Войти',
+
+  // Онбординг (этап 2)
+  'onboarding.title': 'Заполните профиль',
+  'onboarding.subtitle': 'Шаг 2 из 2 — личные данные и двухфакторная аутентификация',
+  'onboarding.firstName': 'Имя',
+  'onboarding.lastName': 'Фамилия',
+  'onboarding.2faTitle': 'Двухфакторная аутентификация',
+  'onboarding.2faHint':
+    'Отсканируйте QR-код в Google Authenticator, 1Password или любом TOTP-приложении и введите 6-значный код для подтверждения.',
+  'onboarding.secretManual': 'Не получается отсканировать? Введите ключ вручную:',
+  'onboarding.code': '6-значный код',
+  'onboarding.finish': 'Завершить настройку',
+  'onboarding.finishing': 'Завершение…',
+
+  // Настройки аккаунта
+  'settings.title': 'Настройки аккаунта',
+  'settings.subtitle': 'Управляйте профилем, паролем и двухфакторной аутентификацией.',
+  'settings.profileTitle': 'Персональные данные',
+  'settings.profileHint': 'Ваше имя отображается в панели.',
+  'settings.firstName': 'Имя',
+  'settings.lastName': 'Фамилия',
+  'settings.email': 'Email',
+  'settings.emailHint': 'Email используется для входа и здесь не меняется.',
+  'settings.save': 'Сохранить',
+  'settings.saving': 'Сохранение…',
+  'settings.profileSaved': 'Профиль обновлён',
+  'settings.passwordTitle': 'Пароль',
+  'settings.passwordHint': 'Минимум 8 символов.',
+  'settings.currentPassword': 'Текущий пароль',
+  'settings.newPassword': 'Новый пароль',
+  'settings.confirmPassword': 'Повторите новый пароль',
+  'settings.changePassword': 'Сменить пароль',
+  'settings.changingPassword': 'Смена…',
+  'settings.passwordChanged': 'Пароль изменён',
+  'settings.passwordMismatch': 'Новые пароли не совпадают.',
+  'settings.2faTitle': 'Двухфакторная аутентификация',
+  'settings.2faStatusOn': 'Включена',
+  'settings.2faStatusOff': 'Выключена',
+  'settings.2faOnHint': 'При входе требуется код из приложения-аутентификатора.',
+  'settings.2faOffHint':
+    'Добавьте дополнительный уровень защиты с помощью TOTP-приложения.',
+  'settings.enable2fa': 'Включить 2FA',
+  'settings.enabling': 'Включение…',
+  'settings.confirmEnable': 'Подтвердить и включить',
+  'settings.disable2fa': 'Выключить 2FA',
+  'settings.disabling': 'Выключение…',
+  'settings.2faEnabledMsg': 'Двухфакторная аутентификация включена',
+  'settings.2faDisabledMsg': 'Двухфакторная аутентификация выключена',
+  'settings.scanHint':
+    'Отсканируйте QR-код в приложении-аутентификаторе и введите 6-значный код.',
+  'settings.secretManual': 'Не получается отсканировать? Введите ключ вручную:',
+  'settings.code': '6-значный код',
+  'settings.passwordToDisable': 'Введите пароль, чтобы выключить 2FA.',
+  'settings.mustChangeTitle': 'Требуется обновить пароль',
+  'settings.mustChangeHint':
+    'Ваш текущий пароль не соответствует политике безопасности. Задайте более надёжный пароль ниже, чтобы продолжить.',
+
+  // Требования к паролю
+  'password.rule.length': 'Минимум 12 символов',
+  'password.rule.upper': 'Заглавная буква (A–Z)',
+  'password.rule.lower': 'Строчная буква (a–z)',
+  'password.rule.digits': 'Минимум 3 цифры',
+  'password.rule.special': 'Спецсимвол (!@#$…)',
+
+  // Коды ошибок API (из поля `code` control-plane)
+  'error.auth.emailTaken': 'Аккаунт с таким email уже существует.',
+  'error.auth.invalidCredentials': 'Неверный email или пароль.',
+  'error.auth.totpRequired': 'Требуется код двухфакторной аутентификации.',
+  'error.auth.totpInvalid': 'Код двухфакторной аутентификации неверен или истёк.',
+  'error.auth.alreadyOnboarded': 'Онбординг уже завершён.',
+  'error.auth.invalidRefresh': 'Сессия истекла. Войдите снова.',
+  'error.auth.currentPasswordInvalid': 'Текущий пароль неверен.',
+  'error.auth.weakPassword':
+    'Пароль должен содержать минимум 12 символов, заглавную и строчную буквы, спецсимвол и не менее 3 цифр.',
+  'error.auth.twoFactorAlreadyEnabled':
+    'Двухфакторная аутентификация уже включена.',
+  'error.auth.twoFactorNotEnabled':
+    'Двухфакторная аутентификация не включена.',
+  'error.common.adminOnly': 'Действие доступно только администраторам.',
+  'error.template.notFound': 'Шаблон не найден.',
+  'error.template.inUse':
+    'Шаблон используется одним или несколькими сервисами и не может быть удалён.',
+  'error.members.userNotFound':
+    'Пользователь с таким email не найден — сначала он должен зарегистрироваться.',
+  'error.members.ownerReserved':
+    'Роль «Владелец» назначается через передачу владения.',
+  'error.members.ownerImmutable':
+    'Роль владельца проекта нельзя изменить напрямую.',
+  'error.members.ownerRemoval': 'Владельца проекта нельзя удалить.',
+  'error.members.forbidden':
+    'Требуется роль «{min}» в этом проекте (у вас «{role}»).',
+  'error.project.limitBelowAllocated':
+    'Лимит не может быть ниже ресурсов, уже выделенных сервисам.',
+  'error.project.cpuOverCapacity': 'Лимит CPU превышает ёмкость платформы.',
+  'error.project.memOverCapacity':
+    'Лимит памяти превышает ёмкость платформы.',
 
   // Projects (dashboard)
   'projects.title': 'Проекты',
@@ -170,6 +305,10 @@ export const ru: Dict = {
   'nodes.images': 'Образы',
   'nodes.reclaimable': 'Можно освободить',
   'nodes.volumes': 'Тома',
+  'nodes.hostLoad': 'Нагрузка CPU / ядра',
+  'nodes.hostRam': 'ОЗУ хоста',
+  'nodes.hostDisk': 'Диск хоста',
+  'nodes.hostMemPerc': 'ОЗУ занято',
   'nodes.servicesOnNode': 'Сервисы',
   'nodes.databasesOnNode': 'Базы данных',
   'nodes.noServices': 'На этой ноде нет сервисов.',
@@ -222,10 +361,44 @@ export const ru: Dict = {
   'templates.aboutTitle': 'Что такое шаблоны?',
   'templates.aboutBody':
     'Шаблон — готовый рецепт стека: какой образ собирает код, какой его запускает, Dockerfile и порт по умолчанию. При создании сервиса вы выбираете шаблон, и агент ноды по нему собирает и запускает приложение. Порт или использование собственного Dockerfile репозитория можно переопределить у каждого сервиса.',
-  'templates.noteTitle': 'Встроенные шаблоны',
+  'templates.noteTitle': 'Встроенные и свои шаблоны',
   'templates.noteBody':
-    'Шаблоны ниже поставляются с панелью и доступны только для чтения. Они покрывают частые Java и JS/TS стеки — выбирайте ближайший при создании сервиса.',
+    'Панель поставляется с шаблонами частых Java и JS/TS стеков. Администраторы могут создавать новые шаблоны, редактировать любые (включая встроенные) и группировать их по категориям.',
   'templates.builtIn': 'встроенный',
+  'templates.new': 'Новый шаблон',
+  'templates.empty': 'Шаблонов пока нет.',
+  'templates.uncategorized': 'Прочее',
+  'templates.created': 'Шаблон создан',
+  'templates.updated': 'Шаблон обновлён',
+  'templates.deleted': 'Шаблон удалён',
+  'templates.editTitle': 'Редактирование шаблона',
+  'templates.editBuiltInHint':
+    'Это встроенный шаблон. Изменения применятся ко всем пользователям панели.',
+  'templates.deleteTitle': 'Удалить шаблон',
+  'templates.deleteConfirm':
+    'Удалить этот шаблон? Уже созданные сервисы продолжат работать; шаблон исчезнет только для новых.',
+  'templates.f.name': 'Название',
+  'templates.f.category': 'Категория',
+  'templates.f.categoryHint': 'Метка группы (пусто — «Прочее»).',
+  'templates.f.description': 'Описание',
+  'templates.f.type': 'Тип',
+  'templates.f.port': 'Порт по умолчанию',
+  'templates.f.healthcheck': 'Путь healthcheck',
+  'templates.f.baseImage': 'Образ запуска',
+  'templates.f.installImage': 'Образ сборки',
+  'templates.f.dockerfilePath': 'Путь к Dockerfile',
+  'templates.f.dockerfilePathHint': 'Путь к Dockerfile внутри репозитория панели.',
+  'templates.f.buildCommand': 'Команда сборки',
+  'templates.f.runCommand': 'Команда запуска',
+  'templates.f.installScript': 'Скрипт сборки',
+  'templates.f.installScriptHint':
+    'Shell-скрипт, выполняемый в образе сборки для создания артефакта.',
+  'templates.f.variables': 'Переменные',
+  'templates.f.addVariable': 'Добавить переменную',
+  'templates.f.noVariables': 'Переменные не заданы.',
+  'templates.f.varName': 'Метка',
+  'templates.f.varDefault': 'Значение по умолчанию',
+  'templates.f.varDescription': 'Описание (необязательно)',
   'templates.desc.javaMaven':
     'Собирает Maven-проект в JAR и запускает на Temurin 21.',
   'templates.desc.javaGradle':
@@ -426,6 +599,8 @@ export const ru: Dict = {
     'Интерактивная оболочка внутри работающего контейнера — посмотреть файлы, подключиться к базе, поправить что-то руками.',
   'service.terminalConnecting': 'Подключение…',
   'service.terminalClosed': 'Сессия закрыта',
+  'service.terminalReconnecting': 'Переподключение…',
+  'service.terminalReconnected': 'Переподключено',
   'service.terminalNotRunning': 'Запустите контейнер, чтобы открыть консоль.',
   'service.close': 'Закрыть',
   // Постоянные тома

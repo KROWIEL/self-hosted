@@ -25,6 +25,8 @@ export interface Template {
   id: string;
   name: string;
   description?: string;
+  /** Free-form grouping label (e.g. 'Java', 'JavaScript'). */
+  category?: string;
   type: ServiceType;
   baseImage: string;
   dockerfilePath?: string;

@@ -59,7 +59,6 @@ import {
   useConfirmDialog,
 } from '@/components/ui';
 import { useI18n, useTypeLabel } from '@/i18n';
-
 export default function ServicePage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -128,7 +127,9 @@ export default function ServicePage() {
       await fn();
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('common.failed'));
+      const msg = e instanceof Error ? e.message : t('common.failed');
+      // setError routes through <ErrorBox>, which surfaces the toast.
+      setError(msg);
     } finally {
       setBusy(false);
     }
@@ -734,18 +735,71 @@ function TerminalModal({
 }) {
   const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<'connecting' | 'open' | 'closed'>(
-    'connecting',
-  );
+  const [status, setStatus] = useState<
+    'connecting' | 'open' | 'reconnecting' | 'closed'
+  >('connecting');
 
   useEffect(() => {
     let disposed = false;
     let ws: WebSocket | null = null;
+    let attempt = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let term: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let fit: any;
     let onWinResize: (() => void) | null = null;
+    const enc = new TextEncoder();
+
+    const sendResize = () => {
+      if (ws && ws.readyState === WebSocket.OPEN && term) {
+        ws.send(
+          JSON.stringify({ resize: { cols: term.cols, rows: term.rows } }),
+        );
+      }
+    };
+
+    // (Re)opens the WS; on unexpected close it retries with capped backoff so a
+    // brief network blip or agent restart doesn't kill the shell session.
+    const connect = () => {
+      if (disposed) return;
+      setStatus(attempt === 0 ? 'connecting' : 'reconnecting');
+      ws = new WebSocket(execSocketUrl(serviceId));
+      ws.binaryType = 'arraybuffer';
+
+      ws.onopen = () => {
+        if (attempt > 0) {
+          term?.write('\r\n\x1b[32m— ' + t('service.terminalReconnected') + ' —\x1b[0m\r\n');
+        }
+        attempt = 0;
+        setStatus('open');
+        sendResize();
+        term?.focus();
+      };
+      ws.onmessage = (ev: MessageEvent) => {
+        if (typeof ev.data === 'string') term?.write(ev.data);
+        else term?.write(new Uint8Array(ev.data as ArrayBuffer));
+      };
+      ws.onclose = () => {
+        if (disposed) return;
+        attempt += 1;
+        const delay = Math.min(1000 * 2 ** (attempt - 1), 10000);
+        setStatus('reconnecting');
+        term?.write(
+          '\r\n\x1b[33m— ' +
+            t('service.terminalReconnecting') +
+            ` (${Math.round(delay / 1000)}s) —\x1b[0m\r\n`,
+        );
+        retryTimer = setTimeout(connect, delay);
+      };
+      ws.onerror = () => {
+        try {
+          ws?.close();
+        } catch {
+          /* onclose handles retry */
+        }
+      };
+    };
 
     (async () => {
       const [{ Terminal }, { FitAddon }] = await Promise.all([
@@ -770,33 +824,6 @@ function TerminalModal({
         /* ignore */
       }
 
-      const enc = new TextEncoder();
-      ws = new WebSocket(execSocketUrl(serviceId));
-      ws.binaryType = 'arraybuffer';
-
-      const sendResize = () => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(
-            JSON.stringify({ resize: { cols: term.cols, rows: term.rows } }),
-          );
-        }
-      };
-
-      ws.onopen = () => {
-        setStatus('open');
-        sendResize();
-        term.focus();
-      };
-      ws.onmessage = (ev: MessageEvent) => {
-        if (typeof ev.data === 'string') term.write(ev.data);
-        else term.write(new Uint8Array(ev.data as ArrayBuffer));
-      };
-      ws.onclose = () => {
-        setStatus('closed');
-        term.write('\r\n\x1b[33m— ' + t('service.terminalClosed') + ' —\x1b[0m\r\n');
-      };
-      ws.onerror = () => setStatus('closed');
-
       term.onData((d: string) => {
         if (ws && ws.readyState === WebSocket.OPEN) ws.send(enc.encode(d));
       });
@@ -810,10 +837,13 @@ function TerminalModal({
         }
       };
       window.addEventListener('resize', onWinResize);
+
+      connect();
     })();
 
     return () => {
       disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
       if (onWinResize) window.removeEventListener('resize', onWinResize);
       try {
         ws?.close();
@@ -848,14 +878,18 @@ function TerminalModal({
                   ? 'text-emerald-400'
                   : status === 'closed'
                     ? 'text-red-400'
-                    : 'text-neutral-500'
+                    : status === 'reconnecting'
+                      ? 'text-amber-400'
+                      : 'text-neutral-500'
               }`}
             >
               {status === 'open'
                 ? '●'
                 : status === 'closed'
                   ? t('service.terminalClosed')
-                  : t('service.terminalConnecting')}
+                  : status === 'reconnecting'
+                    ? t('service.terminalReconnecting')
+                    : t('service.terminalConnecting')}
             </span>
           </div>
           <button

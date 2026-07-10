@@ -25,6 +25,17 @@ type wsControl struct {
 	} `json:"resize"`
 }
 
+// parseResize extracts terminal dimensions from a text control frame. ok is
+// false when the frame isn't a (valid) resize control, in which case the caller
+// should treat the bytes as raw terminal input.
+func parseResize(data []byte) (cols, rows int, ok bool) {
+	var ctrl wsControl
+	if json.Unmarshal(data, &ctrl) != nil || ctrl.Resize == nil {
+		return 0, 0, false
+	}
+	return ctrl.Resize.Cols, ctrl.Resize.Rows, true
+}
+
 // handleExec upgrades to a WebSocket and bridges it to an interactive shell in
 // the service container. We use the Docker exec API with a TTY allocated inside
 // the container (hijacked stream), so no host PTY is required — this works the
@@ -97,11 +108,10 @@ func (s *Server) handleExec(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if mt == websocket.TextMessage {
-			var ctrl wsControl
-			if json.Unmarshal(data, &ctrl) == nil && ctrl.Resize != nil {
+			if cols, rows, ok := parseResize(data); ok {
 				_ = cli.ContainerExecResize(ctx, execResp.ID, container.ResizeOptions{
-					Height: uint(ctrl.Resize.Rows),
-					Width:  uint(ctrl.Resize.Cols),
+					Height: uint(rows),
+					Width:  uint(cols),
 				})
 				continue
 			}

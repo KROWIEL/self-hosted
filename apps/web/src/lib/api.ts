@@ -63,6 +63,8 @@ export interface UpdateServiceBody {
   healthTimeoutS?: number;
 }
 
+export type MemberRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+
 export interface Project {
   id: string;
   name: string;
@@ -70,7 +72,58 @@ export interface Project {
   memLimit: number;
   createdAt: string;
   services: Service[];
+  /** Caller's effective role on this project (present on the detail endpoint). */
+  myRole?: MemberRole | null;
 }
+
+export interface Member {
+  userId: string;
+  email: string;
+  role: MemberRole;
+  createdAt: string;
+}
+
+export const listMembers = (projectId: string) =>
+  api<Member[]>(`/projects/${projectId}/members`);
+
+export const addMember = (projectId: string, email: string, role: MemberRole) =>
+  api<Member>(`/projects/${projectId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  });
+
+export const updateMember = (
+  projectId: string,
+  userId: string,
+  role: MemberRole,
+) =>
+  api<Member>(`/projects/${projectId}/members/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  });
+
+export const removeMember = (projectId: string, userId: string) =>
+  api<{ ok: boolean }>(`/projects/${projectId}/members/${userId}`, {
+    method: 'DELETE',
+  });
+
+export interface AuditLog {
+  id: string;
+  userEmail: string | null;
+  action: string;
+  targetType: string;
+  targetId: string | null;
+  projectId: string | null;
+  ip: string | null;
+  status: number | null;
+  meta: Record<string, unknown>;
+  createdAt: string;
+}
+
+export const listProjectAudit = (projectId: string) =>
+  api<AuditLog[]>(`/projects/${projectId}/audit`);
+
+export const listAudit = () => api<AuditLog[]>('/audit');
 
 export interface Node {
   id: string;
@@ -99,13 +152,47 @@ export interface NodeInstall {
   commands: { linux: string };
 }
 
+export interface TemplateVariable {
+  name: string;
+  envVariable: string;
+  defaultValue: string;
+  description?: string;
+  rules?: string;
+}
+
 export interface Template {
   id: string;
   name: string;
   description: string | null;
+  category: string | null;
   type: ServiceType;
+  baseImage: string;
+  dockerfilePath: string | null;
+  installImage: string;
+  installScript: string;
+  defaultBuildCommand: string;
+  defaultRunCommand: string;
   defaultPort: number;
+  healthcheckPath: string | null;
+  variables: TemplateVariable[];
   isBuiltIn: boolean;
+}
+
+/** Editable fields for creating/updating a template. */
+export interface TemplateInput {
+  name: string;
+  description?: string;
+  category?: string;
+  type: ServiceType;
+  baseImage: string;
+  dockerfilePath?: string;
+  installImage: string;
+  installScript: string;
+  defaultBuildCommand: string;
+  defaultRunCommand: string;
+  defaultPort: number;
+  healthcheckPath?: string;
+  variables: TemplateVariable[];
 }
 
 export type DeployPhase = 'build' | 'run' | 'start' | 'health' | 'switch';
@@ -153,26 +240,79 @@ export function isAuthed(): boolean {
 export function logout() {
   window.localStorage.removeItem('accessToken');
   window.localStorage.removeItem('refreshToken');
+  window.localStorage.removeItem('mustChangePassword');
+}
+
+const MUST_CHANGE_KEY = 'mustChangePassword';
+
+/** Whether the signed-in account must change its (weak) password. */
+export function getMustChangePassword(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(MUST_CHANGE_KEY) === '1';
+}
+
+export function setMustChangePassword(value: boolean) {
+  if (typeof window === 'undefined') return;
+  if (value) window.localStorage.setItem(MUST_CHANGE_KEY, '1');
+  else window.localStorage.removeItem(MUST_CHANGE_KEY);
 }
 
 // ---- Core fetch helper ----
+
+/** Error carrying the HTTP status, an optional stable code and a message. */
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+    /** Machine-readable code (e.g. 'auth.emailTaken') for localization. */
+    public readonly code?: string,
+    /** Interpolation values for the localized message (e.g. roles). */
+    public readonly meta?: Record<string, unknown>,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/** Extracts a readable message + code from the control-plane's unified body. */
+function parseApiError(status: number, raw: string): ApiError {
+  try {
+    const body = JSON.parse(raw) as {
+      message?: string | string[];
+      code?: string;
+      meta?: Record<string, unknown>;
+    };
+    const msg = Array.isArray(body.message)
+      ? body.message.join(', ')
+      : body.message;
+    if (msg) return new ApiError(status, msg, body.code, body.meta);
+  } catch {
+    /* not JSON — fall through */
+  }
+  return new ApiError(status, raw || `Request failed (${status})`);
+}
 
 export async function api<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers ?? {}),
+      },
+    });
+  } catch {
+    // Network/connection failure (server down, offline, CORS).
+    throw new ApiError(0, 'Cannot reach the server. Check your connection.');
+  }
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`API ${res.status}: ${body}`);
+    throw parseApiError(res.status, await res.text());
   }
   if (res.status === 204) return undefined as T;
   const text = await res.text();
@@ -181,15 +321,110 @@ export async function api<T>(
 
 // ---- Auth ----
 
-export async function login(email: string, password: string) {
-  const tokens = await api<{ accessToken: string; refreshToken: string }>(
-    '/auth/login',
-    { method: 'POST', body: JSON.stringify({ email, password }) },
-  );
+interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface AuthResult extends TokenPair {
+  needsOnboarding?: boolean;
+  mustChangePassword?: boolean;
+}
+
+export interface AuthMe {
+  id: string;
+  email: string;
+  role: 'ADMIN' | 'USER';
+  firstName: string | null;
+  lastName: string | null;
+  twoFactor: boolean;
+  onboardedAt: string | null;
+  needsOnboarding: boolean;
+  mustChangePassword: boolean;
+}
+
+export interface TwoFactorSetup {
+  secret: string;
+  otpauthUrl: string;
+  qrDataUrl: string;
+}
+
+function storeTokens(tokens: TokenPair) {
   window.localStorage.setItem('accessToken', tokens.accessToken);
   window.localStorage.setItem('refreshToken', tokens.refreshToken);
-  return tokens;
 }
+
+export async function login(email: string, password: string, totp?: string) {
+  const res = await api<AuthResult>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, ...(totp ? { totp } : {}) }),
+  });
+  storeTokens(res);
+  setMustChangePassword(!!res.mustChangePassword);
+  return res;
+}
+
+/** Stage 1: create the account and sign in (still needs onboarding). */
+export async function register(email: string, password: string) {
+  const res = await api<AuthResult>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  storeTokens(res);
+  return res;
+}
+
+/** Stage 2: fetch a fresh TOTP secret + QR to display. */
+export const begin2fa = () =>
+  api<TwoFactorSetup>('/auth/2fa/setup', { method: 'POST' });
+
+/** Stage 2: submit personal data + confirm the TOTP code. */
+export const completeOnboarding = (body: {
+  firstName: string;
+  lastName: string;
+  totpSecret: string;
+  totpCode: string;
+}) =>
+  api<{ ok: boolean }>('/auth/onboarding', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+
+export const getMe = () => api<AuthMe>('/auth/me');
+
+/** Settings: update personal data on the current account. */
+export const updateProfile = (body: { firstName: string; lastName: string }) =>
+  api<{ ok: boolean }>('/auth/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+
+/** Settings: change the account password (requires the current one). */
+export const changePassword = async (body: {
+  currentPassword: string;
+  newPassword: string;
+}) => {
+  const res = await api<{ ok: boolean }>('/auth/password', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  setMustChangePassword(false);
+  return res;
+};
+
+/** Settings: enable 2FA by confirming a code for a freshly issued secret. */
+export const enable2fa = (body: { totpSecret: string; totpCode: string }) =>
+  api<{ ok: boolean }>('/auth/2fa/enable', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+
+/** Settings: disable 2FA after re-entering the account password. */
+export const disable2fa = (body: { password: string }) =>
+  api<{ ok: boolean }>('/auth/2fa/disable', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 
 // ---- Projects ----
 
@@ -281,6 +516,21 @@ export const nodeAgentStatus = (id: string) =>
 // ---- Templates ----
 
 export const listTemplates = () => api<Template[]>('/templates');
+
+export const createTemplate = (body: TemplateInput) =>
+  api<Template>('/templates', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+
+export const updateTemplate = (id: string, body: Partial<TemplateInput>) =>
+  api<Template>(`/templates/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+
+export const deleteTemplate = (id: string) =>
+  api<{ ok: boolean }>(`/templates/${id}`, { method: 'DELETE' });
 
 // ---- Git credentials ----
 
@@ -425,6 +675,24 @@ export interface NodeStats {
 
 export const getNodeStats = (id: string) =>
   api<NodeStats>(`/nodes/${id}/stats`);
+
+export interface NodeHost {
+  reachable: boolean;
+  error?: string;
+  cpuCores?: number;
+  load1?: number;
+  load5?: number;
+  load15?: number;
+  memTotalMb?: number;
+  memUsedMb?: number;
+  memUsedPerc?: number;
+  diskTotalGb?: number;
+  diskUsedGb?: number;
+  diskUsedPerc?: number;
+}
+
+export const getNodeHost = (id: string) =>
+  api<NodeHost>(`/nodes/${id}/host`);
 
 export interface NodePruneResult {
   ok: boolean;

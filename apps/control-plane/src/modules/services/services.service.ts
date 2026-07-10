@@ -1,11 +1,14 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
+  OnModuleDestroy,
 } from '@nestjs/common';
 import { PowerAction } from '@selfhosted/shared';
 import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { DRIZZLE, Database } from '../../db/database.module';
@@ -24,16 +27,51 @@ import { AgentClient } from '../nodes/agent.client';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { SetDomainDto, SetEnvDto } from './dto/set-env.dto';
-import { DEPLOY_QUEUE, DeployJobData } from './deploy.constants';
+import {
+  DEPLOY_QUEUE,
+  DEPLOY_LOCK_TTL_MS,
+  DeployJobData,
+  deployLockKey,
+} from './deploy.constants';
 
 @Injectable()
-export class ServicesService {
+export class ServicesService implements OnModuleDestroy {
+  private readonly lockRedis: Redis;
+
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly crypto: CryptoService,
     private readonly agent: AgentClient,
     @Inject(DEPLOY_QUEUE) private readonly deployQueue: Queue<DeployJobData>,
-  ) {}
+  ) {
+    this.lockRedis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+      maxRetriesPerRequest: null,
+    });
+  }
+
+  onModuleDestroy() {
+    this.lockRedis.disconnect();
+  }
+
+  /**
+   * Guards against concurrent deploys of the same service (double-click, webhook
+   * + manual overlap). Atomic SET NX; the worker releases the lock when done and
+   * a TTL guarantees eventual recovery if the worker crashes.
+   */
+  private async acquireDeployLock(serviceId: string): Promise<void> {
+    const ok = await this.lockRedis.set(
+      deployLockKey(serviceId),
+      '1',
+      'PX',
+      DEPLOY_LOCK_TTL_MS,
+      'NX',
+    );
+    if (ok !== 'OK') {
+      throw new ConflictException(
+        'A deployment is already in progress for this service.',
+      );
+    }
+  }
 
   private async node(nodeId: string) {
     const rows = await this.db
@@ -425,17 +463,23 @@ export class ServicesService {
    */
   async deploy(id: string) {
     await this.get(id);
-    const rows = await this.db
-      .insert(deployments)
-      .values({ serviceId: id, status: 'QUEUED' })
-      .returning();
-    const deployment = rows[0];
-    await this.deployQueue.add(
-      'deploy',
-      { deploymentId: deployment.id, serviceId: id },
-      { removeOnComplete: 50, removeOnFail: 100 },
-    );
-    return deployment;
+    await this.acquireDeployLock(id);
+    try {
+      const rows = await this.db
+        .insert(deployments)
+        .values({ serviceId: id, status: 'QUEUED' })
+        .returning();
+      const deployment = rows[0];
+      await this.deployQueue.add(
+        'deploy',
+        { deploymentId: deployment.id, serviceId: id },
+        { removeOnComplete: 50, removeOnFail: 100 },
+      );
+      return deployment;
+    } catch (e) {
+      await this.lockRedis.del(deployLockKey(id)).catch(() => undefined);
+      throw e;
+    }
   }
 
   /**
@@ -451,27 +495,35 @@ export class ServicesService {
       );
     }
     await this.get(source.serviceId);
-    const rows = await this.db
-      .insert(deployments)
-      .values({
-        serviceId: source.serviceId,
-        status: 'QUEUED',
-        commitSha: source.commitSha,
-        imageTag: source.imageTag,
-      })
-      .returning();
-    const deployment = rows[0];
-    await this.deployQueue.add(
-      'deploy',
-      {
-        deploymentId: deployment.id,
-        serviceId: source.serviceId,
-        rollbackImageTag: source.imageTag,
-        rollbackCommitSha: source.commitSha ?? undefined,
-      },
-      { removeOnComplete: 50, removeOnFail: 100 },
-    );
-    return deployment;
+    await this.acquireDeployLock(source.serviceId);
+    try {
+      const rows = await this.db
+        .insert(deployments)
+        .values({
+          serviceId: source.serviceId,
+          status: 'QUEUED',
+          commitSha: source.commitSha,
+          imageTag: source.imageTag,
+        })
+        .returning();
+      const deployment = rows[0];
+      await this.deployQueue.add(
+        'deploy',
+        {
+          deploymentId: deployment.id,
+          serviceId: source.serviceId,
+          rollbackImageTag: source.imageTag,
+          rollbackCommitSha: source.commitSha ?? undefined,
+        },
+        { removeOnComplete: 50, removeOnFail: 100 },
+      );
+      return deployment;
+    } catch (e) {
+      await this.lockRedis
+        .del(deployLockKey(source.serviceId))
+        .catch(() => undefined);
+      throw e;
+    }
   }
 
   /** Deterministic webhook token for a service (HMAC, no DB column needed). */

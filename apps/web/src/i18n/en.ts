@@ -22,6 +22,27 @@ export const en = {
   'common.saved': 'Saved',
   'common.close': 'Close',
   'common.done': 'Done',
+  'common.remove': 'Remove',
+
+  // Members / roles
+  'members.title': 'Members',
+  'members.hint':
+    'People with access to this project. Roles: Viewer (read-only), Member (deploy & operate), Admin (manage settings & members), Owner (full control).',
+  'members.email': 'Email',
+  'members.roleLabel': 'Role',
+  'members.add': 'Add',
+  'members.added': 'Member added',
+  'members.role.OWNER': 'Owner',
+  'members.role.ADMIN': 'Admin',
+  'members.role.MEMBER': 'Member',
+  'members.role.VIEWER': 'Viewer',
+  'members.role.NONE': 'none',
+
+  // Audit log
+  'audit.title': 'Audit log',
+  'audit.show': 'Show',
+  'audit.hide': 'Hide',
+  'audit.empty': 'No activity recorded yet.',
 
   // Cleanup / prune
   'cleanup.button': 'Clean up',
@@ -61,6 +82,11 @@ export const en = {
   'nav.tunnels': 'Exposure',
   'nav.templates': 'Templates',
   'nav.git': 'Git access',
+  'nav.settings': 'Settings',
+  'nav.openMenu': 'Open menu',
+  'nav.closeMenu': 'Close menu',
+  'nav.collapse': 'Hide sidebar',
+  'nav.expand': 'Show sidebar',
 
   // Home
   'home.subtitle':
@@ -76,6 +102,116 @@ export const en = {
   'login.signIn': 'Sign in',
   'login.signingIn': 'Signing in…',
   'login.failed': 'Login failed',
+  'login.totp': 'Two-factor code',
+  'login.totpHint': 'Enter the 6-digit code from your authenticator app.',
+  'login.noAccount': "Don't have an account?",
+  'login.register': 'Create one',
+
+  // Registration (stage 1)
+  'register.title': 'Create your account',
+  'register.subtitle': 'Step 1 of 2 — account details',
+  'register.passwordHint': 'At least 8 characters.',
+  'register.continue': 'Continue',
+  'register.creating': 'Creating…',
+  'register.haveAccount': 'Already have an account?',
+  'register.signIn': 'Sign in',
+
+  // Onboarding (stage 2)
+  'onboarding.title': 'Complete your profile',
+  'onboarding.subtitle': 'Step 2 of 2 — personal details & two-factor auth',
+  'onboarding.firstName': 'First name',
+  'onboarding.lastName': 'Last name',
+  'onboarding.2faTitle': 'Two-factor authentication',
+  'onboarding.2faHint':
+    'Scan the QR code with Google Authenticator, 1Password or any TOTP app, then enter the 6-digit code to confirm.',
+  'onboarding.secretManual': "Can't scan? Enter this key manually:",
+  'onboarding.code': '6-digit code',
+  'onboarding.finish': 'Finish setup',
+  'onboarding.finishing': 'Finishing…',
+
+  // Account settings
+  'settings.title': 'Account settings',
+  'settings.subtitle': 'Manage your profile, password and two-factor auth.',
+  'settings.profileTitle': 'Personal data',
+  'settings.profileHint': 'Your name shown across the panel.',
+  'settings.firstName': 'First name',
+  'settings.lastName': 'Last name',
+  'settings.email': 'Email',
+  'settings.emailHint': 'Email is used to sign in and cannot be changed here.',
+  'settings.save': 'Save',
+  'settings.saving': 'Saving…',
+  'settings.profileSaved': 'Profile updated',
+  'settings.passwordTitle': 'Password',
+  'settings.passwordHint': 'Use at least 8 characters.',
+  'settings.currentPassword': 'Current password',
+  'settings.newPassword': 'New password',
+  'settings.confirmPassword': 'Confirm new password',
+  'settings.changePassword': 'Change password',
+  'settings.changingPassword': 'Changing…',
+  'settings.passwordChanged': 'Password changed',
+  'settings.passwordMismatch': 'The new passwords do not match.',
+  'settings.2faTitle': 'Two-factor authentication',
+  'settings.2faStatusOn': 'Enabled',
+  'settings.2faStatusOff': 'Disabled',
+  'settings.2faOnHint':
+    'A code from your authenticator app is required at sign-in.',
+  'settings.2faOffHint':
+    'Add an extra layer of security using a TOTP authenticator app.',
+  'settings.enable2fa': 'Enable 2FA',
+  'settings.enabling': 'Enabling…',
+  'settings.confirmEnable': 'Confirm & enable',
+  'settings.disable2fa': 'Disable 2FA',
+  'settings.disabling': 'Disabling…',
+  'settings.2faEnabledMsg': 'Two-factor authentication enabled',
+  'settings.2faDisabledMsg': 'Two-factor authentication disabled',
+  'settings.scanHint':
+    'Scan the QR code with your authenticator app, then enter the 6-digit code.',
+  'settings.secretManual': "Can't scan? Enter this key manually:",
+  'settings.code': '6-digit code',
+  'settings.passwordToDisable': 'Enter your password to disable 2FA.',
+  'settings.mustChangeTitle': 'Your password needs to be updated',
+  'settings.mustChangeHint':
+    'Your current password does not meet the security policy. Please set a stronger password below to continue.',
+
+  // Password policy checklist
+  'password.rule.length': 'At least 12 characters',
+  'password.rule.upper': 'An uppercase letter (A–Z)',
+  'password.rule.lower': 'A lowercase letter (a–z)',
+  'password.rule.digits': 'At least 3 digits',
+  'password.rule.special': 'A special character (!@#$…)',
+
+  // API error codes (mapped from the control-plane `code` field)
+  'error.auth.emailTaken': 'An account with this email already exists.',
+  'error.auth.invalidCredentials': 'Invalid email or password.',
+  'error.auth.totpRequired': 'A two-factor authentication code is required.',
+  'error.auth.totpInvalid': 'The two-factor code is invalid or has expired.',
+  'error.auth.alreadyOnboarded': 'Onboarding has already been completed.',
+  'error.auth.invalidRefresh': 'Your session has expired. Please sign in again.',
+  'error.auth.currentPasswordInvalid': 'The current password is incorrect.',
+  'error.auth.weakPassword':
+    'Password must be at least 12 characters and include an uppercase letter, a lowercase letter, a special character and at least 3 digits.',
+  'error.auth.twoFactorAlreadyEnabled':
+    'Two-factor authentication is already enabled.',
+  'error.auth.twoFactorNotEnabled':
+    'Two-factor authentication is not enabled.',
+  'error.common.adminOnly': 'This action is restricted to administrators.',
+  'error.template.notFound': 'Template not found.',
+  'error.template.inUse':
+    'This template is used by one or more services and cannot be deleted.',
+  'error.members.userNotFound':
+    'No user with that email — they must register first.',
+  'error.members.ownerReserved':
+    'Use transfer-ownership to assign the Owner role.',
+  'error.members.ownerImmutable':
+    'The project owner role cannot be changed directly.',
+  'error.members.ownerRemoval': 'The project owner cannot be removed.',
+  'error.members.forbidden':
+    'Requires the {min} role on this project (you have {role}).',
+  'error.project.limitBelowAllocated':
+    'The limit cannot be lower than resources already allocated to services.',
+  'error.project.cpuOverCapacity': 'The CPU limit exceeds platform capacity.',
+  'error.project.memOverCapacity':
+    'The memory limit exceeds platform capacity.',
 
   // Projects (dashboard)
   'projects.title': 'Projects',
@@ -169,6 +305,10 @@ export const en = {
   'nodes.images': 'Images',
   'nodes.reclaimable': 'Reclaimable',
   'nodes.volumes': 'Volumes',
+  'nodes.hostLoad': 'CPU load / cores',
+  'nodes.hostRam': 'Host RAM',
+  'nodes.hostDisk': 'Host disk',
+  'nodes.hostMemPerc': 'RAM used',
   'nodes.servicesOnNode': 'Services',
   'nodes.databasesOnNode': 'Databases',
   'nodes.noServices': 'No services on this node.',
@@ -221,10 +361,44 @@ export const en = {
   'templates.aboutTitle': 'What are templates?',
   'templates.aboutBody':
     'A template is a ready-made recipe for a stack — which image builds your code, which image runs it, the Dockerfile and the default port. When you create a service you pick a template, and the node’s agent uses it to build and run your app. You can override the port or use the repo’s own Dockerfile per service.',
-  'templates.noteTitle': 'Built-in templates',
+  'templates.noteTitle': 'Built-in & custom templates',
   'templates.noteBody':
-    'The templates below ship with the panel and are read-only. They cover common Java and JS/TS stacks — pick the closest one when creating a service.',
+    'The panel ships with templates for common Java and JS/TS stacks. Administrators can create new templates, edit any template (including built-in ones) and group them into categories.',
   'templates.builtIn': 'built-in',
+  'templates.new': 'New template',
+  'templates.empty': 'No templates yet.',
+  'templates.uncategorized': 'Other',
+  'templates.created': 'Template created',
+  'templates.updated': 'Template updated',
+  'templates.deleted': 'Template deleted',
+  'templates.editTitle': 'Edit template',
+  'templates.editBuiltInHint':
+    'This is a built-in template. Your changes apply to everyone on this panel.',
+  'templates.deleteTitle': 'Delete template',
+  'templates.deleteConfirm':
+    'Delete this template? Services already created keep working; only new services lose it.',
+  'templates.f.name': 'Name',
+  'templates.f.category': 'Category',
+  'templates.f.categoryHint': 'Group label (leave empty for “Other”).',
+  'templates.f.description': 'Description',
+  'templates.f.type': 'Type',
+  'templates.f.port': 'Default port',
+  'templates.f.healthcheck': 'Healthcheck path',
+  'templates.f.baseImage': 'Runtime image',
+  'templates.f.installImage': 'Build image',
+  'templates.f.dockerfilePath': 'Dockerfile path',
+  'templates.f.dockerfilePathHint': 'Path to the Dockerfile inside the panel repo.',
+  'templates.f.buildCommand': 'Build command',
+  'templates.f.runCommand': 'Run command',
+  'templates.f.installScript': 'Build script',
+  'templates.f.installScriptHint':
+    'Shell script executed in the build image to produce the artifact.',
+  'templates.f.variables': 'Variables',
+  'templates.f.addVariable': 'Add variable',
+  'templates.f.noVariables': 'No variables declared.',
+  'templates.f.varName': 'Label',
+  'templates.f.varDefault': 'Default value',
+  'templates.f.varDescription': 'Description (optional)',
   'templates.desc.javaMaven':
     'Builds a Maven project into a JAR and runs it on Temurin 21.',
   'templates.desc.javaGradle':
@@ -424,6 +598,8 @@ export const en = {
     'Interactive shell inside the running container — inspect files, connect to the database, fix things by hand.',
   'service.terminalConnecting': 'Connecting…',
   'service.terminalClosed': 'Session closed',
+  'service.terminalReconnecting': 'Reconnecting…',
+  'service.terminalReconnected': 'Reconnected',
   'service.terminalNotRunning': 'Start the container to open a shell.',
   'service.close': 'Close',
   // Persistent volumes

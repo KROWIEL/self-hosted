@@ -41,6 +41,7 @@ async function main() {
       name: 'Java 21 (Maven)',
       description:
         'Builds a Maven project into a JAR and runs it on Temurin 21.',
+      category: 'Java',
       type: 'BACKEND',
       baseImage: 'eclipse-temurin:21-jre',
       dockerfilePath: 'templates/java/Dockerfile',
@@ -74,6 +75,7 @@ async function main() {
       name: 'Java 25 (Gradle)',
       description:
         'Builds a Gradle project (via the repo wrapper) into a JAR and runs it on Temurin 25.',
+      category: 'Java',
       type: 'BACKEND',
       baseImage: 'eclipse-temurin:25-jre',
       dockerfilePath: 'templates/java-gradle/Dockerfile',
@@ -102,6 +104,7 @@ async function main() {
       name: 'Java (Maven WAR → Tomcat)',
       description:
         'Builds a Maven WAR from source and deploys it to Tomcat 9 at the root context.',
+      category: 'Java',
       type: 'BACKEND',
       baseImage: 'tomcat:9.0',
       dockerfilePath: 'templates/java-war/Dockerfile',
@@ -120,6 +123,7 @@ async function main() {
       name: 'Next.js 20',
       description:
         'Builds a Next.js app (standalone output) and runs it on Node 20.',
+      category: 'JavaScript',
       type: 'FRONTEND',
       baseImage: 'node:20-alpine',
       dockerfilePath: 'templates/nextjs/Dockerfile',
@@ -146,6 +150,7 @@ async function main() {
       name: 'React (Vite)',
       description:
         'Builds a Vite React SPA and serves the static assets with nginx.',
+      category: 'JavaScript',
       type: 'FRONTEND',
       baseImage: 'nginx:1.27-alpine',
       dockerfilePath: 'templates/react-vite/Dockerfile',
@@ -172,13 +177,20 @@ async function main() {
 
   for (const tpl of builtInTemplates) {
     const found = await db
-      .select({ id: templates.id })
+      .select({ id: templates.id, category: templates.category })
       .from(templates)
       .where(eq(templates.name, tpl.name))
       .limit(1);
     if (found.length === 0) {
       await db.insert(templates).values(tpl);
       console.log(`Template created: ${tpl.name}`);
+    } else if (!found[0].category && tpl.category) {
+      // Backfill the category for templates seeded before categories existed.
+      await db
+        .update(templates)
+        .set({ category: tpl.category })
+        .where(eq(templates.id, found[0].id));
+      console.log(`Template category set: ${tpl.name} → ${tpl.category}`);
     } else {
       console.log(`Template already exists: ${tpl.name}`);
     }

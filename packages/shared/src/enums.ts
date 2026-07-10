@@ -3,6 +3,13 @@ export enum Role {
   USER = 'USER',
 }
 
+export enum MemberRole {
+  OWNER = 'OWNER',
+  ADMIN = 'ADMIN',
+  MEMBER = 'MEMBER',
+  VIEWER = 'VIEWER',
+}
+
 export enum NodeStatus {
   ONLINE = 'ONLINE',
   OFFLINE = 'OFFLINE',

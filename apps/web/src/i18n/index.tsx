@@ -79,6 +79,41 @@ export function useI18n(): I18nContextValue {
   return ctx;
 }
 
+/**
+ * Localizes an error thrown by the API. Prefers the stable `code` (mapped to an
+ * `error.*` key), then the raw English message, then a generic fallback — so the
+ * user never sees an untranslated string when a code is available.
+ */
+const ROLE_VALUES = new Set(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER', 'NONE']);
+
+export function useErrorText() {
+  const { t } = useI18n();
+  return (err: unknown, fallback?: TKey): string => {
+    const e =
+      err && typeof err === 'object'
+        ? (err as { code?: string; meta?: Record<string, unknown> })
+        : undefined;
+    const code = e?.code;
+    if (code) {
+      const key = `error.${code}` as TKey;
+      if (key in en) {
+        // Localize interpolation values that are role enums (e.g. VIEWER),
+        // leaving everything else as-is.
+        const vars: Vars = {};
+        for (const [k, v] of Object.entries(e?.meta ?? {})) {
+          const sv = String(v);
+          vars[k] = ROLE_VALUES.has(sv)
+            ? t(`members.role.${sv}` as TKey)
+            : sv;
+        }
+        return t(key, vars);
+      }
+    }
+    if (err instanceof Error && err.message) return err.message;
+    return t(fallback ?? 'common.failed');
+  };
+}
+
 /** Localizes a runtime status value (falls back to the raw value). */
 export function useStatusLabel() {
   const { t } = useI18n();

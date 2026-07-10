@@ -352,6 +352,19 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /** OS-level host metrics (CPU load, RAM, disk) from the node's agent. */
+  async host(id: string) {
+    const node = await this.get(id);
+    try {
+      return { reachable: true, ...(await this.agent.getHost(node)) };
+    } catch (e) {
+      return {
+        reachable: false,
+        error: e instanceof Error ? e.message : String(e),
+      };
+    }
+  }
+
   /** Reclaims disk on the node via docker prune (manual cleanup button). */
   async prune(id: string, opts: { all?: boolean; volumes?: boolean }) {
     const node = await this.get(id);

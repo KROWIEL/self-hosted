@@ -13,6 +13,12 @@ import {
 
 // Enums (mirror @selfhosted/shared).
 export const roleEnum = pgEnum('role', ['ADMIN', 'USER']);
+export const memberRoleEnum = pgEnum('member_role', [
+  'OWNER',
+  'ADMIN',
+  'MEMBER',
+  'VIEWER',
+]);
 export const nodeStatusEnum = pgEnum('node_status', ['ONLINE', 'OFFLINE']);
 export const gitProviderEnum = pgEnum('git_provider', ['GITHUB', 'GITLAB']);
 export const serviceTypeEnum = pgEnum('service_type', ['BACKEND', 'FRONTEND']);
@@ -42,8 +48,18 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
   password: text('password').notNull(),
+  // Personal data captured during onboarding (stage 2 of registration).
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  // TOTP shared secret, encrypted at rest (AES-256-GCM). Non-null = 2FA on.
   totpSecret: text('totp_secret'),
   role: roleEnum('role').notNull().default('USER'),
+  // Set at login when the account password fails the current strength policy;
+  // the UI then forces a password change (without blocking sign-in).
+  mustChangePassword: boolean('must_change_password').notNull().default(false),
+  // Set when the user finishes onboarding (personal data + 2FA). Null = the
+  // account exists but must still complete stage 2 before using the panel.
+  onboardedAt: timestamp('onboarded_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -100,6 +116,47 @@ export const projects = pgTable('projects', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+/// Project membership: which users can access a project and with what role.
+/// The project owner also gets an OWNER row (backfilled on startup).
+export const projectMembers = pgTable(
+  'project_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: memberRoleEnum('role').notNull().default('MEMBER'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    projectUserUnique: unique('project_members_project_user_unique').on(
+      t.projectId,
+      t.userId,
+    ),
+  }),
+);
+
+/// Append-only audit trail of mutating actions (deploy, power, delete, env
+/// change, member ops, exec-open, …). Never stores secret values.
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  userEmail: text('user_email'),
+  action: text('action').notNull(), // 'service.deploy', 'db.delete', ...
+  targetType: text('target_type').notNull(), // 'service', 'project', ...
+  targetId: text('target_id'),
+  projectId: uuid('project_id').references(() => projects.id, {
+    onDelete: 'set null',
+  }),
+  meta: jsonb('meta').notNull().default(sql`'{}'::jsonb`),
+  ip: text('ip'),
+  status: integer('status'), // HTTP status of the response
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 /// Git credentials (PAT). PAT is encrypted at rest (AES-256-GCM).
 export const gitCredentials = pgTable('git_credentials', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -116,6 +173,8 @@ export const templates = pgTable('templates', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   description: text('description'),
+  // Free-form grouping label (e.g. 'Java', 'JavaScript'); null = uncategorized.
+  category: text('category'),
   type: serviceTypeEnum('type').notNull(),
   baseImage: text('base_image').notNull(),
   dockerfilePath: text('dockerfile_path'),
@@ -330,6 +389,8 @@ export type DbSchema = {
   nodes: typeof nodes;
   nodeEnrollments: typeof nodeEnrollments;
   projects: typeof projects;
+  projectMembers: typeof projectMembers;
+  auditLogs: typeof auditLogs;
   gitCredentials: typeof gitCredentials;
   templates: typeof templates;
   services: typeof services;

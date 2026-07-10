@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { LanguageProvider } from '@/i18n';
+import { ToastProvider } from '@/components/toast';
 
 export const metadata: Metadata = {
   title: 'Self-Hosted Panel',
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="absolute bottom-[-12rem] left-1/3 h-[40rem] w-[40rem] animate-blob-3 rounded-full bg-fuchsia-600/20 blur-[120px]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgba(7,10,18,0.6))]" />
         </div>
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
