@@ -212,6 +212,8 @@ export const ru: Dict = {
   'error.project.cpuOverCapacity': 'Лимит CPU превышает ёмкость платформы.',
   'error.project.memOverCapacity':
     'Лимит памяти превышает ёмкость платформы.',
+  'error.nodes.agentUnreachable':
+    'Агент на ноде «{node}» недоступен. Убедитесь, что он запущен (Ноды → Запустить агента).',
 
   // Projects (dashboard)
   'projects.title': 'Проекты',

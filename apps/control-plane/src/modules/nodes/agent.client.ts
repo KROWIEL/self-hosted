@@ -4,6 +4,7 @@ import { Agent } from 'undici';
 import { connect as tlsConnect } from 'node:tls';
 import { nodes } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
+import { NodeErrors } from '../../common/errors/app-errors';
 
 export type NodeRow = typeof nodes.$inferSelect;
 
@@ -247,6 +248,23 @@ export class AgentClient {
     return agent as unknown as FetchDispatcher;
   }
 
+  /**
+   * Wraps `fetch` so a network-level failure (agent down, connection refused,
+   * DNS/TLS error) surfaces as a coded, localized "agent unreachable" error
+   * instead of a bare `TypeError: fetch failed` that becomes a generic 500.
+   */
+  private async doFetch(
+    node: NodeRow,
+    input: string,
+    init: Parameters<typeof fetch>[1],
+  ): Promise<Response> {
+    try {
+      return await fetch(input, init);
+    } catch {
+      throw NodeErrors.agentUnreachable(node.name);
+    }
+  }
+
   private async request<T>(
     node: NodeRow,
     path: string,
@@ -262,7 +280,7 @@ export class AgentClient {
       },
       dispatcher: this.dispatcher(node),
     };
-    const res = await fetch(`${this.baseUrl(node)}${path}`, init2);
+    const res = await this.doFetch(node, `${this.baseUrl(node)}${path}`, init2);
     if (!res.ok) {
       throw new Error(
         `Agent ${node.name} responded ${res.status}: ${await res.text()}`,
@@ -351,7 +369,8 @@ export class AgentClient {
     onChunk?: (text: string) => void,
   ): Promise<AgentBuildResult> {
     const token = this.crypto.decrypt(node.daemonToken);
-    const res = await fetch(
+    const res = await this.doFetch(
+      node,
       `${this.baseUrl(node)}/servers/${input.serviceId}/build`,
       {
         method: 'POST',
@@ -575,7 +594,8 @@ export class AgentClient {
   /** Opens the raw download stream of a backup file from the node. */
   async downloadBackup(node: NodeRow, file: string, signal?: AbortSignal) {
     const token = this.crypto.decrypt(node.daemonToken);
-    const res = await fetch(
+    const res = await this.doFetch(
+      node,
       `${this.baseUrl(node)}/backups/download?file=${encodeURIComponent(file)}`,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -613,11 +633,15 @@ export class AgentClient {
     signal?: AbortSignal,
   ): Promise<Response> {
     const token = this.crypto.decrypt(node.daemonToken);
-    const res = await fetch(`${this.baseUrl(node)}/servers/${serviceId}/logs`, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal,
-      dispatcher: this.dispatcher(node),
-    });
+    const res = await this.doFetch(
+      node,
+      `${this.baseUrl(node)}/servers/${serviceId}/logs`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+        dispatcher: this.dispatcher(node),
+      },
+    );
     if (!res.ok || !res.body) {
       throw new Error(`Agent ${node.name} logs HTTP ${res.status}`);
     }

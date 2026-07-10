@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -101,6 +102,15 @@ export const ProjectErrors = {
     new BadRequestException({
       code: 'project.memOverCapacity',
       message: 'Project memory limit exceeds platform capacity.',
+    }),
+};
+
+export const NodeErrors = {
+  agentUnreachable: (node: string) =>
+    new BadGatewayException({
+      code: 'nodes.agentUnreachable',
+      message: `The agent on node "${node}" is unreachable. Make sure it is running (Nodes → Start agent).`,
+      meta: { node },
     }),
 };
 

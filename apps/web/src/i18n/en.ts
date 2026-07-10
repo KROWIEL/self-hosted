@@ -212,6 +212,8 @@ export const en = {
   'error.project.cpuOverCapacity': 'The CPU limit exceeds platform capacity.',
   'error.project.memOverCapacity':
     'The memory limit exceeds platform capacity.',
+  'error.nodes.agentUnreachable':
+    'The agent on node “{node}” is unreachable. Make sure it is running (Nodes → Start agent).',
 
   // Projects (dashboard)
   'projects.title': 'Projects',

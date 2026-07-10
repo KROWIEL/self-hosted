@@ -49,8 +49,9 @@ import {
   ErrorBox,
   GuideCard,
   KpiCard,
+  Masonry,
+  MasonryItem,
   PanelCard,
-  ResponsiveGrid,
   ResourceSlider,
   Spinner,
   StatusText,
@@ -254,12 +255,11 @@ export default function ServicePage() {
 
           <ServiceResourceSummary service={service} id={id} />
 
-          <ResponsiveGrid>
-            <div className="md:col-span-2 xl:col-span-2">
+          <Masonry>
+            <MasonryItem>
               <OverviewPanel service={service} />
-            </div>
-
-            <div className="md:col-span-2 xl:col-span-2">
+            </MasonryItem>
+            <MasonryItem>
               <DeploymentsPanel
                 deployments={deployments}
                 zeroDowntime={service.zeroDowntime}
@@ -270,18 +270,27 @@ export default function ServicePage() {
                 setShowHistory={setShowHistory}
                 onRollback={(depId) => act(() => rollbackDeployment(depId))}
               />
-            </div>
+            </MasonryItem>
+            <MasonryItem>
+              <SettingsBox service={service} onSaved={refresh} />
+            </MasonryItem>
+            <MasonryItem>
+              <EnvEditor id={id} env={env} onSaved={refresh} />
+            </MasonryItem>
+            <MasonryItem>
+              <DomainBox id={id} onSaved={refresh} />
+            </MasonryItem>
+            <MasonryItem>
+              <VolumesBox id={id} />
+            </MasonryItem>
+            <MasonryItem>
+              <WebhookBox id={id} />
+            </MasonryItem>
+          </Masonry>
 
-            <SettingsBox service={service} onSaved={refresh} />
-            <EnvEditor id={id} env={env} onSaved={refresh} />
-            <DomainBox id={id} onSaved={refresh} />
-            <VolumesBox id={id} />
-            <WebhookBox id={id} />
-
-            <section className="md:col-span-2 xl:col-span-3">
-              <LogViewer id={id} />
-            </section>
-          </ResponsiveGrid>
+          <section className="mt-6">
+            <LogViewer id={id} />
+          </section>
 
           {termOpen && (
             <TerminalModal serviceId={id} onClose={() => setTermOpen(false)} />

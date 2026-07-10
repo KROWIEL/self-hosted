@@ -1,6 +1,14 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import {
+  Children,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { useI18n, useStatusLabel } from '@/i18n';
 import { useToast } from '@/components/toast';
@@ -228,6 +236,121 @@ export function ResponsiveGrid({
       {children}
     </div>
   );
+}
+
+const useIsoLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
+function sameOrder(a: number[], b: number[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
+/**
+ * True masonry layout. Unlike CSS multi-column (which splits the list in
+ * document order and balances poorly with tall, unbreakable cards), this
+ * measures each card and drops it into the currently shortest column, so cards
+ * flow left-to-right and fill gaps instead of piling up in one column. The
+ * column count flexes with the container width and it re-balances whenever a
+ * card resizes (e.g. a form entering edit mode).
+ */
+export function Masonry({
+  children,
+  className = '',
+  minColWidth = 360,
+  maxColumns = 3,
+  gap = 24,
+}: {
+  children: ReactNode;
+  className?: string;
+  minColWidth?: number;
+  maxColumns?: number;
+  gap?: number;
+}) {
+  const items = Children.toArray(children);
+  const count = items.length;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [columns, setColumns] = useState(1);
+  const [assignment, setAssignment] = useState<number[]>(() =>
+    new Array(count).fill(0),
+  );
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.clientWidth;
+      const fit = Math.floor((w + gap) / (minColWidth + gap));
+      setColumns(Math.max(1, Math.min(maxColumns, fit)));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [gap, minColWidth, maxColumns]);
+
+  const recompute = useCallback(() => {
+    const heights = new Array(columns).fill(0);
+    const next = new Array(count).fill(0);
+    for (let i = 0; i < count; i++) {
+      let col = 0;
+      for (let k = 1; k < columns; k++) if (heights[k] < heights[col]) col = k;
+      next[i] = col;
+      heights[col] += (itemRefs.current[i]?.offsetHeight ?? 0) + gap;
+    }
+    setAssignment((prev) => (sameOrder(prev, next) ? prev : next));
+  }, [columns, count, gap]);
+
+  useIsoLayoutEffect(() => {
+    recompute();
+  }, [recompute]);
+
+  useEffect(() => {
+    const ro = new ResizeObserver(() => recompute());
+    itemRefs.current.forEach((el) => el && ro.observe(el));
+    return () => ro.disconnect();
+  }, [recompute, count]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`flex items-start ${className}`}
+      style={{ gap }}
+    >
+      {Array.from({ length: columns }).map((_, col) => (
+        <div
+          key={col}
+          className="flex min-w-0 flex-1 flex-col"
+          style={{ gap }}
+        >
+          {items.map((child, i) =>
+            (assignment[i] ?? 0) === col ? (
+              <div
+                key={i}
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
+              >
+                {child}
+              </div>
+            ) : null,
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MasonryItem({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return className ? <div className={className}>{children}</div> : <>{children}</>;
 }
 
 export function Modal({
