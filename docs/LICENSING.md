@@ -78,3 +78,11 @@ export class BackupsController { /* ... */ }
 4. Point `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL` at your checkout.
 
 See `tools/license-issuer/README.md` for the operational details.
+
+## Online activation (optional)
+
+For revocation + seat limits, run the seller-side activation server
+(`tools/license-server/`) behind HTTPS and set `LICENSE_ACTIVATION_URL` in the
+builds you distribute. The panel then heartbeats on a schedule; paid modules
+lock after `LICENSE_ACTIVATION_MAX_AGE_MS` without a successful check. Leave
+`LICENSE_ACTIVATION_URL` empty to keep the offline / key-only model.

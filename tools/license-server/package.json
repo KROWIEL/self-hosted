@@ -1,0 +1,10 @@
+{
+  "name": "license-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reference online-activation server for the self-hosted panel. SELLER-SIDE ONLY — never ship this or the private key to customers.",
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}
