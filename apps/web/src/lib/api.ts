@@ -331,6 +331,37 @@ interface AuthResult extends TokenPair {
   mustChangePassword?: boolean;
 }
 
+// ---- Commercial licensing / entitlements (mirror @selfhosted/shared) ----
+
+export type LicenseTier = 'free' | 'homelab' | 'pro';
+
+export type LicenseModule =
+  | 'reverse-tunnels'
+  | 'preview-envs'
+  | 'offsite-backups'
+  | 'alerts'
+  | 'metrics-history'
+  | 'sso'
+  | 'audit-export'
+  | 'api-cli'
+  | 'white-label';
+
+export interface Entitlements {
+  tier: LicenseTier;
+  modules: LicenseModule[];
+  expiresAt: number | null;
+  licensed: boolean;
+  subject?: string;
+  name?: string;
+}
+
+export const FREE_ENTITLEMENTS: Entitlements = {
+  tier: 'free',
+  modules: [],
+  expiresAt: null,
+  licensed: false,
+};
+
 export interface AuthMe {
   id: string;
   email: string;
@@ -341,6 +372,7 @@ export interface AuthMe {
   onboardedAt: string | null;
   needsOnboarding: boolean;
   mustChangePassword: boolean;
+  entitlements: Entitlements;
 }
 
 export interface TwoFactorSetup {
@@ -1043,3 +1075,19 @@ export const tunnelStatus = (id: string) =>
   api<TunnelStatus>(`/tunnels/${id}/status`);
 export const tunnelInstall = (id: string) =>
   api<TunnelInstall>(`/tunnels/${id}/install`);
+
+// ---- Licensing / billing ----
+
+/** Current effective entitlements for this installation. */
+export const getLicense = () => api<Entitlements>('/license');
+
+/** Activate / replace the installation license key (admin only). */
+export const setLicense = (key: string) =>
+  api<Entitlements>('/license', {
+    method: 'PUT',
+    body: JSON.stringify({ key }),
+  });
+
+/** Remove the stored license key, reverting to Free (admin only). */
+export const clearLicense = () =>
+  api<Entitlements>('/license', { method: 'DELETE' });

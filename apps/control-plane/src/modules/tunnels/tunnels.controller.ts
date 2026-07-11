@@ -11,10 +11,14 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ModuleGuard } from '../../common/licensing/module.guard';
+import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { TunnelsService } from './tunnels.service';
 import { CreateTunnelDto, UpdateTunnelDto } from './dto/tunnel.dto';
 
-@UseGuards(JwtAuthGuard)
+// Reverse-tunnels is a paid add-on module (Home-Lab / Pro tiers).
+@UseGuards(JwtAuthGuard, ModuleGuard)
+@RequiresModule('reverse-tunnels')
 @Controller('tunnels')
 export class TunnelsController {
   constructor(private readonly tunnels: TunnelsService) {}

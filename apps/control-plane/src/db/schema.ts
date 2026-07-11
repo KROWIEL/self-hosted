@@ -384,6 +384,16 @@ export const tunnels = pgTable('tunnels', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+/// The active commercial license for this installation. A singleton by
+/// convention: setting a new key replaces any existing row. The signed `key`
+/// is the source of truth; entitlements are derived by verifying it. An env
+/// var `LICENSE_KEY` is used as a fallback when this table is empty.
+export const licenses = pgTable('licenses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 export type DbSchema = {
   users: typeof users;
   nodes: typeof nodes;
@@ -402,4 +412,5 @@ export type DbSchema = {
   backups: typeof backups;
   backupSchedules: typeof backupSchedules;
   tunnels: typeof tunnels;
+  licenses: typeof licenses;
 };

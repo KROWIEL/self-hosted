@@ -84,6 +84,8 @@ export const ru: Dict = {
   'nav.templates': 'Шаблоны',
   'nav.git': 'Git-доступы',
   'nav.settings': 'Настройки',
+  'nav.billing': 'Тарифы',
+  'nav.locked': 'Требуется апгрейд',
   'nav.openMenu': 'Открыть меню',
   'nav.closeMenu': 'Закрыть меню',
   'nav.collapse': 'Скрыть панель',
@@ -214,6 +216,10 @@ export const ru: Dict = {
     'Лимит памяти превышает ёмкость платформы.',
   'error.nodes.agentUnreachable':
     'Агент на ноде «{node}» недоступен. Убедитесь, что он запущен (Ноды → Запустить агента).',
+  'error.license.invalidKey': 'Ключ лицензии недействителен или повреждён.',
+  'error.license.expiredKey': 'Срок действия ключа лицензии истёк.',
+  'error.license.moduleLocked':
+    'Эта функция доступна в тарифе {tier}. Откройте её в разделе «Тарифы».',
 
   // Projects (dashboard)
   'projects.title': 'Проекты',
@@ -685,6 +691,9 @@ export const ru: Dict = {
   'tunnel.title': 'Публикация',
   'tunnel.subtitle':
     'Опубликуйте панель через лёгкий публичный VDS-реле. VDS только перекладывает трафик на ваш локальный прокси — без Docker и без настройки под каждое приложение.',
+  'tunnel.lockedTitle': 'Обратные туннели — платный модуль',
+  'tunnel.lockedBody':
+    'Публикуйте ноды за NAT / домашние серверы в интернет через публичный релей — killer-фича для self-hosting за серым IP. Откройте её в тарифе Home-Lab (или Pro).',
   'tunnel.aboutTitle': 'Что такое обратный туннель?',
   'tunnel.aboutBody':
     'Если нода за серым/NAT IP, из интернета она недоступна. Обратный туннель решает это: небольшой клиент с вашей стороны исходящим соединением подключается к серверу туннеля на дешёвом публичном VDS, а тот перекладывает публичные порты (например, 443) обратно на ваш Traefik. Посетители попадают на VDS, трафик уходит на вашу ноду.',
@@ -759,4 +768,56 @@ export const ru: Dict = {
   // Service types
   'type.BACKEND': 'Бэкенд',
   'type.FRONTEND': 'Фронтенд',
+
+  // Billing / licensing
+  'billing.subtitle':
+    'Управление тарифом этой установки. Бесплатное ядро — без ограничений; платные тарифы открывают дополнительные модули.',
+  'billing.currentPlan': 'Текущий тариф',
+  'billing.active': 'Активна',
+  'billing.free': 'Бесплатно',
+  'billing.expires': 'Действует до',
+  'billing.perpetual': 'Бессрочно',
+  'billing.unlockedModules': 'Открытые модули',
+  'billing.noModules': 'Только базовые функции',
+  'billing.licenseKey': 'Ключ лицензии',
+  'billing.licenseKeyHint':
+    'Вставьте ключ лицензии из письма о покупке, чтобы активировать платный тариф на этой установке.',
+  'billing.licenseKeyPlaceholder': 'вставьте ключ лицензии…',
+  'billing.activate': 'Активировать лицензию',
+  'billing.activating': 'Активация…',
+  'billing.remove': 'Удалить лицензию',
+  'billing.activated': 'Лицензия активирована.',
+  'billing.removed': 'Лицензия удалена. Возврат к Free.',
+  'billing.adminOnly':
+    'Активировать или менять ключ лицензии может только администратор.',
+  'billing.plansTitle': 'Тарифы',
+  'billing.yourPlan': 'Ваш тариф',
+  'billing.buy': 'Оформить',
+  'billing.viewPlans': 'Смотреть тарифы',
+  'billing.requiresPlan': 'Требуется тариф {plan}',
+  'billing.forever': 'навсегда',
+  'billing.perMonth': '/мес',
+  'billing.price.free': '$0',
+  'billing.price.homelab': '$3',
+  'billing.price.pro': '$15',
+  'billing.tier.free': 'Free',
+  'billing.tier.homelab': 'Home-Lab',
+  'billing.tier.pro': 'Pro',
+  'billing.feat.core': 'Деплой из git, шаблоны, HTTPS',
+  'billing.feat.dbLogs': 'Managed БД, логи, live-метрики',
+  'billing.feat.rbac': 'Проекты, RBAC, 2FA, неогранич. ноды',
+  'billing.feat.allFree': 'Всё из Free',
+  'billing.feat.tunnels': '+ модуль Reverse-tunnels (NAT / home-lab)',
+  'billing.feat.allHomelab': 'Всё из Home-Lab',
+  'billing.feat.proAll':
+    'Все модули: preview-env, S3-бэкапы, алерты, история метрик, SSO, API/CLI, white-label',
+  'billing.module.reverse-tunnels': 'Reverse-tunnels',
+  'billing.module.preview-envs': 'Preview-окружения',
+  'billing.module.offsite-backups': 'Офсайт-бэкапы',
+  'billing.module.alerts': 'Алерты',
+  'billing.module.metrics-history': 'История метрик',
+  'billing.module.sso': 'SSO / OIDC',
+  'billing.module.audit-export': 'Экспорт аудита',
+  'billing.module.api-cli': 'API и CLI',
+  'billing.module.white-label': 'White-label',
 };

@@ -73,6 +73,25 @@ export const CommonErrors = {
     }),
 };
 
+export const LicenseErrors = {
+  invalidKey: () =>
+    new BadRequestException({
+      code: 'license.invalidKey',
+      message: 'The license key is invalid or malformed.',
+    }),
+  expiredKey: () =>
+    new BadRequestException({
+      code: 'license.expiredKey',
+      message: 'The license key has expired.',
+    }),
+  moduleLocked: (module: string, tier: string) =>
+    new ForbiddenException({
+      code: 'license.moduleLocked',
+      message: `This feature requires the ${tier} plan. Upgrade in Billing to unlock it.`,
+      meta: { module, tier },
+    }),
+};
+
 export const TemplateErrors = {
   notFound: () =>
     new BadRequestException({

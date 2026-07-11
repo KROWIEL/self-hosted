@@ -14,6 +14,8 @@ import {
   tunnelStatus,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
+import { useEntitlements } from '@/components/entitlements';
+import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -31,12 +33,23 @@ import {
 import { useI18n } from '@/i18n';
 
 export default function TunnelsPage() {
+  return (
+    <AppShell>
+      <TunnelsContent />
+    </AppShell>
+  );
+}
+
+function TunnelsContent() {
   const { t } = useI18n();
+  const { has } = useEntitlements();
   const { confirm, dialog } = useConfirmDialog();
   const [tunnels, setTunnels] = useState<Tunnel[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+
+  const unlocked = has('reverse-tunnels');
 
   function load() {
     setLoading(true);
@@ -46,7 +59,11 @@ export default function TunnelsPage() {
       .finally(() => setLoading(false));
   }
 
-  useEffect(load, []);
+  useEffect(() => {
+    if (unlocked) load();
+    else setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked]);
 
   async function onDelete(id: string) {
     if (
@@ -67,8 +84,21 @@ export default function TunnelsPage() {
     }
   }
 
+  if (!unlocked) {
+    return (
+      <>
+        <PageHeader title={t('tunnel.title')} subtitle={t('tunnel.subtitle')} />
+        <UpgradeNotice
+          tier="homelab"
+          featureTitle={t('tunnel.lockedTitle')}
+          featureBody={t('tunnel.lockedBody')}
+        />
+      </>
+    );
+  }
+
   return (
-    <AppShell>
+    <>
       <PageHeader
         title={t('tunnel.title')}
         subtitle={t('tunnel.subtitle')}
@@ -112,7 +142,7 @@ export default function TunnelsPage() {
         />
       )}
       {dialog}
-    </AppShell>
+    </>
   );
 }
 

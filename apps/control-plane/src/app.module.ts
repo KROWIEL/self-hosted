@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './db/database.module';
 import { CryptoModule } from './common/crypto/crypto.module';
+import { LicensingModule } from './common/licensing/licensing.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { MembersModule } from './modules/members/members.module';
@@ -23,6 +24,7 @@ import { GitModule } from './modules/git/git.module';
     }),
     DatabaseModule,
     CryptoModule,
+    LicensingModule,
     AuthModule,
     UsersModule,
     MembersModule,

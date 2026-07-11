@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
 import { CryptoService } from '../../common/crypto/crypto.service';
+import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { AuthErrors } from '../../common/errors/app-errors';
 import { isStrongPassword } from '../../common/validation/password';
 import { UsersService } from '../users/users.service';
@@ -22,6 +23,7 @@ export class AuthService {
     private readonly users: UsersService,
     private readonly jwt: JwtService,
     private readonly crypto: CryptoService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   /** Stage 1: create the account and sign the user in so they can onboard. */
@@ -168,6 +170,7 @@ export class AuthService {
       onboardedAt: user.onboardedAt,
       needsOnboarding: !user.onboardedAt,
       mustChangePassword: user.mustChangePassword,
+      entitlements: await this.entitlements.get(),
     };
   }
 

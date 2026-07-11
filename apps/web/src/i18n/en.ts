@@ -83,6 +83,8 @@ export const en = {
   'nav.templates': 'Templates',
   'nav.git': 'Git access',
   'nav.settings': 'Settings',
+  'nav.billing': 'Billing',
+  'nav.locked': 'Requires an upgrade',
   'nav.openMenu': 'Open menu',
   'nav.closeMenu': 'Close menu',
   'nav.collapse': 'Hide sidebar',
@@ -214,6 +216,10 @@ export const en = {
     'The memory limit exceeds platform capacity.',
   'error.nodes.agentUnreachable':
     'The agent on node “{node}” is unreachable. Make sure it is running (Nodes → Start agent).',
+  'error.license.invalidKey': 'The license key is invalid or malformed.',
+  'error.license.expiredKey': 'The license key has expired.',
+  'error.license.moduleLocked':
+    'This feature requires the {tier} plan. Upgrade in Billing to unlock it.',
 
   // Projects (dashboard)
   'projects.title': 'Projects',
@@ -684,6 +690,9 @@ export const en = {
   'tunnel.title': 'Exposure',
   'tunnel.subtitle':
     'Expose this panel through a lightweight public VDS relay. The VDS only forwards traffic to your local proxy — no Docker, no per-app config.',
+  'tunnel.lockedTitle': 'Reverse tunnels are a paid module',
+  'tunnel.lockedBody':
+    'Expose NAT / home-lab nodes to the internet through a public relay — the killer feature for self-hosting behind a grey IP. Unlock it with the Home-Lab plan (or Pro).',
   'tunnel.aboutTitle': 'What is a reverse tunnel?',
   'tunnel.aboutBody':
     'If your node sits behind a grey/NAT IP, it isn’t reachable from the internet. A reverse tunnel fixes this: a small client on your side connects out to a tunnel server on a cheap public VDS, which relays public ports (like 443) back to your Traefik. Visitors hit the VDS; traffic is forwarded to your node.',
@@ -757,4 +766,56 @@ export const en = {
   // Service types
   'type.BACKEND': 'Backend',
   'type.FRONTEND': 'Frontend',
+
+  // Billing / licensing
+  'billing.subtitle':
+    'Manage this installation’s plan. The free core is unlimited; paid plans unlock add-on modules.',
+  'billing.currentPlan': 'Current plan',
+  'billing.active': 'Active',
+  'billing.free': 'Free',
+  'billing.expires': 'Expires',
+  'billing.perpetual': 'Never (perpetual)',
+  'billing.unlockedModules': 'Unlocked modules',
+  'billing.noModules': 'Core features only',
+  'billing.licenseKey': 'License key',
+  'billing.licenseKeyHint':
+    'Paste the license key from your purchase confirmation to activate a paid plan on this installation.',
+  'billing.licenseKeyPlaceholder': 'paste license key…',
+  'billing.activate': 'Activate license',
+  'billing.activating': 'Activating…',
+  'billing.remove': 'Remove license',
+  'billing.activated': 'License activated.',
+  'billing.removed': 'License removed. Reverted to Free.',
+  'billing.adminOnly':
+    'Only an administrator can activate or change the license key.',
+  'billing.plansTitle': 'Plans',
+  'billing.yourPlan': 'Your plan',
+  'billing.buy': 'Get started',
+  'billing.viewPlans': 'View plans',
+  'billing.requiresPlan': 'Requires the {plan} plan',
+  'billing.forever': 'forever',
+  'billing.perMonth': '/mo',
+  'billing.price.free': '$0',
+  'billing.price.homelab': '$3',
+  'billing.price.pro': '$15',
+  'billing.tier.free': 'Free',
+  'billing.tier.homelab': 'Home-Lab',
+  'billing.tier.pro': 'Pro',
+  'billing.feat.core': 'Deploy from git, templates, HTTPS',
+  'billing.feat.dbLogs': 'Managed databases, logs, live metrics',
+  'billing.feat.rbac': 'Projects, RBAC, 2FA, unlimited nodes',
+  'billing.feat.allFree': 'Everything in Free',
+  'billing.feat.tunnels': '+ Reverse-tunnels module (NAT / home-lab)',
+  'billing.feat.allHomelab': 'Everything in Home-Lab',
+  'billing.feat.proAll':
+    'All modules: preview-envs, S3 backups, alerts, metrics history, SSO, API/CLI, white-label',
+  'billing.module.reverse-tunnels': 'Reverse-tunnels',
+  'billing.module.preview-envs': 'Preview environments',
+  'billing.module.offsite-backups': 'Off-site backups',
+  'billing.module.alerts': 'Alerts',
+  'billing.module.metrics-history': 'Metrics history',
+  'billing.module.sso': 'SSO / OIDC',
+  'billing.module.audit-export': 'Audit export',
+  'billing.module.api-cli': 'API & CLI',
+  'billing.module.white-label': 'White-label',
 };
