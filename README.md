@@ -145,6 +145,24 @@ and React (Vite) / Next.js frontends. Any repository that ships its own
 - **Toast notifications** — non-blocking bottom-screen toasts with a countdown
   bar; nothing lingers in the page body.
 
+### Paid modules (open-core)
+
+The core above is free and unlimited. The following add-on modules are gated by
+a signed license key (see [`docs/LICENSING.md`](docs/LICENSING.md)). **Home-Lab**
+unlocks reverse tunnels; **Pro** unlocks all nine.
+
+| Module | Tier | What it does |
+|---|---|---|
+| **Reverse tunnels** | Home-Lab | Expose NAT / home-lab nodes to the internet via a public relay. |
+| **Preview environments** | Pro | Deploy any branch as a disposable, isolated copy with its own optional subdomain; auto-cleanup by TTL. |
+| **Off-site backups** | Pro | Mirror managed-DB backups to any S3-compatible bucket (encrypted credentials). |
+| **Alerts** | Pro | Webhook alerts for node-offline, deploy/backup failures and resource thresholds. |
+| **Metrics history** | Pro | Store and chart historical CPU / RAM / disk per node. |
+| **SSO / OIDC** | Pro | OpenID Connect single sign-on with domain allow-list and JIT provisioning. |
+| **Audit export** | Pro | Organization-wide audit log with filters and CSV / JSON export. |
+| **API & CLI tokens** | Pro | Personal access tokens (PATs) for programmatic API / CLI access. |
+| **White-label** | Pro | Customize app name, logo, accent color and attribution. |
+
 ---
 
 ## Architecture

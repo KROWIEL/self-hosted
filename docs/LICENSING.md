@@ -9,11 +9,30 @@ unlock add-on modules through a signed, offline-verifiable license key.
 |------|-------------------|-----------------|
 | **Free** | $0 forever | Full core: deploy from git, templates, HTTPS, managed DBs, logs & live metrics, projects, RBAC, 2FA, unlimited nodes |
 | **Home-Lab** | ~$3 / mo | Everything in Free **+ Reverse-tunnels module** (expose NAT / home-lab nodes) |
-| **Pro** | ~$15 / mo | Everything + all modules (preview-envs, off-site backups, alerts, metrics history, SSO, audit export, API/CLI, white-label) |
+| **Pro** | ~$15 / mo | Everything + **all 9 modules** below |
+
+### Gated modules
+
+Each module is an independently licensable add-on. A tier grants a set of them;
+a license may also grant extra modules à la carte (via the `modules` field in
+the key payload).
+
+| Module id | From tier | Description |
+|-----------|-----------|-------------|
+| `reverse-tunnels` | Home-Lab | Expose services on NAT / home-lab nodes to the internet through a lightweight public relay. |
+| `preview-envs` | Pro | Deploy any branch as a disposable, isolated environment (a cloned child service) with its own optional subdomain; auto-torn down by TTL. |
+| `offsite-backups` | Pro | Mirror managed-database backups to any S3-compatible bucket, with encrypted credentials and a background upload worker. |
+| `alerts` | Pro | Webhook alerts for node-offline, deploy-failed, backup-failed and resource-threshold events, via configurable channels & rules. |
+| `metrics-history` | Pro | Periodically sample and store per-node CPU / RAM / disk usage, with history charts. |
+| `sso` | Pro | OpenID Connect single sign-on with JWKS verification, domain allow-list and just-in-time user provisioning. |
+| `audit-export` | Pro | Organization-wide audit log with server-side filters and CSV / JSON export. |
+| `api-cli` | Pro | Personal API tokens (PATs) for programmatic access to the API / CLI, integrated into the JWT auth guard. |
+| `white-label` | Pro | Customize the app name, logo, accent color and attribution across the UI and login page. |
 
 Tier → modules mapping lives in `packages/shared/src/licensing.ts`
-(`TIER_MODULES`). Adding a new gated module is a one-line change there plus a
-`@RequiresModule('...')` on the backend and (optionally) a nav/page guard.
+(`TIER_MODULES`); `Home-Lab = [reverse-tunnels]`, `Pro = all modules`. Adding a
+new gated module is a one-line change there plus a `@RequiresModule('...')` on
+the backend and (optionally) a nav/page guard.
 
 ## Architecture
 
@@ -70,14 +89,22 @@ export class BackupsController { /* ... */ }
 
 ## Selling
 
+The panel is sold from Belarus, where merchant-of-record platforms (Lemon
+Squeezy / Paddle / Polar) don't onboard sellers. Instead, a self-hosted payment
+microservice (private `self-hosted-pay` repo, deployed at `sh.example.com`) handles
+checkout via a Belarusian payment provider (bePaid / Priorbank acquiring),
+issues the signed key, and emails it to the buyer.
+
 1. Generate a signing keypair once: `tools/license-issuer/keygen.mjs`, embed the
    public key (see that tool's README). **Do this before production.**
-2. Sell via a merchant-of-record (Lemon Squeezy / Polar / Paddle) for subscriptions,
-   or Gumroad / CodeCanyon for one-time copies.
-3. On a paid order, a webhook issues + emails a key (`webhook-example.mjs`).
-4. Point `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL` at your checkout.
+2. Host the landing + checkout on `sh.example.com` (the `self-hosted-pay` service).
+3. On a paid order, the pay service verifies the provider webhook, signs a key
+   for the purchased tier and emails it to the buyer.
+4. Point `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL` at the
+   `sh.example.com` checkout URLs for each tier.
 
-See `tools/license-issuer/README.md` for the operational details.
+See `tools/license-issuer/README.md` for the signing details and the
+`self-hosted-pay` repo for the checkout + webhook flow.
 
 ## Online activation (optional)
 
