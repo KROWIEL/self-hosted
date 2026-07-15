@@ -91,6 +91,7 @@ export const ru: Dict = {
   'nav.whiteLabel': 'White-label',
   'nav.sso': 'Единый вход (SSO)',
   'nav.previews': 'Превью-среды',
+  'nav.email': 'Почта',
   'nav.settings': 'Настройки',
   'nav.billing': 'Тарифы',
   'nav.locked': 'Требуется апгрейд',
@@ -236,6 +237,14 @@ export const ru: Dict = {
   'error.sso.notLicensed': 'Единый вход доступен в тарифе Pro.',
   'error.sso.notConfigured':
     'Единый вход не настроен. Обратитесь к администратору.',
+  'error.email.notConfigured':
+    'Почта не настроена. Сначала укажите SMTP-хост, учётные данные и адрес отправителя.',
+  'error.email.noRecipients':
+    'Нет подходящих получателей — добавьте хотя бы один адрес или выберите «Все пользователи».',
+  'error.email.sendFailed': 'SMTP-сервер отклонил сообщение: {reason}',
+  'error.network.unreachable':
+    'Не удаётся подключиться к серверу. Проверьте соединение.',
+  'error.http.requestFailed': 'Запрос не выполнен ({status}).',
 
   // Projects (dashboard)
   'projects.title': 'Проекты',
@@ -830,14 +839,60 @@ export const ru: Dict = {
   'billing.tier.free': 'Free',
   'billing.tier.homelab': 'Home-Lab',
   'billing.tier.pro': 'Pro',
-  'billing.feat.core': 'Деплой из git, шаблоны, HTTPS',
-  'billing.feat.dbLogs': 'Managed БД, логи, live-метрики',
-  'billing.feat.rbac': 'Проекты, RBAC, 2FA, неогранич. ноды',
-  'billing.feat.allFree': 'Всё из Free',
-  'billing.feat.tunnels': '+ модуль Reverse-tunnels (NAT / home-lab)',
-  'billing.feat.allHomelab': 'Всё из Home-Lab',
-  'billing.feat.proAll':
-    'Все модули: превью-среды, S3-бэкапы, алерты, история метрик, SSO, экспорт аудита, API/CLI, white-label',
+  // Тариф Free — базовый PaaS, лицензия не нужна.
+  'billing.feat.free.deploy.title': 'Деплой из Git, шаблонов и Docker',
+  'billing.feat.free.deploy.desc':
+    'Push-to-deploy любого репозитория, запуск из готовых шаблонов приложений или любого Docker-образа — без ручной настройки сервера.',
+  'billing.feat.free.https.title': 'Автоматический HTTPS',
+  'billing.feat.free.https.desc':
+    'Traefik выпускает и продлевает сертификаты Let’s Encrypt для каждого поддомена, поэтому все сервисы работают по TLS из коробки.',
+  'billing.feat.free.databases.title': 'Managed-базы данных',
+  'billing.feat.free.databases.desc':
+    'Разворачивайте PostgreSQL или MySQL для каждого проекта — с бэкапами по расписанию и восстановлением в один клик.',
+  'billing.feat.free.observability.title': 'Логи и live-метрики',
+  'billing.feat.free.observability.desc':
+    'Смотрите логи контейнеров в реальном времени и следите за CPU, RAM и диском по каждому сервису и ноде.',
+  'billing.feat.free.access.title': 'Проекты, RBAC и 2FA',
+  'billing.feat.free.access.desc':
+    'Разбивайте работу на проекты, разграничивайте доступ по ролям и защищайте аккаунты двухфакторной аутентификацией.',
+  'billing.feat.free.node.title': '1 нода включена',
+  'billing.feat.free.node.desc':
+    'Запускайте всю платформу на одном сервере — идеально для личного проекта или знакомства.',
+  // Тариф Home-Lab — ядро Free плюс reverse-туннели.
+  'billing.feat.homelab.allFree.title': 'Всё из Free',
+  'billing.feat.homelab.allFree.desc':
+    'Полное бесплатное ядро плюс возможности для домашней лаборатории ниже.',
+  'billing.feat.homelab.tunnels.title': 'Защищённые reverse-туннели',
+  'billing.feat.homelab.limits.title': '3 ноды + 3 туннеля',
+  'billing.feat.homelab.limits.desc':
+    'Подключайте до трёх серверов и публикуйте до трёх туннелируемых сервисов — достаточно для полноценной домашней лаборатории на нескольких машинах.',
+  // Тариф Pro — всё, без ограничений, все модули.
+  'billing.feat.pro.allHomelab.title': 'Всё из Free и Home-Lab',
+  'billing.feat.pro.allHomelab.desc':
+    'Полное бесплатное ядро и reverse-туннели плюс все дополнительные модули ниже.',
+  'billing.feat.pro.unlimited.title': 'Неограниченные ноды и туннели',
+  'billing.feat.pro.unlimited.desc':
+    'Масштабируйтесь на любое число серверов и публикуйте сколько угодно сервисов — без ограничений.',
+  'billing.proModulesTitle': 'Все модули Pro',
+  // Ценность каждого модуля (что делает + зачем это нужно).
+  'billing.moduleDesc.reverse-tunnels':
+    'Публикуйте сервисы за NAT или в домашней/локальной сети в интернет через лёгкий публичный релей — без проброса портов, статического IP и настройки роутера.',
+  'billing.moduleDesc.preview-envs':
+    'Разворачивайте любую ветку как одноразовую изолированную копию с собственным поддоменом и авто-удалением по TTL — безопасно проверяйте изменения до релиза.',
+  'billing.moduleDesc.offsite-backups':
+    'Копируйте бэкапы managed-баз в любой S3-совместимый бакет с шифрованием доступов, чтобы данные уцелели, даже если нода потеряна.',
+  'billing.moduleDesc.alerts':
+    'Отправляйте уведомления по webhook (Slack, Discord, Telegram, свой endpoint) о падении нод, неудачных деплоях и бэкапах, превышении порогов — узнавайте об инцидентах раньше пользователей.',
+  'billing.moduleDesc.metrics-history':
+    'Периодически собирайте и храните CPU, RAM и диск по каждой ноде с историческими графиками для планирования ёмкости и диагностики.',
+  'billing.moduleDesc.sso':
+    'Позвольте команде входить через ваш провайдер идентификации по OpenID Connect — со списком разрешённых доменов и автоматическим созданием пользователей.',
+  'billing.moduleDesc.audit-export':
+    'Просматривайте журнал действий по всей организации и выгружайте его в CSV или JSON для комплаенса и разбора инцидентов.',
+  'billing.moduleDesc.api-cli':
+    'Выпускайте персональные токены доступа для автоматизации платформы из скриптов, CI/CD-пайплайнов и CLI.',
+  'billing.moduleDesc.white-label':
+    'Оформите панель под свой бренд: имя приложения, логотип, акцентный цвет и атрибуция в интерфейсе и на странице входа.',
   'billing.module.reverse-tunnels': 'Reverse-tunnels',
   'billing.module.preview-envs': 'Preview-окружения',
   'billing.module.offsite-backups': 'Офсайт-бэкапы',
@@ -1074,6 +1129,55 @@ export const ru: Dict = {
   'previews.aboutTitle': 'Что такое preview-окружения?',
   'previews.aboutBody':
     'Временный изолированный деплой сервиса из любой git-ветки — удобно для ревью pull request на отдельном URL. Каждое окружение автоматически удаляется по истечении TTL, его можно передеплоить или удалить в любой момент.',
+  'email.aboutTitle': 'Что такое почтовый сервис?',
+  'email.aboutBody':
+    'Отправляйте и рассылайте сообщения пользователям через ваш SMTP-провайдер (Mailgun, SendGrid, Amazon SES, Postmark или любой SMTP-релей). Это только исходящая почта — сообщения передаются через настроенного вами провайдера; это не входящий почтовый сервер. Укажите настройки SMTP, отправьте тест и составьте письмо для всех пользователей или выбранного списка.',
+
+  // Почтовый сервис (Pro: email)
+  'email.title': 'Почта',
+  'email.subtitle': 'Отправка и рассылка сообщений пользователям через SMTP.',
+  'email.lockedTitle': 'Почта — функция Pro',
+  'email.lockedBody':
+    'Подключите SMTP-провайдера, чтобы отправлять транзакционные письма и рассылать объявления пользователям и команде.',
+  'email.adminOnly': 'Настраивать и отправлять почту могут только администраторы.',
+  'email.smtpTitle': 'Настройки SMTP',
+  'email.smtpHint':
+    'Используйте данные вашего почтового провайдера (Mailgun, SendGrid, Amazon SES, Postmark или любой SMTP-релей).',
+  'email.enabled': 'Включено',
+  'email.host': 'SMTP-хост',
+  'email.port': 'Порт',
+  'email.secure': 'Неявный TLS (порт 465). Отключите для STARTTLS (587).',
+  'email.username': 'Имя пользователя',
+  'email.password': 'Пароль',
+  'email.fromName': 'Имя отправителя',
+  'email.fromEmail': 'Адрес отправителя',
+  'email.save': 'Сохранить',
+  'email.saving': 'Сохранение…',
+  'email.saved': 'Настройки почты сохранены.',
+  'email.testTo': 'Тестовый получатель (необязательно)',
+  'email.test': 'Отправить тест',
+  'email.testing': 'Отправка…',
+  'email.testOk': 'Тестовое письмо отправлено на {to}.',
+  'email.composeTitle': 'Новое сообщение',
+  'email.composeHint':
+    'Получатели скрыты друг от друга (отправка через BCC).',
+  'email.subject': 'Тема',
+  'email.body': 'Сообщение',
+  'email.recipients': 'Получатели',
+  'email.recipientsAll': 'Все пользователи',
+  'email.recipientsCustom': 'Указанные адреса',
+  'email.recipientsList': 'Адреса (через запятую или с новой строки)',
+  'email.send': 'Отправить сообщение',
+  'email.sending': 'Отправка…',
+  'email.sendOk': 'Сообщение отправлено {count} получателю(ям).',
+  'email.historyTitle': 'История отправок',
+  'email.noHistory': 'Сообщений пока нет.',
+  'email.colTime': 'Время',
+  'email.colSubject': 'Тема',
+  'email.colRecipients': 'Получатели',
+  'email.colStatus': 'Статус',
+  'email.statusSent': 'Отправлено',
+  'email.statusFailed': 'Ошибка',
 
   // Единый вход (Pro: sso)
   'sso.title': 'Единый вход (SSO)',

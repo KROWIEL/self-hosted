@@ -90,6 +90,7 @@ export const en = {
   'nav.whiteLabel': 'White-label',
   'nav.sso': 'Single sign-on',
   'nav.previews': 'Preview envs',
+  'nav.email': 'Email',
   'nav.settings': 'Settings',
   'nav.billing': 'Billing',
   'nav.locked': 'Requires an upgrade',
@@ -236,6 +237,14 @@ export const en = {
   'error.sso.notLicensed': 'Single sign-on requires the Pro plan.',
   'error.sso.notConfigured':
     'Single sign-on is not configured. Ask an administrator to set it up.',
+  'error.email.notConfigured':
+    'Email is not configured. Set the SMTP host, credentials and sender address first.',
+  'error.email.noRecipients':
+    'No valid recipients — add at least one address or pick “all users”.',
+  'error.email.sendFailed': 'The SMTP server rejected the message: {reason}',
+  'error.network.unreachable':
+    'Cannot reach the server. Check your connection.',
+  'error.http.requestFailed': 'Request failed ({status}).',
 
   // Projects (dashboard)
   'projects.title': 'Projects',
@@ -828,14 +837,60 @@ export const en = {
   'billing.tier.free': 'Free',
   'billing.tier.homelab': 'Home-Lab',
   'billing.tier.pro': 'Pro',
-  'billing.feat.core': 'Deploy from git, templates, HTTPS',
-  'billing.feat.dbLogs': 'Managed databases, logs, live metrics',
-  'billing.feat.rbac': 'Projects, RBAC, 2FA, unlimited nodes',
-  'billing.feat.allFree': 'Everything in Free',
-  'billing.feat.tunnels': '+ Reverse-tunnels module (NAT / home-lab)',
-  'billing.feat.allHomelab': 'Everything in Home-Lab',
-  'billing.feat.proAll':
-    'All modules: preview environments, S3 backups, alerts, metrics history, SSO, audit export, API/CLI, white-label',
+  // Free tier — the core PaaS, no license required.
+  'billing.feat.free.deploy.title': 'Deploy from Git, templates & Docker',
+  'billing.feat.free.deploy.desc':
+    'Push-to-deploy any repository, launch from one-click app templates, or run any Docker image — no manual server wiring.',
+  'billing.feat.free.https.title': 'Automatic HTTPS',
+  'billing.feat.free.https.desc':
+    'Traefik issues and renews Let’s Encrypt certificates per subdomain, so every service is served over TLS out of the box.',
+  'billing.feat.free.databases.title': 'Managed databases',
+  'billing.feat.free.databases.desc':
+    'Spin up PostgreSQL or MySQL per project, with scheduled backups and one-click restore.',
+  'billing.feat.free.observability.title': 'Logs & live metrics',
+  'billing.feat.free.observability.desc':
+    'Stream container logs and watch real-time CPU, RAM and disk usage for every service and node.',
+  'billing.feat.free.access.title': 'Projects, RBAC & 2FA',
+  'billing.feat.free.access.desc':
+    'Organize work into projects, control who can do what with roles, and protect accounts with two-factor auth.',
+  'billing.feat.free.node.title': '1 node included',
+  'billing.feat.free.node.desc':
+    'Run the whole platform on a single server — perfect for a personal project or a trial.',
+  // Home-Lab tier — Free core plus reverse tunnels.
+  'billing.feat.homelab.allFree.title': 'Everything in Free',
+  'billing.feat.homelab.allFree.desc':
+    'The complete free core, plus the home-lab additions below.',
+  'billing.feat.homelab.tunnels.title': 'Secure reverse tunnels',
+  'billing.feat.homelab.limits.title': '3 nodes + 3 tunnels',
+  'billing.feat.homelab.limits.desc':
+    'Connect up to three servers and publish up to three tunneled services — enough for a real multi-machine home lab.',
+  // Pro tier — everything, unlimited, all modules.
+  'billing.feat.pro.allHomelab.title': 'Everything in Free & Home-Lab',
+  'billing.feat.pro.allHomelab.desc':
+    'The full free core and reverse tunnels, plus every add-on module below.',
+  'billing.feat.pro.unlimited.title': 'Unlimited nodes & tunnels',
+  'billing.feat.pro.unlimited.desc':
+    'Scale across as many servers and expose as many services as you need — no caps.',
+  'billing.proModulesTitle': 'Every Pro module',
+  // Per-module value propositions (what it does + why it matters).
+  'billing.moduleDesc.reverse-tunnels':
+    'Publish services behind NAT or a home/LAN network to the internet through a lightweight public relay — no port-forwarding, static IP or router changes needed.',
+  'billing.moduleDesc.preview-envs':
+    'Deploy any branch as a disposable, isolated copy with its own optional subdomain, auto-torn down by TTL — review changes safely before they ship.',
+  'billing.moduleDesc.offsite-backups':
+    'Mirror managed-database backups to any S3-compatible bucket with encrypted credentials, so your data survives even if a node is lost.',
+  'billing.moduleDesc.alerts':
+    'Send webhook alerts (Slack, Discord, Telegram, custom) for node-offline, failed deploys or backups and resource thresholds — hear about incidents before your users do.',
+  'billing.moduleDesc.metrics-history':
+    'Continuously sample and store per-node CPU, RAM and disk usage, with history charts for capacity planning and troubleshooting.',
+  'billing.moduleDesc.sso':
+    'Let your team sign in with your identity provider over OpenID Connect, with a domain allow-list and just-in-time user provisioning.',
+  'billing.moduleDesc.audit-export':
+    'Review an organization-wide activity trail and export it as CSV or JSON for compliance and incident investigations.',
+  'billing.moduleDesc.api-cli':
+    'Issue personal access tokens to automate the platform from scripts, CI/CD pipelines and the CLI.',
+  'billing.moduleDesc.white-label':
+    'Rebrand the panel with your own app name, logo, accent color and attribution across the UI and login page.',
   'billing.module.reverse-tunnels': 'Reverse-tunnels',
   'billing.module.preview-envs': 'Preview environments',
   'billing.module.offsite-backups': 'Off-site backups',
@@ -1067,6 +1122,55 @@ export const en = {
   'previews.aboutTitle': 'What are preview environments?',
   'previews.aboutBody':
     'Spin up a temporary, isolated deployment of a service from any git branch — ideal for reviewing a pull request on its own URL. Each preview auto-expires after its TTL and can be redeployed or removed anytime.',
+  'email.aboutTitle': 'What is the email service?',
+  'email.aboutBody':
+    'Send and broadcast messages to your users through your own SMTP provider (Mailgun, SendGrid, Amazon SES, Postmark, or any SMTP relay). This is outbound only — it relays mail through a provider you configure; it is not an inbound mail server. Enter your SMTP settings, send a test, then compose a message to all users or a specific list.',
+
+  // Email service (Pro: email)
+  'email.title': 'Email',
+  'email.subtitle': 'Send and broadcast messages to your users over SMTP.',
+  'email.lockedTitle': 'Email is a Pro feature',
+  'email.lockedBody':
+    'Connect an SMTP provider to send transactional mail and broadcast announcements to your users and team.',
+  'email.adminOnly': 'Only administrators can configure and send email.',
+  'email.smtpTitle': 'SMTP settings',
+  'email.smtpHint':
+    'Use credentials from your email provider (Mailgun, SendGrid, Amazon SES, Postmark, or any SMTP relay).',
+  'email.enabled': 'Enabled',
+  'email.host': 'SMTP host',
+  'email.port': 'Port',
+  'email.secure': 'Use implicit TLS (port 465). Leave off for STARTTLS (587).',
+  'email.username': 'Username',
+  'email.password': 'Password',
+  'email.fromName': 'From name',
+  'email.fromEmail': 'From address',
+  'email.save': 'Save',
+  'email.saving': 'Saving…',
+  'email.saved': 'Email settings saved.',
+  'email.testTo': 'Test recipient (optional)',
+  'email.test': 'Send test',
+  'email.testing': 'Sending…',
+  'email.testOk': 'Test email sent to {to}.',
+  'email.composeTitle': 'Compose message',
+  'email.composeHint':
+    'Recipients are hidden from one another (sent via BCC).',
+  'email.subject': 'Subject',
+  'email.body': 'Message',
+  'email.recipients': 'Recipients',
+  'email.recipientsAll': 'All users',
+  'email.recipientsCustom': 'Specific addresses',
+  'email.recipientsList': 'Addresses (comma or newline separated)',
+  'email.send': 'Send message',
+  'email.sending': 'Sending…',
+  'email.sendOk': 'Message sent to {count} recipient(s).',
+  'email.historyTitle': 'Delivery history',
+  'email.noHistory': 'No messages sent yet.',
+  'email.colTime': 'Time',
+  'email.colSubject': 'Subject',
+  'email.colRecipients': 'Recipients',
+  'email.colStatus': 'Status',
+  'email.statusSent': 'Sent',
+  'email.statusFailed': 'Failed',
 
   // Single sign-on (Pro: sso)
   'sso.title': 'Single sign-on',
