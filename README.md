@@ -149,7 +149,7 @@ and React (Vite) / Next.js frontends. Any repository that ships its own
 
 The core above is free. The following add-on modules are gated by a signed
 license key (see [`docs/LICENSING.md`](docs/LICENSING.md)). **Home-Lab** unlocks
-reverse tunnels; **Pro** unlocks all nine.
+reverse tunnels; **Pro** unlocks all ten.
 
 Each tier also caps a few resources: **Free** = 1 node; **Home-Lab** = 3 nodes +
 3 reverse tunnels; **Pro** = unlimited.
@@ -165,6 +165,7 @@ Each tier also caps a few resources: **Free** = 1 node; **Home-Lab** = 3 nodes +
 | **Audit export** | Pro | Organization-wide audit log with filters and CSV / JSON export. |
 | **API & CLI tokens** | Pro | Personal access tokens (PATs) for programmatic API / CLI access. |
 | **White-label** | Pro | Customize app name, logo, accent color and attribution. |
+| **Email** | Pro | Send and broadcast messages to users over your own SMTP provider (outbound relay, not an inbound mail server). |
 
 ---
 

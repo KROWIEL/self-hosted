@@ -39,6 +39,7 @@ the key payload).
 | `audit-export` | Pro | Organization-wide audit log with server-side filters and CSV / JSON export. |
 | `api-cli` | Pro | Personal API tokens (PATs) for programmatic access to the API / CLI, integrated into the JWT auth guard. |
 | `white-label` | Pro | Customize the app name, logo, accent color and attribution across the UI and login page. |
+| `email` | Pro | Outbound email over your own SMTP provider: send test messages and broadcast announcements to all users or a specific list, with encrypted credentials and a delivery log. |
 
 Tier → modules mapping lives in `packages/shared/src/licensing.ts`
 (`TIER_MODULES`); `Home-Lab = [reverse-tunnels]`, `Pro = all modules`. Adding a
