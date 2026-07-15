@@ -147,9 +147,12 @@ and React (Vite) / Next.js frontends. Any repository that ships its own
 
 ### Paid modules (open-core)
 
-The core above is free and unlimited. The following add-on modules are gated by
-a signed license key (see [`docs/LICENSING.md`](docs/LICENSING.md)). **Home-Lab**
-unlocks reverse tunnels; **Pro** unlocks all nine.
+The core above is free. The following add-on modules are gated by a signed
+license key (see [`docs/LICENSING.md`](docs/LICENSING.md)). **Home-Lab** unlocks
+reverse tunnels; **Pro** unlocks all nine.
+
+Each tier also caps a few resources: **Free** = 1 node; **Home-Lab** = 3 nodes +
+3 reverse tunnels; **Pro** = unlimited.
 
 | Module | Tier | What it does |
 |---|---|---|
