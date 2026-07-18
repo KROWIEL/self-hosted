@@ -363,10 +363,13 @@ export const listEmailMessages = () => api<EmailMessage[]>('/email/messages');
 
 // ---- Personal API tokens (Pro: api-cli) ----
 
+export type ApiTokenScope = 'read' | 'full' | 'admin';
+
 export interface ApiToken {
   id: string;
   name: string;
   preview: string;
+  scopes: ApiTokenScope[];
   lastUsedAt: string | null;
   expiresAt: string | null;
   createdAt: string;
@@ -376,6 +379,8 @@ export const listApiTokens = () => api<ApiToken[]>('/api-tokens');
 export const createApiToken = (body: {
   name: string;
   expiresInDays?: number;
+  /** Defaults to least-privilege `read` on the client. */
+  scopes?: ApiTokenScope[];
 }) =>
   api<{ token: string; item: ApiToken }>('/api-tokens', {
     method: 'POST',

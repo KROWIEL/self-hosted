@@ -1063,6 +1063,16 @@ export const en = {
   'apiTokens.expiry': 'Expires in (days)',
   'apiTokens.expiryPlaceholder': 'never',
   'apiTokens.create': 'Create token',
+  'apiTokens.scopes': 'Scopes',
+  'apiTokens.scopesHint':
+    'Defaults to read-only. Enable write or admin only if the token needs them.',
+  'apiTokens.scopeRead': 'Read',
+  'apiTokens.scopeReadHint': 'List and fetch resources (GET only).',
+  'apiTokens.scopeFull': 'Full (read + write)',
+  'apiTokens.scopeFullHint': 'Create, update and delete via the API.',
+  'apiTokens.scopeAdmin': 'Admin',
+  'apiTokens.scopeAdminHint':
+    'Reach platform-admin routes (only effective if your account is an admin).',
   'apiTokens.freshTitle': 'Copy your new token now',
   'apiTokens.freshHint':
     "This is the only time the token is shown. Store it somewhere safe — you won't be able to see it again.",

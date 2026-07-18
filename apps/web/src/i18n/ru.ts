@@ -1068,6 +1068,16 @@ export const ru: Dict = {
   'apiTokens.expiry': 'Срок действия (дней)',
   'apiTokens.expiryPlaceholder': 'бессрочно',
   'apiTokens.create': 'Создать токен',
+  'apiTokens.scopes': 'Области доступа',
+  'apiTokens.scopesHint':
+    'По умолчанию только чтение. Включайте запись или admin только при необходимости.',
+  'apiTokens.scopeRead': 'Чтение',
+  'apiTokens.scopeReadHint': 'Просмотр ресурсов (только GET).',
+  'apiTokens.scopeFull': 'Полный (чтение + запись)',
+  'apiTokens.scopeFullHint': 'Создание, изменение и удаление через API.',
+  'apiTokens.scopeAdmin': 'Admin',
+  'apiTokens.scopeAdminHint':
+    'Доступ к маршрутам администратора платформы (только если ваш аккаунт — admin).',
   'apiTokens.freshTitle': 'Скопируйте новый токен сейчас',
   'apiTokens.freshHint':
     'Токен показывается только один раз. Сохраните его в надёжном месте — увидеть снова будет нельзя.',
