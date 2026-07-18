@@ -4,6 +4,7 @@ export const API_URL =
 // ---- Domain types (mirror the control plane responses) ----
 
 export type ServiceType = 'BACKEND' | 'FRONTEND';
+export type DeployKind = 'git' | 'image' | 'compose';
 export type ServiceStatus =
   | 'CREATED'
   | 'BUILDING'
@@ -24,8 +25,12 @@ export interface Service {
   status: ServiceStatus;
   projectId: string;
   nodeId: string;
-  templateId: string;
-  repoUrl: string;
+  templateId: string | null;
+  deployKind: DeployKind;
+  repoUrl: string | null;
+  image: string | null;
+  composeFile: string | null;
+  composeYaml: string | null;
   branch: string;
   useRepoDockerfile: boolean;
   port: number | null;
@@ -55,6 +60,9 @@ export interface UpdateServiceBody {
   branch?: string;
   gitCredId?: string;
   useRepoDockerfile?: boolean;
+  image?: string;
+  composeFile?: string;
+  composeYaml?: string;
   port?: number;
   cpuLimit?: number;
   memLimit?: number;
@@ -1136,8 +1144,12 @@ export interface CreateServiceBody {
   name: string;
   type: ServiceType;
   nodeId: string;
-  templateId: string;
-  repoUrl: string;
+  templateId?: string;
+  deployKind?: DeployKind;
+  repoUrl?: string;
+  image?: string;
+  composeFile?: string;
+  composeYaml?: string;
   branch?: string;
   gitCredId?: string;
   useRepoDockerfile?: boolean;
@@ -1163,6 +1175,54 @@ export const powerService = (
   id: string,
   action: 'start' | 'stop' | 'restart',
 ) => api<Service>(`/services/${id}/${action}`, { method: 'POST' });
+
+// ---- Catalog ----
+
+export interface CatalogEnvDefault {
+  key: string;
+  value?: string;
+  secret?: boolean;
+  required?: boolean;
+}
+
+export interface CatalogApp {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  icon: string | null;
+  minTier: 'free' | 'homelab';
+  deployKind: DeployKind;
+  image: string | null;
+  composeYaml: string | null;
+  composeGitUrl: string | null;
+  composeFile: string | null;
+  defaultPort: number | null;
+  recommendedVolumes: { mountPath: string }[];
+  envDefaults: CatalogEnvDefault[];
+  locked?: boolean;
+}
+
+export const listCatalog = () =>
+  api<(CatalogApp & { locked: boolean })[]>('/catalog');
+export const getCatalogApp = (slug: string) =>
+  api<CatalogApp & { locked: boolean }>(`/catalog/${slug}`);
+export const installCatalogApp = (
+  slug: string,
+  body: {
+    projectId: string;
+    nodeId: string;
+    name?: string;
+    env?: Record<string, string>;
+    deploy?: boolean;
+  },
+) =>
+  api<{ service: Service; deployment: Deployment | null }>(
+    `/catalog/${slug}/install`,
+    { method: 'POST', body: JSON.stringify(body) },
+  );
+
 /**
  * Opens the live runtime log stream for a service. Returns the raw Response so
  * the caller can read `response.body` as a ReadableStream.
