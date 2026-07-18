@@ -51,6 +51,10 @@ func (b *Builder) PrepareCompose(ctx context.Context, req ComposePrepareRequest,
 	}
 
 	if strings.TrimSpace(req.ComposeYAML) != "" {
+		if err := compose.CheckComposePrivileges(req.ComposeYAML); err != nil {
+			_ = os.RemoveAll(dir)
+			return "", "", err
+		}
 		// Inline catalog compose — write the YAML at the requested relative path.
 		full := filepath.Join(dir, filepath.FromSlash(filepath.ToSlash(composeFile)))
 		if err := os.MkdirAll(filepath.Dir(full), 0o700); err != nil {
