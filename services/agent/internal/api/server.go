@@ -165,6 +165,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/servers/{uuid}/stats", s.handleStats)
 	s.mux.HandleFunc("POST /api/servers/{uuid}/gc", s.handleGC)
 	s.mux.HandleFunc("GET /api/servers/{uuid}/exec", s.handleExec)
+	s.mux.HandleFunc("POST /api/servers/{uuid}/exec-cmd", s.handleExecCmd)
 	s.mux.HandleFunc("POST /api/databases", s.handleDBCreate)
 	s.mux.HandleFunc("POST /api/databases/power", s.handleDBPower)
 	s.mux.HandleFunc("POST /api/databases/status", s.handleDBStatus)
