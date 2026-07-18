@@ -64,6 +64,12 @@ export const AuthErrors = {
       code: 'auth.tokenReadOnly',
       message: 'This API token is read-only and cannot perform this action.',
     }),
+  csrfInvalid: () =>
+    new ForbiddenException({
+      code: 'auth.csrfInvalid',
+      message:
+        'Missing or invalid CSRF token. Refresh the page and try again.',
+    }),
   currentPasswordInvalid: () =>
     new BadRequestException({
       code: 'auth.currentPasswordInvalid',
