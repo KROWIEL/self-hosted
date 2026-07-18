@@ -491,6 +491,12 @@ export const apiTokens = pgTable('api_tokens', {
   tokenHash: text('token_hash').notNull().unique(),
   // Non-secret display hint, e.g. 'shpat_ab12cd…'.
   preview: text('preview').notNull(),
+  // Coarse authorization scopes (M4), stored comma-separated. One access level
+  // ('read' = GET/HEAD only, or 'full' = read+write) plus an optional 'admin'
+  // scope required to reach platform-admin routes. Defaults to 'full' for new
+  // tokens; the migration backfills pre-existing rows to 'full,admin' to keep
+  // prior behaviour.
+  scopes: text('scopes').notNull().default('full'),
   lastUsedAt: timestamp('last_used_at'),
   expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

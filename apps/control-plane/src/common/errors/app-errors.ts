@@ -59,6 +59,11 @@ export const AuthErrors = {
       code: 'auth.invalidRefresh',
       message: 'Your session has expired. Please sign in again.',
     }),
+  tokenReadOnly: () =>
+    new ForbiddenException({
+      code: 'auth.tokenReadOnly',
+      message: 'This API token is read-only and cannot perform this action.',
+    }),
   currentPasswordInvalid: () =>
     new BadRequestException({
       code: 'auth.currentPasswordInvalid',
