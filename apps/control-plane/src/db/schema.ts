@@ -430,8 +430,9 @@ export const installation = pgTable('installation', {
 export const alertChannels = pgTable('alert_channels', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
-  type: text('type').notNull().default('webhook'), // 'webhook'
-  // Encrypted JSON config, e.g. {"url":"https://…"} — may embed secrets.
+  // webhook | discord | slack | telegram
+  type: text('type').notNull().default('webhook'),
+  // Encrypted JSON: {url} or telegram {botToken,chatId} — may embed secrets.
   configEnc: text('config_enc').notNull(),
   enabled: boolean('enabled').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
