@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PowerAction } from '@selfhosted/shared';
 import { Agent } from 'undici';
 import { connect as tlsConnect } from 'node:tls';
@@ -196,6 +196,8 @@ export interface AgentBackupInput {
  */
 @Injectable()
 export class AgentClient {
+  private readonly logger = new Logger(AgentClient.name);
+
   constructor(private readonly crypto: CryptoService) {}
 
   // Per-node undici dispatchers that pin the agent's self-signed cert by its
@@ -284,9 +286,13 @@ export class AgentClient {
     };
     const res = await this.doFetch(node, `${this.baseUrl(node)}${path}`, init2);
     if (!res.ok) {
-      throw new Error(
-        `Agent ${node.name} responded ${res.status}: ${await res.text()}`,
+      // The upstream body can carry agent/Docker internals — log it server-side
+      // but surface only a generic, coded error to the caller (L5).
+      const body = await res.text().catch(() => '');
+      this.logger.warn(
+        `Agent ${node.name} ${path} responded ${res.status}: ${body}`,
       );
+      throw NodeErrors.agentRequestFailed(node.name, res.status);
     }
     return (await res.json()) as T;
   }

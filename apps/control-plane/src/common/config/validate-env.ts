@@ -31,6 +31,18 @@ export function collectEnvErrors(env: NodeJS.ProcessEnv): string[] {
   require('DATABASE_URL');
   require('REDIS_URL');
 
+  // WEBHOOK_SECRET signs deploy-webhook tokens. It must be a dedicated secret
+  // (not the JWT signing key) and is required in production; in dev an insecure
+  // fallback is used with a runtime warning.
+  if ((env.NODE_ENV ?? '') === 'production') {
+    const webhook = env.WEBHOOK_SECRET;
+    if (!webhook || webhook.trim() === '') {
+      errors.push('WEBHOOK_SECRET is required in production');
+    } else if (webhook === env.JWT_SECRET) {
+      errors.push('WEBHOOK_SECRET must not reuse JWT_SECRET');
+    }
+  }
+
   // JWT signing secrets must be strong in EVERY environment — a weak, default
   // or shipped-example secret lets anyone forge valid sessions. This is a fatal
   // startup error (collected below), not a warning.

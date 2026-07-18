@@ -413,10 +413,15 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
     try {
       return await this.agent.getSystem(node);
     } catch (e) {
+      // Don't leak agent/Docker internals to the client — log and return a
+      // generic reachability flag (L5).
+      this.logger.warn(
+        `systemInfo(${id}) failed: ${e instanceof Error ? e.message : String(e)}`,
+      );
       return {
         version: 'unreachable',
         reachable: false,
-        error: e instanceof Error ? e.message : String(e),
+        error: 'unreachable',
       };
     }
   }
@@ -437,9 +442,12 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
     try {
       return { reachable: true, ...(await this.agent.getHost(node)) };
     } catch (e) {
+      this.logger.warn(
+        `host(${id}) failed: ${e instanceof Error ? e.message : String(e)}`,
+      );
       return {
         reachable: false,
-        error: e instanceof Error ? e.message : String(e),
+        error: 'unreachable',
       };
     }
   }

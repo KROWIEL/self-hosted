@@ -107,6 +107,7 @@ $generated = @()
 foreach ($item in @(
     @{ Key = 'JWT_SECRET';         Bytes = 48 },
     @{ Key = 'JWT_REFRESH_SECRET'; Bytes = 48 },
+    @{ Key = 'WEBHOOK_SECRET';     Bytes = 32 },
     @{ Key = 'ENCRYPTION_KEY';     Bytes = 32 }
   )) {
   if (Set-EnvSecret -Path '.env' -Key $item.Key -Value (New-RandomSecret -ByteCount $item.Bytes)) {

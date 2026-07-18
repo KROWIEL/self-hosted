@@ -198,6 +198,14 @@ export const NodeErrors = {
       message: `The agent on node "${node}" is unreachable. Make sure it is running (Nodes → Start agent).`,
       meta: { node },
     }),
+  // Generic upstream failure: the raw agent/Docker response is logged
+  // server-side and never returned to the client (L5).
+  agentRequestFailed: (node: string, status?: number) =>
+    new BadGatewayException({
+      code: 'nodes.agentRequestFailed',
+      message: `The agent on node "${node}" returned an error. Check the panel logs for details.`,
+      meta: { node, status },
+    }),
 };
 
 export const MemberErrors = {

@@ -110,6 +110,7 @@ fi
 generated=()
 if set_env_secret .env JWT_SECRET "$(gen_secret 48)"; then generated+=("JWT_SECRET"); fi
 if set_env_secret .env JWT_REFRESH_SECRET "$(gen_secret 48)"; then generated+=("JWT_REFRESH_SECRET"); fi
+if set_env_secret .env WEBHOOK_SECRET "$(gen_secret 32)"; then generated+=("WEBHOOK_SECRET"); fi
 if set_env_secret .env ENCRYPTION_KEY "$(gen_secret 32)"; then generated+=("ENCRYPTION_KEY"); fi
 if [ "${#generated[@]}" -gt 0 ]; then
   log "Generated strong random secret(s) in .env: ${generated[*]}"

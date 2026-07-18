@@ -103,4 +103,41 @@ describe('collectEnvErrors', () => {
     expect(errors.some((e) => e.includes('JWT_SECRET'))).toBe(true);
     expect(errors.some((e) => e.includes('JWT_REFRESH_SECRET'))).toBe(true);
   });
+
+  // WEBHOOK_SECRET is only enforced in production, and must be a dedicated
+  // secret rather than a reuse of the JWT signing key.
+  describe('WEBHOOK_SECRET (production only)', () => {
+    it('is not required outside production', () => {
+      const env = validEnv();
+      delete env.WEBHOOK_SECRET;
+      expect(collectEnvErrors(env)).toEqual([]);
+    });
+
+    it('is required in production', () => {
+      const env = validEnv();
+      env.NODE_ENV = 'production';
+      delete env.WEBHOOK_SECRET;
+      expect(
+        collectEnvErrors(env).some((e) => e.includes('WEBHOOK_SECRET')),
+      ).toBe(true);
+    });
+
+    it('must not reuse JWT_SECRET in production', () => {
+      const env = validEnv();
+      env.NODE_ENV = 'production';
+      env.WEBHOOK_SECRET = env.JWT_SECRET;
+      expect(
+        collectEnvErrors(env).some(
+          (e) => e.includes('WEBHOOK_SECRET') && e.includes('JWT_SECRET'),
+        ),
+      ).toBe(true);
+    });
+
+    it('accepts a dedicated secret in production', () => {
+      const env = validEnv();
+      env.NODE_ENV = 'production';
+      env.WEBHOOK_SECRET = strongSecret();
+      expect(collectEnvErrors(env)).toEqual([]);
+    });
+  });
 });
