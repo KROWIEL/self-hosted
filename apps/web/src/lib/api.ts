@@ -200,16 +200,30 @@ export interface AlertEventGroup {
 export const listAlertMeta = () =>
   api<{ events: string[]; groups: AlertEventGroup[] }>('/alerts/meta');
 
+export type AlertChannelType = 'webhook' | 'discord' | 'slack' | 'telegram';
+
 export const listAlertChannels = () =>
   api<AlertChannel[]>('/alerts/channels');
-export const createAlertChannel = (body: { name: string; url: string }) =>
+export const createAlertChannel = (body: {
+  name: string;
+  type?: AlertChannelType;
+  url?: string;
+  botToken?: string;
+  chatId?: string;
+}) =>
   api<AlertChannel>('/alerts/channels', {
     method: 'POST',
     body: JSON.stringify(body),
   });
 export const updateAlertChannel = (
   id: string,
-  body: { name?: string; url?: string; enabled?: boolean },
+  body: {
+    name?: string;
+    url?: string;
+    botToken?: string;
+    chatId?: string;
+    enabled?: boolean;
+  },
 ) =>
   api<AlertChannel>(`/alerts/channels/${id}`, {
     method: 'PATCH',
