@@ -26,7 +26,7 @@ import {
 } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import { EntitlementsService } from '../../common/licensing/entitlements.service';
-import { LicenseErrors } from '../../common/errors/app-errors';
+import { LicenseErrors, NodeErrors } from '../../common/errors/app-errors';
 import { AgentClient } from './agent.client';
 
 interface CreateNodeInput {
@@ -201,25 +201,69 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
     return { nodeId: row.nodeId, daemonToken };
   }
 
-  /** Agent liveness ping. Authorized by the node's provisioned daemon token. */
+  /**
+   * Agent liveness ping. Authorized by the node's provisioned daemon token. A
+   * rotating node's previous secret is also accepted during the migration
+   * window; once the agent heartbeats with the CURRENT secret the rotation has
+   * converged, so the previous secret is retired.
+   */
   async heartbeat(nodeId: string, token: string, version?: string) {
     const node = await this.get(nodeId);
-    const expected = this.crypto.decrypt(node.daemonToken);
-    const a = Buffer.from(token);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    const current = this.crypto.decrypt(node.daemonToken);
+    const prev = node.daemonTokenPrev
+      ? this.crypto.decrypt(node.daemonTokenPrev)
+      : '';
+    const matchesCurrent = safeStrEqual(token, current);
+    const matchesPrev = prev ? safeStrEqual(token, prev) : false;
+    if (!matchesCurrent && !matchesPrev) {
       throw new UnauthorizedException();
     }
+    const patch: Partial<typeof nodes.$inferInsert> = {
+      status: 'ONLINE',
+      lastSeen: new Date(),
+      agentVersion: version ?? node.agentVersion,
+      updatedAt: new Date(),
+    };
+    // The agent now presents the new secret -> rotation converged; drop the old.
+    if (matchesCurrent && node.daemonTokenPrev) {
+      patch.daemonTokenPrev = null;
+      patch.daemonTokenRotatedAt = null;
+    }
+    await this.db.update(nodes).set(patch).where(eq(nodes.id, nodeId));
+    return { ok: true };
+  }
+
+  /**
+   * Rotates the node's long-lived daemon secret. The new secret is pushed to the
+   * agent FIRST (authenticated with the current secret); only after the agent
+   * confirms does the panel persist the switch, keeping the old secret as
+   * `daemonTokenPrev` for a migration window. This ordering guarantees a failed
+   * push (agent down, or a legacy agent without the endpoint) never locks a node
+   * out — the DB, and therefore the secret in use, is left untouched.
+   */
+  async rotateDaemonToken(nodeId: string) {
+    const node = await this.get(nodeId);
+    const oldToken = this.crypto.decrypt(node.daemonToken);
+    const newToken = randomBytes(32).toString('hex');
+
+    const res = await this.agent.rotate(node, newToken);
+    if (!res.ok) {
+      if (res.status === 404) throw NodeErrors.rotationUnsupported(node.name);
+      throw NodeErrors.agentRequestFailed(node.name, res.status);
+    }
+
+    const rotatedAt = new Date();
     await this.db
       .update(nodes)
       .set({
-        status: 'ONLINE',
-        lastSeen: new Date(),
-        agentVersion: version ?? node.agentVersion,
-        updatedAt: new Date(),
+        daemonToken: this.crypto.encrypt(newToken),
+        daemonTokenPrev: this.crypto.encrypt(oldToken),
+        daemonTokenRotatedAt: rotatedAt,
+        updatedAt: rotatedAt,
       })
       .where(eq(nodes.id, nodeId));
-    return { ok: true };
+    this.logger.log(`Node ${nodeId} daemon token rotated`);
+    return { ok: true, rotatedAt };
   }
 
   /** Connection details + a ready-to-paste one-liner install command. */
@@ -489,6 +533,14 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
       .orderBy(managedDatabases.name);
     return { services: svc, databases: dbs };
   }
+}
+
+/** Constant-time string comparison with a length guard (avoids leaking length). */
+function safeStrEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
 }
 
 /** Agent asset-token lifetime; override with NODE_ASSET_TOKEN_TTL_MS (default 24h). */

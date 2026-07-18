@@ -132,6 +132,15 @@ export class NodesController {
     return this.nodes.remove(id);
   }
 
+  /**
+   * Rotate this node's long-lived daemon secret. Pushes a new secret to the
+   * agent and switches over only once the agent confirms (back-compat safe).
+   */
+  @Post(':id/rotate-token')
+  rotateToken(@Param('id') id: string) {
+    return this.nodes.rotateDaemonToken(id);
+  }
+
   /** Dev: launch the local Go agent for this node (LOCAL_AGENT_ENABLED=1). */
   @Post(':id/agent/start')
   async startAgent(@Param('id') id: string) {

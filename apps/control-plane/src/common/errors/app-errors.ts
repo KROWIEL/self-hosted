@@ -212,6 +212,13 @@ export const NodeErrors = {
       message: `The agent on node "${node}" returned an error. Check the panel logs for details.`,
       meta: { node, status },
     }),
+  // The agent is too old to support daemon-token rotation (no /rotate endpoint).
+  rotationUnsupported: (node: string) =>
+    new BadGatewayException({
+      code: 'nodes.rotationUnsupported',
+      message: `The agent on node "${node}" is too old to rotate its token. Upgrade the agent, then try again.`,
+      meta: { node },
+    }),
 };
 
 export const MemberErrors = {

@@ -77,6 +77,11 @@ export const nodes = pgTable('nodes', {
   fqdn: text('fqdn').notNull(),
   agentPort: integer('agent_port').notNull().default(8443),
   daemonToken: text('daemon_token').notNull(),
+  // During a daemon-token rotation the previous secret is retained (encrypted)
+  // so already-running agents/heartbeats keep authenticating until they confirm
+  // the new one; cleared once the node converges on the new secret.
+  daemonTokenPrev: text('daemon_token_prev'),
+  daemonTokenRotatedAt: timestamp('daemon_token_rotated_at'),
   publicKey: text('public_key'),
   status: nodeStatusEnum('status').notNull().default('OFFLINE'),
   // Whether the local Go agent should be (re)started automatically on panel
