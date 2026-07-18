@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/self-hosted/agent/internal/docker"
 )
 
 // Backup / restore of volumes (tar.gz) and managed databases (sql.gz).
@@ -62,6 +64,12 @@ func (s *Server) handleBackupCreate(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch body.Kind {
 	case "VOLUME":
+		// Reject non-volume names so "-v <name>:/data" can't become a host
+		// bind-mount (e.g. "/etc:/data").
+		if !docker.ValidVolumeName(body.Volume) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
 		// Direct argv (no shell): file name is already charset-restricted.
 		err = s.docker.RunEphemeral(ctx,
 			"-v", body.Volume+":/data:ro",
@@ -116,6 +124,10 @@ func (s *Server) handleBackupRestore(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch body.Kind {
 	case "VOLUME":
+		if !docker.ValidVolumeName(body.Volume) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
 		// The rm-glob + tar sequence needs a shell, but the file name is passed
 		// as a positional arg ($1), never interpolated into the script.
 		err = s.docker.RunEphemeral(ctx,

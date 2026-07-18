@@ -90,6 +90,58 @@ func TestValidateRef(t *testing.T) {
 	}
 }
 
+func TestValidateID(t *testing.T) {
+	valid := []string{
+		"svc",
+		"service-123",
+		"a_b-c",
+		"550e8400-e29b-41d4-a716-446655440000",
+	}
+	for _, id := range valid {
+		if err := validateID("serviceID", id); err != nil {
+			t.Fatalf("valid id %q rejected: %v", id, err)
+		}
+	}
+	invalid := []string{
+		"",
+		"../etc",
+		"a/b",
+		"a b",
+		"a:b",
+		"foo/../bar",
+		".",
+		"..",
+	}
+	for _, id := range invalid {
+		if err := validateID("serviceID", id); err == nil {
+			t.Fatalf("expected id %q to be rejected", id)
+		}
+	}
+}
+
+func TestSafeSubdir(t *testing.T) {
+	base := t.TempDir()
+
+	t.Run("contained subdir is accepted", func(t *testing.T) {
+		got, err := safeSubdir(base, "service-1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := filepath.Join(base, "service-1")
+		if got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("traversal escaping base is rejected", func(t *testing.T) {
+		for _, name := range []string{"../evil", "../../etc", "sub/../../out"} {
+			if _, err := safeSubdir(base, name); err == nil {
+				t.Fatalf("expected %q to be rejected", name)
+			}
+		}
+	})
+}
+
 func TestEnsureDockerignoreGit(t *testing.T) {
 	t.Run("creates when missing", func(t *testing.T) {
 		dir := t.TempDir()

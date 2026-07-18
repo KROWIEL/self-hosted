@@ -8,10 +8,37 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/self-hosted/agent/internal/docker"
 )
+
+// idRe matches safe identifiers used to build per-service / per-work
+// subdirectories (UUIDs and slugs). It forbids path separators, "..", and any
+// other character that could let a crafted id escape the work directory.
+var idRe = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+
+// validateID rejects identifiers that are not a plain slug/UUID.
+func validateID(kind, id string) error {
+	if !idRe.MatchString(id) {
+		return fmt.Errorf("invalid %s %q", kind, id)
+	}
+	return nil
+}
+
+// safeSubdir joins base + name and verifies the cleaned result stays within
+// base. This is defense-in-depth (on top of validateID) so a destructive
+// os.RemoveAll can never operate outside the work directory.
+func safeSubdir(base, name string) (string, error) {
+	baseClean := filepath.Clean(base)
+	clean := filepath.Clean(filepath.Join(baseClean, name))
+	if clean != baseClean &&
+		!strings.HasPrefix(clean, baseClean+string(os.PathSeparator)) {
+		return "", fmt.Errorf("resolved path %q escapes work dir", clean)
+	}
+	return clean, nil
+}
 
 // Builder clones a git repo and builds a Docker image from it.
 type Builder struct {
@@ -38,7 +65,15 @@ type BuildRequest struct {
 // Build clones the repo and builds the image, streaming output to w.
 // Returns the resolved commit SHA.
 func (b *Builder) Build(ctx context.Context, req BuildRequest, w io.Writer) (string, error) {
-	dir := filepath.Join(b.workDir, req.ServiceID)
+	// Validate the service id and confirm the resolved dir is inside workDir
+	// BEFORE any os.RemoveAll (M3: path traversal / arbitrary deletion).
+	if err := validateID("serviceID", req.ServiceID); err != nil {
+		return "", err
+	}
+	dir, err := safeSubdir(b.workDir, req.ServiceID)
+	if err != nil {
+		return "", err
+	}
 	if err := os.RemoveAll(dir); err != nil {
 		return "", err
 	}

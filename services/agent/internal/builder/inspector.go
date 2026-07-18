@@ -82,7 +82,15 @@ func looksLikeConfig(name string) bool {
 
 // Inspect clones the repo shallowly and returns detected env keys + databases.
 func (b *Builder) Inspect(ctx context.Context, req InspectRequest) (*InspectResult, error) {
-	dir := filepath.Join(b.workDir, "inspect-"+req.WorkID)
+	// Validate the work id and confirm the resolved dir is inside workDir BEFORE
+	// any os.RemoveAll (M3: path traversal / arbitrary deletion).
+	if err := validateID("workID", req.WorkID); err != nil {
+		return nil, err
+	}
+	dir, err := safeSubdir(b.workDir, "inspect-"+req.WorkID)
+	if err != nil {
+		return nil, err
+	}
 	if err := os.RemoveAll(dir); err != nil {
 		return nil, err
 	}

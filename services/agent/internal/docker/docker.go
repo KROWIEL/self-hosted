@@ -7,8 +7,20 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
+
+// volumeNameRe matches safe Docker named-volume identifiers. It rejects any
+// value containing '/' or ':' (and other shell/path metacharacters), so a
+// caller can't turn a "-v name:path" mount into a host bind-mount such as
+// "/etc:/etc" or "/var/run/docker.sock:...". Must start alphanumeric.
+var volumeNameRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]+$`)
+
+// ValidVolumeName reports whether name is a safe Docker named-volume identifier.
+func ValidVolumeName(name string) bool {
+	return volumeNameRe.MatchString(name)
+}
 
 // Client wraps Docker operations via the docker CLI.
 // MVP choice: shelling out keeps the agent dependency-free and readable.
@@ -81,9 +93,16 @@ func (c *Client) RunContainer(ctx context.Context, opts RunOptions, w io.Writer)
 		args = append(args, "--cpus", fmt.Sprintf("%.2f", float64(opts.CPULimit)/100.0))
 	}
 	for _, v := range opts.Volumes {
-		if v.Name != "" && v.MountPath != "" {
-			args = append(args, "-v", fmt.Sprintf("%s:%s", v.Name, v.MountPath))
+		if v.Name == "" || v.MountPath == "" {
+			continue
 		}
+		// Reject anything that isn't a plain named volume so a crafted name
+		// (e.g. "/etc") can't become a host bind-mount. Fail loudly rather than
+		// silently dropping the mount, which could cause data loss.
+		if !ValidVolumeName(v.Name) {
+			return "", fmt.Errorf("invalid volume name %q", v.Name)
+		}
+		args = append(args, "-v", fmt.Sprintf("%s:%s", v.Name, v.MountPath))
 	}
 	for k, v := range opts.Env {
 		args = append(args, "-e", fmt.Sprintf("%s=%s", k, v))
