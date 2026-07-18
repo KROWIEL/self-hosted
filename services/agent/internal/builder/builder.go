@@ -2,6 +2,7 @@ package builder
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -44,22 +45,37 @@ func (b *Builder) Build(ctx context.Context, req BuildRequest, w io.Writer) (str
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", err
 	}
-	// Always clean up the working tree (and any token in the remote URL).
+	// Always clean up the working tree.
 	defer os.RemoveAll(dir)
 
-	cloneURL := req.RepoURL
-	if req.PATToken != "" {
-		cloneURL = injectToken(req.RepoURL, req.PATToken)
+	// Reject inputs that git could interpret as options (leading "-").
+	if err := validateRef(req.RepoURL, req.Branch); err != nil {
+		return "", err
 	}
+
+	// Credentials are injected via the environment (http.extraHeader), never
+	// baked into the clone URL — so the token stays out of argv, on-disk git
+	// config and image layers. Clone the clean URL.
+	cloneEnv := tokenCloneEnv(req.PATToken)
 
 	fmt.Fprintf(w, ">> cloning %s (%s)\n", req.RepoURL, req.Branch)
 	// Force LF on checkout so shell scripts (e.g. gradlew) keep their POSIX
 	// shebang. On a Windows host, git's core.autocrlf can rewrite LF → CRLF,
 	// which breaks `./gradlew` inside the Linux build container ("not found").
-	if err := run(ctx, w, dir, "git",
+	// Restrict transports to http(s) only ("--" ends option parsing).
+	if err := runEnv(ctx, w, dir, cloneEnv, "git",
 		"-c", "core.autocrlf=false", "-c", "core.eol=lf",
-		"clone", "--depth", "1", "--branch", req.Branch, cloneURL, "."); err != nil {
+		"-c", "protocol.allow=never",
+		"-c", "protocol.https.allow=always",
+		"-c", "protocol.http.allow=always",
+		"clone", "--depth", "1", "--branch", req.Branch, "--", req.RepoURL, "."); err != nil {
 		return "", fmt.Errorf("git clone failed: %w", err)
+	}
+
+	// Keep the .git directory (history + any embedded creds) out of the image:
+	// the templates do `COPY . .`, so ensure the context ignores it.
+	if err := ensureDockerignoreGit(dir); err != nil {
+		return "", err
 	}
 
 	sha, err := commitSHA(ctx, dir)
@@ -112,11 +128,57 @@ func resolveDockerfile(repoDir, templateRel string, useRepoDockerfile bool) stri
 	return filepath.Join(templateRoot, filepath.FromSlash(rel))
 }
 
-func injectToken(repoURL, token string) string {
-	if strings.HasPrefix(repoURL, "https://") {
-		return "https://x-access-token:" + token + "@" + strings.TrimPrefix(repoURL, "https://")
+// validateRef rejects a clone URL or branch that begins with "-" and would
+// otherwise be parsed by git as an option/flag (option-injection).
+func validateRef(cloneURL, branch string) error {
+	if strings.HasPrefix(cloneURL, "-") {
+		return fmt.Errorf("invalid repo URL: must not start with '-'")
 	}
-	return repoURL
+	if strings.HasPrefix(branch, "-") {
+		return fmt.Errorf("invalid branch: must not start with '-'")
+	}
+	return nil
+}
+
+// tokenCloneEnv returns extra environment entries that make git send an HTTP
+// Authorization header for the clone via the GIT_CONFIG_* mechanism (git
+// 2.31+). This keeps the PAT out of argv and the stored remote URL. Returns nil
+// when no token is set (unauthenticated clone — behavior unchanged).
+func tokenCloneEnv(token string) []string {
+	if token == "" {
+		return nil
+	}
+	basic := base64.StdEncoding.EncodeToString([]byte("x-access-token:" + token))
+	return []string{
+		"GIT_CONFIG_COUNT=1",
+		"GIT_CONFIG_KEY_0=http.extraHeader",
+		"GIT_CONFIG_VALUE_0=AUTHORIZATION: Basic " + basic,
+	}
+}
+
+// ensureDockerignoreGit guarantees the build context ignores ".git" so the repo
+// history (and any credentials it might contain) is never copied into an image
+// by template Dockerfiles that use `COPY . .`.
+func ensureDockerignoreGit(dir string) error {
+	path := filepath.Join(dir, ".dockerignore")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return os.WriteFile(path, []byte(".git\n"), 0o644)
+		}
+		return err
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.TrimSpace(line) == ".git" {
+			return nil // already ignored
+		}
+	}
+	content := string(data)
+	if len(content) > 0 && !strings.HasSuffix(content, "\n") {
+		content += "\n"
+	}
+	content += ".git\n"
+	return os.WriteFile(path, []byte(content), 0o644)
 }
 
 func commitSHA(ctx context.Context, dir string) (string, error) {
@@ -130,9 +192,18 @@ func commitSHA(ctx context.Context, dir string) (string, error) {
 }
 
 func run(ctx context.Context, w io.Writer, dir string, name string, args ...string) error {
+	return runEnv(ctx, w, dir, nil, name, args...)
+}
+
+// runEnv is run() with extra environment variables appended to the process
+// environment (used to pass git credentials without exposing them in argv).
+func runEnv(ctx context.Context, w io.Writer, dir string, extraEnv []string, name string, args ...string) error {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
 	cmd.Stdout = w
 	cmd.Stderr = w
+	if len(extraEnv) > 0 {
+		cmd.Env = append(os.Environ(), extraEnv...)
+	}
 	return cmd.Run()
 }

@@ -1,8 +1,10 @@
 package builder
 
 import (
+	"encoding/base64"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -48,19 +50,89 @@ func TestResolveDockerfile(t *testing.T) {
 	})
 }
 
-func TestInjectToken(t *testing.T) {
-	t.Run("https gets x-access-token credentials", func(t *testing.T) {
-		got := injectToken("https://github.com/acme/app.git", "secret123")
-		want := "https://x-access-token:secret123@github.com/acme/app.git"
-		if got != want {
-			t.Fatalf("got %q, want %q", got, want)
+func TestTokenCloneEnv(t *testing.T) {
+	if env := tokenCloneEnv(""); env != nil {
+		t.Fatalf("expected nil env without a token, got %v", env)
+	}
+
+	env := tokenCloneEnv("secret123")
+	basic := base64.StdEncoding.EncodeToString([]byte("x-access-token:secret123"))
+	want := []string{
+		"GIT_CONFIG_COUNT=1",
+		"GIT_CONFIG_KEY_0=http.extraHeader",
+		"GIT_CONFIG_VALUE_0=AUTHORIZATION: Basic " + basic,
+	}
+	if len(env) != len(want) {
+		t.Fatalf("got %v, want %v", env, want)
+	}
+	for i := range want {
+		if env[i] != want[i] {
+			t.Fatalf("index %d: got %q, want %q", i, env[i], want[i])
+		}
+	}
+	// The raw token must never appear verbatim (only base64 in the header).
+	for _, e := range env {
+		if strings.Contains(e, "secret123") {
+			t.Fatalf("raw token leaked into env entry %q", e)
+		}
+	}
+}
+
+func TestValidateRef(t *testing.T) {
+	if err := validateRef("https://github.com/acme/app.git", "main"); err != nil {
+		t.Fatalf("valid ref rejected: %v", err)
+	}
+	if err := validateRef("--upload-pack=evil", "main"); err == nil {
+		t.Fatal("expected leading-dash URL to be rejected")
+	}
+	if err := validateRef("https://github.com/acme/app.git", "-x"); err == nil {
+		t.Fatal("expected leading-dash branch to be rejected")
+	}
+}
+
+func TestEnsureDockerignoreGit(t *testing.T) {
+	t.Run("creates when missing", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := ensureDockerignoreGit(dir); err != nil {
+			t.Fatal(err)
+		}
+		data, err := os.ReadFile(filepath.Join(dir, ".dockerignore"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(data), ".git") {
+			t.Fatalf("expected .git in .dockerignore, got %q", data)
 		}
 	})
 
-	t.Run("non-https left untouched", func(t *testing.T) {
-		in := "git@github.com:acme/app.git"
-		if got := injectToken(in, "secret123"); got != in {
-			t.Fatalf("got %q, want %q", got, in)
+	t.Run("appends when present without .git", func(t *testing.T) {
+		dir := t.TempDir()
+		p := filepath.Join(dir, ".dockerignore")
+		if err := os.WriteFile(p, []byte("node_modules"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := ensureDockerignoreGit(dir); err != nil {
+			t.Fatal(err)
+		}
+		data, _ := os.ReadFile(p)
+		if !strings.Contains(string(data), "node_modules") ||
+			!strings.Contains(string(data), ".git") {
+			t.Fatalf("expected both entries, got %q", data)
+		}
+	})
+
+	t.Run("no duplicate when already ignored", func(t *testing.T) {
+		dir := t.TempDir()
+		p := filepath.Join(dir, ".dockerignore")
+		if err := os.WriteFile(p, []byte(".git\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := ensureDockerignoreGit(dir); err != nil {
+			t.Fatal(err)
+		}
+		data, _ := os.ReadFile(p)
+		if strings.Count(string(data), ".git") != 1 {
+			t.Fatalf("expected a single .git entry, got %q", data)
 		}
 	})
 }
