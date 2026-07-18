@@ -15,6 +15,7 @@ import { ModuleGuard } from '../../common/licensing/module.guard';
 import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { SsoService, ReqLike } from './sso.service';
 import { SetSsoConfigDto } from './dto/sso.dto';
+import { setSessionCookies } from '../../common/http/cookies';
 
 /** HttpOnly cookie that binds the OIDC state to the browser (anti login-CSRF). */
 const SSO_STATE_COOKIE = 'sso_state';
@@ -68,14 +69,17 @@ export class SsoController {
     @Query('error') error?: string,
   ) {
     const cookieCsrf = readCookie(req.headers.cookie, SSO_STATE_COOKIE);
-    const target = await this.sso.handleCallback(
+    const result = await this.sso.handleCallback(
       req as unknown as ReqLike,
       { code, state, error },
       cookieCsrf,
     );
     // One-time use: clear the binding cookie regardless of outcome.
     res.clearCookie(SSO_STATE_COOKIE, { path: SSO_COOKIE_PATH });
-    res.redirect(target);
+    // On success set the session as HttpOnly cookies (H-1) — no tokens in the
+    // redirect URL — then bounce to the dashboard.
+    if (result.ok) setSessionCookies(req, res, result.tokens);
+    res.redirect(result.redirect);
   }
 
   @Get('config')

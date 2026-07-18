@@ -1,6 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ExtractJwt, Strategy, type JwtFromRequestFunction } from 'passport-jwt';
+import type { Request } from 'express';
+import { ACCESS_COOKIE, readCookie } from '../../common/http/cookies';
 import { UsersService } from '../users/users.service';
 
 export interface JwtPayload {
@@ -24,11 +26,22 @@ function requireJwtSecret(): string {
   return secret;
 }
 
+/**
+ * Extract the access token from the HttpOnly `access_token` cookie first (H-1:
+ * browser sessions), then fall back to the `Authorization: Bearer` header so
+ * PATs and the CLI keep working unchanged.
+ */
+const fromCookieOrHeader: JwtFromRequestFunction = (req: Request) => {
+  const fromCookie = readCookie(req?.headers?.cookie, ACCESS_COOKIE);
+  if (fromCookie) return fromCookie;
+  return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+};
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly users: UsersService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: fromCookieOrHeader,
       ignoreExpiration: false,
       secretOrKey: requireJwtSecret(),
     });

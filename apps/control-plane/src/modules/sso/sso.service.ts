@@ -36,6 +36,15 @@ interface StatePayload {
 }
 
 /**
+ * Outcome of {@link SsoService.handleCallback}: on success the controller sets
+ * the session cookies from `tokens`; either way it redirects the browser to
+ * `redirect`.
+ */
+export type SsoCallbackResult =
+  | { ok: true; tokens: { accessToken: string; refreshToken: string }; redirect: string }
+  | { ok: false; redirect: string };
+
+/**
  * Single sign-on via OpenID Connect (Pro: sso). Stores a singleton IdP config
  * and drives the Authorization Code flow: `buildAuthUrl` starts it, and
  * `handleCallback` completes it by verifying the ID token and minting a normal
@@ -174,18 +183,22 @@ export class SsoService {
   }
 
   /**
-   * Complete the flow. Always returns a web-app URL to redirect to (never
-   * throws): success carries the session tokens in the URL fragment, failure
-   * carries a machine-readable `error` code the callback page localizes.
+   * Complete the flow. Never throws: on success it returns the freshly minted
+   * session tokens plus a redirect target so the controller can set them as
+   * HttpOnly cookies (H-1) and bounce the browser to the dashboard; on failure
+   * it returns a redirect carrying a machine-readable `error` code the callback
+   * page localizes. Tokens are no longer leaked through the URL fragment.
    */
   async handleCallback(
     req: ReqLike,
     q: { code?: string; state?: string; error?: string },
     cookieCsrf?: string,
-  ): Promise<string> {
+  ): Promise<SsoCallbackResult> {
     const appBase = this.appBase();
-    const fail = (code: string) =>
-      `${appBase}/sso/callback#error=${encodeURIComponent(code)}`;
+    const fail = (code: string): SsoCallbackResult => ({
+      ok: false,
+      redirect: `${appBase}/sso/callback#error=${encodeURIComponent(code)}`,
+    });
 
     try {
       if (q.error) return fail(q.error);
@@ -254,11 +267,11 @@ export class SsoService {
         role: user.role,
         tokenVersion: user.tokenVersion,
       });
-      const frag = new URLSearchParams({
-        access: session.accessToken,
-        refresh: session.refreshToken,
-      });
-      return `${appBase}/sso/callback#${frag.toString()}`;
+      return {
+        ok: true,
+        tokens: session,
+        redirect: `${appBase}/dashboard`,
+      };
     } catch (e) {
       this.logger.warn(`SSO callback failed: ${(e as Error).message}`);
       return fail('sso_failed');
