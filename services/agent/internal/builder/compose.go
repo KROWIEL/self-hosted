@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/self-hosted/agent/internal/compose"
 )
 
 // ComposePrepareRequest prepares a work directory for docker compose up.
@@ -40,6 +42,12 @@ func (b *Builder) PrepareCompose(ctx context.Context, req ComposePrepareRequest,
 	composeFile = req.ComposeFile
 	if composeFile == "" {
 		composeFile = "docker-compose.yml"
+	}
+	if cleaned, err := compose.ValidateComposeFilePath(composeFile); err != nil {
+		_ = os.RemoveAll(dir)
+		return "", "", err
+	} else {
+		composeFile = cleaned
 	}
 
 	if strings.TrimSpace(req.ComposeYAML) != "" {
