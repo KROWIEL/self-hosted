@@ -7,19 +7,21 @@
 [![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com)
 [![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 
-A self-hosted control panel for deploying **applications** straight from a git
-repository into Docker — a lightweight, self-hosted alternative to Heroku /
-Railway / Render. Connect a repo, pick a stack template, and the panel builds
-and runs your services in containers behind a reverse proxy with automatic
-HTTPS.
+A self-hosted control panel for deploying **applications** into Docker — a
+lightweight, self-hosted alternative to Heroku / Railway / Render. Deploy from
+**git**, a **container image**, or a **Compose** stack; pick a template,
+`Dockerfile`, or **Nixpacks** build; or install from the **app catalog**.
+Services run behind Traefik with automatic HTTPS (and optional custom PEMs).
 
 It is built for small teams: multi-tenant projects with role-based access,
-two-factor authentication, an audit trail, managed databases, zero-downtime
-deploys and a fully localized (English / Russian) responsive UI.
+two-factor authentication, an audit trail, managed databases, persistent
+volumes, zero-downtime deploys and a fully localized (English / Russian)
+responsive UI.
 
 **Supported stacks out of the box:** Java backends (Maven / Gradle / WAR→Tomcat)
 and React (Vite) / Next.js frontends. Any repository that ships its own
-`Dockerfile` also works, and admins can add their own templates.
+`Dockerfile` also works (or use Nixpacks); admins can add their own templates
+and catalog apps.
 
 ---
 
@@ -72,8 +74,15 @@ and React (Vite) / Next.js frontends. Any repository that ships its own
 
 ### Deployments
 
+- **Deploy kinds** — `git` (clone & build), `image` (run an existing image), or
+  `compose` (Docker Compose stack from a repo path or inline YAML).
+- **Build modes (git)** — `template` (curated stack), `dockerfile` (repo
+  `Dockerfile`), or `nixpacks` (auto-detect build).
 - **Git-based deploys** — connect a repo (public, or private via a Personal
-  Access Token), pick a template, deploy. Build logs stream live to the UI.
+  Access Token), pick a build mode, deploy. Build logs stream live to the UI.
+- **App catalog** (`/catalog`) — one-click install of curated apps; Free sees
+  basic apps, Home-Lab unlocks the full catalog (`minTier`).
+- **Persistent volumes** — attach named volumes to services for durable data.
 - **Zero-downtime deployments** — blue-green rollout with agent-side health
   checks; traffic switches to the new container only once it is healthy.
 - **Rollback** — redeploy any previous successful image in one click.
@@ -90,6 +99,8 @@ and React (Vite) / Next.js frontends. Any repository that ships its own
   default port and typed variables.
 - **Categories** — templates are grouped by category (e.g. Java, JavaScript)
   for quick browsing.
+- **Certificates** (`/certificates`) — view ACME/TLS status per domain and
+  upload custom PEM cert + key (encrypted at rest, applied on the agent).
 
 ### Multi-tenancy & access control
 
@@ -131,10 +142,13 @@ and React (Vite) / Next.js frontends. Any repository that ships its own
 - **Disk cleanup** — a per-node "Clean up" button (docker system/builder/volume
   prune) plus automatic image/container cleanup when services or projects are
   deleted.
-- **Reverse tunnels** — expose services running behind NAT/home networks
-  through a public VDS relay.
+- **Reverse tunnels** *(Home-Lab)* — expose services running behind NAT/home
+  networks through a public VDS relay.
+- **Service cron** *(Home-Lab)* — schedule commands inside a running service
+  container.
 - **Automatic HTTPS** — Traefik issues Let's Encrypt certificates per subdomain
-  (HTTP-01) or a wildcard certificate (DNS-01 via Cloudflare).
+  (HTTP-01) or a wildcard certificate (DNS-01 via Cloudflare); custom PEMs via
+  the certificates page.
 
 ### User experience
 
@@ -147,19 +161,23 @@ and React (Vite) / Next.js frontends. Any repository that ships its own
 
 ### Paid modules (open-core)
 
-The core above is free. The following add-on modules are gated by a signed
-license key (see [`docs/LICENSING.md`](docs/LICENSING.md)). **Home-Lab** unlocks
-reverse tunnels; **Pro** unlocks all ten.
+The core above is free (including catalog basics, compose/image/git deploys,
+Nixpacks, volumes, and the certificates page). Add-on modules are gated by a
+signed license key (see [`docs/LICENSING.md`](docs/LICENSING.md)).
 
-Each tier also caps a few resources: **Free** = 1 node; **Home-Lab** = 3 nodes +
-3 reverse tunnels; **Pro** = unlimited.
+| Tier | Limits | Unlocks |
+|---|---|---|
+| **Free** | 1 node, 0 tunnels | Full core |
+| **Home-Lab** | 3 nodes, 3 tunnels | `reverse-tunnels`, `service-cron`, full catalog |
+| **Pro** | unlimited | All **11** modules below |
 
 | Module | Tier | What it does |
 |---|---|---|
 | **Reverse tunnels** | Home-Lab | Expose NAT / home-lab nodes to the internet via a public relay. |
-| **Preview environments** | Pro | Deploy any branch as a disposable, isolated copy with its own optional subdomain; auto-cleanup by TTL. |
-| **Off-site backups** | Pro | Mirror managed-DB backups to any S3-compatible bucket (encrypted credentials). |
-| **Alerts** | Pro | Webhook alerts for node-offline, deploy/backup failures and resource thresholds. |
+| **Service cron** | Home-Lab | Schedule commands inside a running service container (cron expressions). |
+| **Preview environments** | Pro | Deploy any branch as a disposable, isolated copy with its own optional subdomain; auto-cleanup by TTL. GitHub/GitLab PR webhooks via **Git Apps** (`/git-apps`) create/update previews and post PR comments. |
+| **Off-site backups** | Pro | Mirror managed-DB backups to **S3**, **GCS**, **Azure Blob**, or **SFTP** (encrypted credentials). |
+| **Alerts** | Pro | Channels: generic **webhook**, **Discord**, **Slack**, **Telegram** — for node-offline, deploy/backup failures and resource thresholds. |
 | **Metrics history** | Pro | Store and chart historical CPU / RAM / disk per node. |
 | **SSO / OIDC** | Pro | OpenID Connect single sign-on with domain allow-list and JIT provisioning. |
 | **Audit export** | Pro | Organization-wide audit log with filters and CSV / JSON export. |
@@ -200,8 +218,9 @@ A **control plane + agent** design:
 | `Node` + Agent | A server running the Go agent that manages containers |
 | `Project` | A group of services + databases with its own CPU/RAM quota |
 | `Member` | A user attached to a project with a role (`OWNER`/`ADMIN`/`MEMBER`/`VIEWER`) |
-| `Service` | A deployable unit (a backend or frontend) built from git |
-| `Template` | A stack definition describing how to build & run a service |
+| `Service` | A deployable unit (`deployKind`: git / image / compose) |
+| `Template` | A stack definition describing how to build & run a git service |
+| `Catalog app` | A curated installable app (image/compose/git) gated by `minTier` |
 | `Domain` | A hostname routed to a service via Traefik |
 | `Managed database` | A PostgreSQL/MySQL container owned by a project |
 | `Tunnel` | A reverse tunnel exposing a NATed node via a public relay |
@@ -462,6 +481,8 @@ AGENT_PUBLISH_PORTS=0
 
 ## Security model
 
+Practical hardening in the free core (not a claim of third-party audit):
+
 - **Authentication:** email + password, optional TOTP 2FA, JWT access/refresh
   tokens. Passwords are hashed with bcrypt.
 - **Password policy:** ≥ 12 chars, upper + lower (any script), ≥ 3 digits and a
@@ -473,10 +494,13 @@ AGENT_PUBLISH_PORTS=0
   `ADMIN`.
 - **Audit trail:** an interceptor records mutating requests (actor, action,
   target, project, HTTP status) to an append-only table.
-- **Secrets at rest:** Git PATs, service env secrets, user TOTP secrets and node
-  daemon tokens are AES-256-GCM encrypted.
+- **Secrets at rest:** Git PATs, service env secrets, custom TLS PEMs, user TOTP
+  secrets and node daemon tokens are AES-256-GCM encrypted.
 - **Agent trust:** every agent call requires `Authorization: Bearer
-  <daemon token>`; tokens are generated per node and stored encrypted.
+  <daemon token>`; tokens are generated per node and stored encrypted. Remote
+  agents use TLS pinning where configured.
+- **Webhook signatures:** GitHub/GitLab PR webhooks (Pro / `preview-envs`) verify
+  shared secrets before creating preview environments.
 - **Localized, coded errors:** the API returns stable error `code`s that the UI
   maps to localized messages, so users never see raw internal strings.
 
