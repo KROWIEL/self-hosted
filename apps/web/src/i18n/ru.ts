@@ -907,6 +907,7 @@ export const ru: Dict = {
   'billing.feat.homelab.allFree.desc':
     'Полное бесплатное ядро плюс возможности для домашней лаборатории ниже.',
   'billing.feat.homelab.tunnels.title': 'Защищённые reverse-туннели',
+  'billing.feat.homelab.cron.title': 'Cron-задачи на сервис',
   'billing.feat.homelab.limits.title': '3 ноды + 3 туннеля',
   'billing.feat.homelab.limits.desc':
     'Подключайте до трёх серверов и публикуйте до трёх туннелируемых сервисов — достаточно для полноценной домашней лаборатории на нескольких машинах.',
@@ -921,6 +922,8 @@ export const ru: Dict = {
   // Ценность каждого модуля (что делает + зачем это нужно).
   'billing.moduleDesc.reverse-tunnels':
     'Публикуйте сервисы за NAT или в домашней/локальной сети в интернет через лёгкий публичный релей — без проброса портов, статического IP и настройки роутера.',
+  'billing.moduleDesc.service-cron':
+    'Планируйте повторяющиеся команды внутри запущенного контейнера сервиса (бэкапы, прогрев кэша, скрипты обслуживания) со статусом последнего запуска в панели.',
   'billing.moduleDesc.preview-envs':
     'Разворачивайте любую ветку как одноразовую изолированную копию с собственным поддоменом и авто-удалением по TTL — безопасно проверяйте изменения до релиза.',
   'billing.moduleDesc.offsite-backups':
@@ -940,6 +943,7 @@ export const ru: Dict = {
   'billing.moduleDesc.email':
     'Подключите свой SMTP-провайдер, чтобы панель рассылала письма — задайте отправителя, отправляйте тестовые сообщения, уведомляйте всех пользователей или выбранных получателей и смотрите журнал доставки.',
   'billing.module.reverse-tunnels': 'Reverse-tunnels',
+  'billing.module.service-cron': 'Cron на сервис',
   'billing.module.preview-envs': 'Preview-окружения',
   'billing.module.offsite-backups': 'Офсайт-бэкапы',
   'billing.module.alerts': 'Алерты',

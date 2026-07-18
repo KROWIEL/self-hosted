@@ -869,6 +869,7 @@ export type LicenseTier = 'free' | 'homelab' | 'pro';
 
 export type LicenseModule =
   | 'reverse-tunnels'
+  | 'service-cron'
   | 'preview-envs'
   | 'offsite-backups'
   | 'alerts'

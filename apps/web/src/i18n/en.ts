@@ -905,6 +905,7 @@ export const en = {
   'billing.feat.homelab.allFree.desc':
     'The complete free core, plus the home-lab additions below.',
   'billing.feat.homelab.tunnels.title': 'Secure reverse tunnels',
+  'billing.feat.homelab.cron.title': 'Per-service cron jobs',
   'billing.feat.homelab.limits.title': '3 nodes + 3 tunnels',
   'billing.feat.homelab.limits.desc':
     'Connect up to three servers and publish up to three tunneled services — enough for a real multi-machine home lab.',
@@ -919,6 +920,8 @@ export const en = {
   // Per-module value propositions (what it does + why it matters).
   'billing.moduleDesc.reverse-tunnels':
     'Publish services behind NAT or a home/LAN network to the internet through a lightweight public relay — no port-forwarding, static IP or router changes needed.',
+  'billing.moduleDesc.service-cron':
+    'Schedule recurring commands inside a running service container (backups, cache warmers, maintenance scripts) with last-run status in the panel.',
   'billing.moduleDesc.preview-envs':
     'Deploy any branch as a disposable, isolated copy with its own optional subdomain, auto-torn down by TTL — review changes safely before they ship.',
   'billing.moduleDesc.offsite-backups':
@@ -938,6 +941,7 @@ export const en = {
   'billing.moduleDesc.email':
     'Connect your SMTP provider to send transactional and broadcast email from the panel — configure the sender identity, send test messages, notify all users or specific recipients, and review a delivery log.',
   'billing.module.reverse-tunnels': 'Reverse-tunnels',
+  'billing.module.service-cron': 'Per-service cron',
   'billing.module.preview-envs': 'Preview environments',
   'billing.module.offsite-backups': 'Off-site backups',
   'billing.module.alerts': 'Alerts',
