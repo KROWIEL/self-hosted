@@ -8,9 +8,13 @@ import (
 
 func TestTraefikHostRule(t *testing.T) {
 	got := traefikHostRule("example.com")
-	want := "HostRegexp(`^(.+\\.)?example\\.com$`)"
+	want := "Host(`example.com`)"
 	if got != want {
 		t.Fatalf("traefikHostRule() = %q, want %q", got, want)
+	}
+	// Exact match only — must not emit a subdomain-capturing regexp.
+	if strings.Contains(got, "HostRegexp") || strings.Contains(got, ".+") {
+		t.Fatalf("traefikHostRule() must use Host(), got %q", got)
 	}
 }
 

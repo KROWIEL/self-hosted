@@ -682,11 +682,11 @@ func acmeWildcardEnabled() bool {
 	return strings.TrimSpace(os.Getenv("ACME_CERT_RESOLVER")) == "letsencrypt-dns"
 }
 
-// traefikHostRule matches the apex domain and any subdomain (e.g. example.com,
-// admin.example.com, tenant1.example.com).
+// traefikHostRule matches exactly one hostname. Domains are FQDN-validated by
+// the control plane before deploy; previews also get a concrete host, so a
+// HostRegexp subdomain wildcard is unnecessary and would over-match (H9).
 func traefikHostRule(domain string) string {
-	reDomain := strings.ReplaceAll(domain, ".", `\.`)
-	return fmt.Sprintf("HostRegexp(`^(.+\\.)?%s$`)", reDomain)
+	return fmt.Sprintf("Host(`%s`)", domain)
 }
 
 func (s *Server) handleRemove(w http.ResponseWriter, r *http.Request) {
