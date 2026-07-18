@@ -29,7 +29,12 @@ export function setupExecProxy(app: INestApplication): () => void {
   const members = app.get(MembersService, { strict: false });
   const resolver = app.get(ProjectResolver, { strict: false });
   const wss = new WebSocketServer({ noServer: true });
-  const secret = process.env.JWT_SECRET ?? 'change-me-access-secret';
+  // Fail closed: no hardcoded fallback. Startup env validation guarantees this
+  // is a strong secret; guard here in case the proxy is wired up in isolation.
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not set — refusing to start the exec proxy.');
+  }
 
   // Heartbeat: drop clients that stopped answering (closed tab, dead network)
   // so their upstream docker-exec sessions get cleaned up too.

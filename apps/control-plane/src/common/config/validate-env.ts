@@ -26,8 +26,29 @@ export function collectEnvErrors(env: NodeJS.ProcessEnv): string[] {
 
   require('DATABASE_URL');
   require('REDIS_URL');
-  require('JWT_SECRET');
-  require('JWT_REFRESH_SECRET');
+
+  // JWT signing secrets must be strong in EVERY environment — a weak, default
+  // or shipped-example secret lets anyone forge valid sessions. This is a fatal
+  // startup error (collected below), not a warning.
+  const jwtExampleDefaults: Record<string, string> = {
+    JWT_SECRET: 'change-me-access-secret',
+    JWT_REFRESH_SECRET: 'change-me-refresh-secret',
+  };
+  for (const key of ['JWT_SECRET', 'JWT_REFRESH_SECRET']) {
+    const v = env[key];
+    if (!v || v.trim() === '') {
+      errors.push(`${key} is required`);
+      continue;
+    }
+    if (v.length < 32) {
+      errors.push(`${key} must be at least 32 characters long`);
+    }
+    if (v.includes('change-me')) {
+      errors.push(`${key} must not contain the placeholder "change-me"`);
+    } else if (v === jwtExampleDefaults[key]) {
+      errors.push(`${key} must not use the shipped .env.example default`);
+    }
+  }
 
   // ENCRYPTION_KEY must be a base64-encoded 32-byte (256-bit) key for AES-256-GCM.
   const encKey = require('ENCRYPTION_KEY');
@@ -55,17 +76,6 @@ export function validateEnv(): void {
 
   const logger = new Logger('Config');
   const errors = collectEnvErrors(process.env);
-
-  // Warn (not fatal) about weak dev defaults so prod deployments get flagged.
-  if (process.env.NODE_ENV === 'production') {
-    const weak = ['dev-', 'change-me'];
-    for (const key of ['JWT_SECRET', 'JWT_REFRESH_SECRET']) {
-      const v = process.env[key] ?? '';
-      if (weak.some((w) => v.includes(w))) {
-        logger.warn(`${key} looks like a dev default — set a strong secret.`);
-      }
-    }
-  }
 
   if (errors.length > 0) {
     logger.error('Invalid configuration:');

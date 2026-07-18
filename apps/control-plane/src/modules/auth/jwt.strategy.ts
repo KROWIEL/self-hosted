@@ -9,13 +9,26 @@ export interface JwtPayload {
   role: string;
 }
 
+/**
+ * Read the access-token signing secret, failing closed if it is unset. There is
+ * deliberately no hardcoded fallback — a missing secret must abort startup
+ * (see validate-env.ts, which also rejects weak/default values).
+ */
+function requireJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not set');
+  }
+  return secret;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly users: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET ?? 'change-me-access-secret',
+      secretOrKey: requireJwtSecret(),
     });
   }
 

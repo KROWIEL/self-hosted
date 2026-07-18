@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from './db/database.module';
 import { CryptoModule } from './common/crypto/crypto.module';
 import { LicensingModule } from './common/licensing/licensing.module';
@@ -30,6 +32,14 @@ import { EmailModule } from './modules/email/email.module';
       isGlobal: true,
       envFilePath: ['../../.env', '.env'],
     }),
+    // Global rate limiting: a generous default cap per client IP. Auth routes
+    // add tighter per-route limits via @Throttle (see AuthController).
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 120,
+      },
+    ]),
     DatabaseModule,
     CryptoModule,
     LicensingModule,
@@ -53,6 +63,13 @@ import { EmailModule } from './modules/email/email.module';
     SsoModule,
     PreviewModule,
     EmailModule,
+  ],
+  providers: [
+    // Apply the throttler globally (defense-in-depth across every route).
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

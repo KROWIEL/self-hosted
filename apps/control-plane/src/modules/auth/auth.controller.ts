@@ -7,6 +7,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -21,6 +22,8 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  // Brute-force sensitive: cap credential/2FA attempts tightly per client IP.
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
@@ -31,6 +34,7 @@ export class AuthController {
     return this.auth.register(dto);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('refresh')
   refresh(@Body('refreshToken') refreshToken: string) {
     return this.auth.refresh(refreshToken);
@@ -69,6 +73,7 @@ export class AuthController {
     return this.auth.changePassword(req.user.id, dto);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @Post('2fa/enable')
   enable2fa(
@@ -78,6 +83,7 @@ export class AuthController {
     return this.auth.enable2fa(req.user.id, dto);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
   disable2fa(

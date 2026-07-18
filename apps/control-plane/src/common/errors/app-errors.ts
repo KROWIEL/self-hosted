@@ -3,6 +3,8 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -22,6 +24,15 @@ export const AuthErrors = {
       code: 'auth.invalidCredentials',
       message: 'Invalid email or password.',
     }),
+  tooManyAttempts: () =>
+    new HttpException(
+      {
+        code: 'auth.tooManyAttempts',
+        message:
+          'Too many failed attempts. Please wait a few minutes and try again.',
+      },
+      HttpStatus.TOO_MANY_REQUESTS,
+    ),
   totpRequired: () =>
     new UnauthorizedException({
       code: 'auth.totpRequired',

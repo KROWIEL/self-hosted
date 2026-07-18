@@ -17,14 +17,69 @@ import { Disable2faDto } from './dto/disable-2fa.dto';
 
 const TOTP_ISSUER = process.env.TOTP_ISSUER ?? 'Self-Hosted Panel';
 
+// Per-account brute-force backoff: after this many consecutive failed login /
+// TOTP attempts, the account is locked for LOGIN_LOCKOUT_MS.
+const MAX_FAILED_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
+
+interface FailedAttempts {
+  count: number;
+  lockedUntil: number; // epoch ms; 0 = not locked
+}
+
 @Injectable()
 export class AuthService {
+  /**
+   * In-memory per-account failed-attempt tracker. This is a lightweight
+   * complement to the IP-based throttler and intentionally requires no schema
+   * change: it is per-process (not shared across replicas) and resets on
+   * restart. A persistent, cluster-wide lockout is a documented follow-up.
+   */
+  private readonly failedLogins = new Map<string, FailedAttempts>();
+
   constructor(
     private readonly users: UsersService,
     private readonly jwt: JwtService,
     private readonly crypto: CryptoService,
     private readonly entitlements: EntitlementsService,
   ) {}
+
+  private assertNotLocked(key: string): void {
+    const rec = this.failedLogins.get(key);
+    if (rec && rec.lockedUntil > Date.now()) {
+      throw AuthErrors.tooManyAttempts();
+    }
+  }
+
+  private recordFailure(key: string): void {
+    const now = Date.now();
+    const rec = this.failedLogins.get(key) ?? { count: 0, lockedUntil: 0 };
+    // A previous lock has fully expired — start a fresh window.
+    if (rec.lockedUntil !== 0 && rec.lockedUntil <= now) {
+      rec.count = 0;
+      rec.lockedUntil = 0;
+    }
+    rec.count += 1;
+    if (rec.count >= MAX_FAILED_ATTEMPTS) {
+      rec.lockedUntil = now + LOGIN_LOCKOUT_MS;
+    }
+    this.failedLogins.set(key, rec);
+    this.pruneFailures(now);
+  }
+
+  private clearFailures(key: string): void {
+    this.failedLogins.delete(key);
+  }
+
+  /** Opportunistically drop expired entries so the map can't grow unbounded. */
+  private pruneFailures(now: number): void {
+    if (this.failedLogins.size < 1000) return;
+    for (const [k, v] of this.failedLogins) {
+      if (v.lockedUntil !== 0 && v.lockedUntil <= now) {
+        this.failedLogins.delete(k);
+      }
+    }
+  }
 
   /** Stage 1: create the account and sign the user in so they can onboard. */
   async register(dto: RegisterDto) {
@@ -42,12 +97,17 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const email = dto.email.toLowerCase();
+    // Reject early if this account is in a brute-force lockout window.
+    this.assertNotLocked(email);
+
     const user = await this.users.findByEmail(email);
     if (!user) {
+      this.recordFailure(email);
       throw AuthErrors.invalidCredentials();
     }
     const ok = await this.users.verifyPassword(dto.password, user.password);
     if (!ok) {
+      this.recordFailure(email);
       throw AuthErrors.invalidCredentials();
     }
 
@@ -56,9 +116,13 @@ export class AuthService {
       if (!dto.totp) throw AuthErrors.totpRequired();
       const secret = this.crypto.decrypt(user.totpSecret);
       if (!authenticator.check(dto.totp, secret)) {
+        this.recordFailure(email);
         throw AuthErrors.totpInvalid();
       }
     }
+
+    // Successful authentication — clear any accumulated failure state.
+    this.clearFailures(email);
 
     // Soft-enforce the current password policy: flag weak passwords so the UI
     // can force a change on next use, without ever blocking sign-in.
