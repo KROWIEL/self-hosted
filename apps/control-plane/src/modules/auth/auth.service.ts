@@ -1,5 +1,6 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, HttpException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
@@ -17,6 +18,7 @@ import { Enable2faDto } from './dto/enable-2fa.dto';
 import { Disable2faDto } from './dto/disable-2fa.dto';
 
 const TOTP_ISSUER = process.env.TOTP_ISSUER ?? 'Self-Hosted Panel';
+const REFRESH_JTI_PREFIX = 'auth:refresh:jti:';
 
 /**
  * Self-service registration toggle (H1). Disabled by default so a fresh panel is
@@ -318,15 +320,27 @@ export class AuthService implements OnModuleDestroy {
 
   async refresh(refreshToken: string) {
     try {
-      const payload = await this.jwt.verifyAsync<{ sub: string; tv?: number }>(
-        refreshToken,
-        { secret: process.env.JWT_REFRESH_SECRET },
-      );
+      const payload = await this.jwt.verifyAsync<{
+        sub: string;
+        tv?: number;
+        jti?: string;
+        exp?: number;
+      }>(refreshToken, { secret: process.env.JWT_REFRESH_SECRET });
       const user = await this.users.findById(payload.sub);
       if (!user) throw AuthErrors.invalidRefresh();
       // Reject a refresh token minted before the account's session epoch was
       // bumped (password change, 2FA disable, logout).
       if (payload.tv !== user.tokenVersion) throw AuthErrors.invalidRefresh();
+      // Rotation with reuse detection (M1): every refresh JWT carries a unique
+      // jti. The first redeem marks it used in Redis; a second redeem of the
+      // same jti is treated as theft and kills every session for the account.
+      if (!payload.jti) throw AuthErrors.invalidRefresh();
+      const remainingMs = refreshJtiTtlMs(payload.exp);
+      const outcome = await this.consumeRefreshJti(payload.jti, remainingMs);
+      if (outcome === 'reuse') {
+        await this.users.bumpTokenVersion(user.id);
+        throw AuthErrors.invalidRefresh();
+      }
       // Rotate: issue a brand-new access AND refresh token on every refresh.
       return this.issueTokens(
         user.id,
@@ -334,8 +348,41 @@ export class AuthService implements OnModuleDestroy {
         user.role,
         user.tokenVersion,
       );
-    } catch {
+    } catch (e) {
+      // Re-throw coded AuthErrors (invalidRefresh, etc.) so a reuse bump isn't
+      // swallowed into a generic "invalid refresh" without the side effects
+      // having already run. Unknown verify failures still map to invalidRefresh.
+      if (e instanceof HttpException) throw e;
       throw AuthErrors.invalidRefresh();
+    }
+  }
+
+  /**
+   * Atomically mark a refresh jti as consumed. Returns:
+   *  - 'ok'     — first use; jti stored with TTL ≈ remaining refresh lifetime
+   *  - 'reuse'  — jti was already consumed (replay / theft)
+   *  - 'skip'   — Redis unavailable; fail open so a blip can't lock everyone out
+   */
+  private async consumeRefreshJti(
+    jti: string,
+    ttlMs: number,
+  ): Promise<'ok' | 'reuse' | 'skip'> {
+    try {
+      const result = await this.lockRedis.set(
+        `${REFRESH_JTI_PREFIX}${jti}`,
+        '1',
+        'PX',
+        Math.max(ttlMs, 1_000),
+        'NX',
+      );
+      return result === null ? 'reuse' : 'ok';
+    } catch (e) {
+      this.logger.warn(
+        `refresh jti check unavailable (allowing rotate): ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+      return 'skip';
     }
   }
 
@@ -366,10 +413,25 @@ export class AuthService implements OnModuleDestroy {
       secret: process.env.JWT_SECRET,
       expiresIn: process.env.JWT_EXPIRES_IN ?? '15m',
     });
-    const refreshToken = await this.jwt.signAsync(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
-    });
+    // Refresh tokens carry a unique jti so rotation can detect reuse (M1).
+    const jti = randomUUID();
+    const refreshToken = await this.jwt.signAsync(
+      { ...payload, jti },
+      {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
+        jwtid: jti,
+      },
+    );
     return { accessToken, refreshToken };
   }
+}
+
+/** TTL for the used-jti Redis key: remaining JWT lifetime, floored to ≥1s. */
+export function refreshJtiTtlMs(exp?: number): number {
+  if (typeof exp !== 'number' || !Number.isFinite(exp)) {
+    // Fallback ≈ default refresh lifetime when exp is missing.
+    return 7 * 24 * 60 * 60 * 1000;
+  }
+  return Math.max(Math.floor(exp * 1000 - Date.now()), 1_000);
 }
