@@ -384,6 +384,32 @@ export const createApiToken = (body: {
 export const revokeApiToken = (id: string) =>
   api<{ ok: true }>(`/api-tokens/${id}`, { method: 'DELETE' });
 
+// ---- Admin registration invites (when ALLOW_OPEN_REGISTRATION is off) ----
+
+export interface Invite {
+  id: string;
+  email: string | null;
+  role: 'USER' | 'ADMIN';
+  createdBy: string;
+  expiresAt: string;
+  usedAt: string | null;
+  createdAt: string;
+  status: 'pending' | 'used' | 'expired';
+}
+
+export const listInvites = () => api<Invite[]>('/invites');
+export const createInvite = (body: {
+  email?: string;
+  expiresInDays?: number;
+  role?: 'USER' | 'ADMIN';
+}) =>
+  api<{ token: string; url?: string; invite: Invite }>('/invites', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+export const revokeInvite = (id: string) =>
+  api<{ ok: true }>(`/invites/${id}`, { method: 'DELETE' });
+
 // ---- White-label branding (Pro: white-label) ----
 
 export interface BrandingEffective {
@@ -890,10 +916,18 @@ export async function login(email: string, password: string, totp?: string) {
 }
 
 /** Stage 1: create the account and sign in (still needs onboarding). */
-export async function register(email: string, password: string) {
+export async function register(
+  email: string,
+  password: string,
+  inviteToken?: string,
+) {
   return api<AuthResult>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({
+      email,
+      password,
+      ...(inviteToken?.trim() ? { inviteToken: inviteToken.trim() } : {}),
+    }),
   });
 }
 

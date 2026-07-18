@@ -92,6 +92,7 @@ export const ru: Dict = {
   'nav.sso': 'Единый вход (SSO)',
   'nav.previews': 'Превью-среды',
   'nav.email': 'Почта',
+  'nav.invites': 'Приглашения',
   'nav.settings': 'Настройки',
   'nav.billing': 'Тарифы',
   'nav.locked': 'Требуется апгрейд',
@@ -123,6 +124,9 @@ export const ru: Dict = {
   // Регистрация (этап 1)
   'register.title': 'Создание аккаунта',
   'register.subtitle': 'Шаг 1 из 2 — данные аккаунта',
+  'register.subtitleInvite': 'Шаг 1 из 2 — приглашённый аккаунт',
+  'register.inviteReady':
+    'Приглашение принято — создайте аккаунт, чтобы продолжить.',
   'register.passwordHint': 'Минимум 8 символов.',
   'register.continue': 'Продолжить',
   'register.creating': 'Создание…',
@@ -206,6 +210,14 @@ export const ru: Dict = {
     'Двухфакторная аутентификация уже включена.',
   'error.auth.twoFactorNotEnabled':
     'Двухфакторная аутентификация не включена.',
+  'error.auth.registrationDisabled':
+    'Самостоятельная регистрация отключена. Попросите администратора прислать приглашение.',
+  'error.auth.inviteRequired':
+    'Для создания аккаунта требуется приглашение.',
+  'error.auth.inviteInvalid':
+    'Приглашение недействительно, истекло или уже использовано.',
+  'error.auth.inviteEmailMismatch':
+    'Это приглашение выдано для другого адреса email.',
   'error.common.adminOnly': 'Действие доступно только администраторам.',
   'error.template.notFound': 'Шаблон не найден.',
   'error.template.inUse':
@@ -1228,6 +1240,41 @@ export const ru: Dict = {
     'Для вашей почты нет аккаунта, а автосоздание отключено.',
   'sso.error.access_denied': 'Провайдер отклонил вход.',
   'sso.error.sso_failed': 'Единый вход не удался. Попробуйте ещё раз.',
+
+  // Приглашения администратора
+  'invites.title': 'Приглашения',
+  'invites.subtitle':
+    'Выдавайте одноразовые ссылки для регистрации, когда публичная регистрация отключена.',
+  'invites.adminOnly': 'Управлять приглашениями могут только администраторы.',
+  'invites.aboutTitle': 'Зачем приглашения?',
+  'invites.aboutBody':
+    'Когда открытая регистрация выключена, новым пользователям нужно приглашение. Создайте ссылку, отправьте её один раз и при необходимости отзовите неиспользованные. Можно привязать приглашение к конкретному email.',
+  'invites.createTitle': 'Создать приглашение',
+  'invites.email': 'Email (необязательно)',
+  'invites.emailPlaceholder': 'оставьте пустым — любой email',
+  'invites.role': 'Роль',
+  'invites.roleUser': 'Пользователь',
+  'invites.roleAdmin': 'Админ',
+  'invites.expiry': 'Срок (дней)',
+  'invites.create': 'Создать',
+  'invites.creating': 'Создание…',
+  'invites.freshTitle': 'Скопируйте приглашение сейчас',
+  'invites.freshHint':
+    'Токен показывается только один раз. Отправьте URL получателю.',
+  'invites.copyUrl': 'Копировать URL',
+  'invites.copyToken': 'Копировать токен',
+  'invites.copied': 'Скопировано ✓',
+  'invites.listTitle': 'Выданные приглашения',
+  'invites.empty': 'Приглашений пока нет.',
+  'invites.anyEmail': 'Любой email',
+  'invites.status.pending': 'Ожидает',
+  'invites.status.used': 'Использовано',
+  'invites.status.expired': 'Истекло',
+  'invites.expires': 'истекает',
+  'invites.created': 'создано',
+  'invites.revoke': 'Отозвать',
+  'invites.confirmRevoke':
+    'Отозвать это приглашение? Ссылка перестанет работать.',
 
   // Превью-среды (Pro: preview-envs)
   'previews.title': 'Превью-среды',
