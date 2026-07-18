@@ -628,6 +628,16 @@ export function isAuthed(): boolean {
 }
 
 export function logout() {
+  // Best-effort server-side invalidation: bump the account's session epoch so
+  // the tokens we're about to drop (and any other live sessions) stop working.
+  // Fire-and-forget — the token is read synchronously before we clear storage.
+  try {
+    void api<{ ok: boolean }>('/auth/logout', { method: 'POST' }).catch(
+      () => undefined,
+    );
+  } catch {
+    /* ignore */
+  }
   window.localStorage.removeItem('accessToken');
   window.localStorage.removeItem('refreshToken');
   window.localStorage.removeItem('mustChangePassword');
@@ -1054,13 +1064,26 @@ export async function streamServiceLogs(
 }
 
 /**
- * Builds the WebSocket URL for an interactive container shell. The access token
- * is passed as a query param because browsers can't set WS headers.
+ * Requests a short-lived, single-use exec ticket for a service. The ticket —
+ * not the access JWT — is what opens the WebSocket, keeping bearer tokens out
+ * of proxy logs/history.
  */
-export function execSocketUrl(serviceId: string): string {
-  const token = getToken() ?? '';
+export async function createExecTicket(serviceId: string): Promise<string> {
+  const { ticket } = await api<{ ticket: string }>(
+    `/services/${serviceId}/exec-ticket`,
+    { method: 'POST' },
+  );
+  return ticket;
+}
+
+/**
+ * Builds the WebSocket URL for an interactive container shell. A single-use
+ * ticket (from createExecTicket) is passed as a query param because browsers
+ * can't set WS headers; unlike a JWT it's opaque, short-lived and one-shot.
+ */
+export function execSocketUrl(serviceId: string, ticket: string): string {
   const wsBase = API_URL.replace(/^http/, 'ws');
-  return `${wsBase}/services/${serviceId}/exec?token=${encodeURIComponent(token)}`;
+  return `${wsBase}/services/${serviceId}/exec?ticket=${encodeURIComponent(ticket)}`;
 }
 
 /** Opens the live build-log stream for a deployment (see streamServiceLogs). */
