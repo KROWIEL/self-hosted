@@ -32,15 +32,22 @@ func insecureHTTP() bool {
 	return true
 }
 
-// Version is the agent build version reported to the control plane.
-const Version = "0.2.0"
+// Version is the agent build version reported to the control plane. 0.3.0+
+// verifies short-lived HS256 request tokens and supports daemon-token rotation;
+// the control plane uses this version to decide when to mint signed tokens.
+const Version = "0.3.0"
 
 // Config holds agent runtime configuration sourced from environment.
 type Config struct {
 	Port int
-	// DaemonToken is the bearer token the control plane must present.
-	// MVP: shared token. Later: verify RSA-signed JWT with the panel's public key.
+	// DaemonToken is the shared secret the control plane authenticates with —
+	// either presented raw (legacy / back-compat) or used to sign short-lived
+	// HS256 request tokens the agent verifies.
 	DaemonToken string
+	// NodeID is this node's control-plane id. Enrolled agents load it from
+	// persisted state; the dev agent may set it via AGENT_NODE_ID so signed
+	// request tokens can be audience-checked. Empty disables the audience check.
+	NodeID string
 	// WorkDir is where repos are cloned during builds (prefer tmpfs in prod).
 	WorkDir string
 	// Network is the default Docker network deployed services join.
@@ -76,6 +83,7 @@ func Load() Config {
 	return Config{
 		Port:        envInt("AGENT_PORT", 8443),
 		DaemonToken: os.Getenv("AGENT_DAEMON_TOKEN"),
+		NodeID:      os.Getenv("AGENT_NODE_ID"),
 		WorkDir:     workDir,
 		Network:     envStr("AGENT_NETWORK", "bridge"),
 		BackupDir:   envStr("AGENT_BACKUP_DIR", filepath.Join(workDir, "backups")),

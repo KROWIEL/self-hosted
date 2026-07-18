@@ -2,12 +2,12 @@ import type { INestApplication } from '@nestjs/common';
 import { MemberRole } from '@selfhosted/shared';
 import type { Server } from 'node:http';
 import { WebSocket, WebSocketServer, type RawData } from 'ws';
-import { CryptoService } from './common/crypto/crypto.service';
 import { ServicesService } from './modules/services/services.service';
 import { ExecTicketService } from './modules/services/exec-ticket.service';
 import { MembersService } from './modules/members/members.service';
 import { ProjectResolver } from './modules/members/project-resolver.service';
 import { UsersService } from './modules/users/users.service';
+import { AgentTokenService } from './modules/nodes/agent-token.service';
 
 const EXEC_PATH = /^\/api\/v1\/services\/([^/]+)\/exec$/;
 
@@ -30,7 +30,7 @@ type LiveSocket = WebSocket & { isAlive?: boolean };
 export function setupExecProxy(app: INestApplication): () => void {
   const server = app.getHttpServer() as Server;
   const services = app.get(ServicesService, { strict: false });
-  const crypto = app.get(CryptoService, { strict: false });
+  const agentToken = app.get(AgentTokenService, { strict: false });
   const members = app.get(MembersService, { strict: false });
   const resolver = app.get(ProjectResolver, { strict: false });
   const users = app.get(UsersService, { strict: false });
@@ -104,7 +104,7 @@ export function setupExecProxy(app: INestApplication): () => void {
         client.on('pong', () => {
           client.isAlive = true;
         });
-        void bridge(client, serviceId, services, crypto);
+        void bridge(client, serviceId, services, agentToken);
       });
     })();
   });
@@ -126,7 +126,7 @@ async function bridge(
   client: WebSocket,
   serviceId: string,
   services: ServicesService,
-  crypto: CryptoService,
+  agentToken: AgentTokenService,
 ): Promise<void> {
   let node: Awaited<ReturnType<ServicesService['getNodeRow']>>;
   try {
@@ -136,11 +136,10 @@ async function bridge(
     return;
   }
 
-  const daemonToken = crypto.decrypt(node.daemonToken);
   const scheme = process.env.AGENT_INSECURE_HTTP === '1' ? 'ws' : 'wss';
   const upstream = new WebSocket(
     `${scheme}://${node.fqdn}:${node.agentPort}/api/servers/${serviceId}/exec`,
-    { headers: { Authorization: `Bearer ${daemonToken}` } },
+    { headers: { Authorization: `Bearer ${agentToken.authToken(node)}` } },
   );
 
   const queue: Array<[RawData, boolean]> = [];

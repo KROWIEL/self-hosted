@@ -50,9 +50,13 @@ type Store struct {
 }
 
 // State is the provisioned identity written after a successful enrollment.
+// NextToken is set only during a daemon-token rotation: the agent has been
+// handed a new secret but has not yet confirmed the control plane switched to
+// it. Persisting it lets a restart mid-rotation keep accepting both secrets.
 type State struct {
 	NodeID      string `json:"nodeId"`
 	DaemonToken string `json:"daemonToken"`
+	NextToken   string `json:"nextToken,omitempty"`
 }
 
 func NewStore(dir string) *Store { return &Store{dir: dir} }
@@ -179,17 +183,20 @@ func Enroll(panelURL, joinToken, fingerprint string, version string, port int) (
 }
 
 // HeartbeatLoop periodically reports liveness to the panel until ctx-less exit.
-func HeartbeatLoop(panelURL string, st State, version string) {
+// tokenFn returns the agent's current daemon secret at send time (not a captured
+// copy) so that after a rotation converges the heartbeat presents the new secret
+// and the panel can safely retire the old one.
+func HeartbeatLoop(panelURL, nodeID, version string, tokenFn func() string) {
 	tick := time.NewTicker(30 * time.Second)
 	defer tick.Stop()
 	beat := func() {
-		body, _ := json.Marshal(map[string]any{"nodeId": st.NodeID, "version": version})
+		body, _ := json.Marshal(map[string]any{"nodeId": nodeID, "version": version})
 		req, err := http.NewRequest(http.MethodPost, panelURL+"/api/v1/node-agent/heartbeat", bytes.NewReader(body))
 		if err != nil {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+st.DaemonToken)
+		req.Header.Set("Authorization", "Bearer "+tokenFn())
 		resp, err := httpClient().Do(req)
 		if err != nil {
 			return

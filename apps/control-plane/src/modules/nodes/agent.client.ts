@@ -3,8 +3,8 @@ import { PowerAction } from '@selfhosted/shared';
 import { Agent } from 'undici';
 import { connect as tlsConnect } from 'node:tls';
 import { nodes } from '../../db/schema';
-import { CryptoService } from '../../common/crypto/crypto.service';
 import { NodeErrors } from '../../common/errors/app-errors';
+import { AgentTokenService } from './agent-token.service';
 
 export type NodeRow = typeof nodes.$inferSelect;
 
@@ -198,7 +198,7 @@ export interface AgentBackupInput {
 export class AgentClient {
   private readonly logger = new Logger(AgentClient.name);
 
-  constructor(private readonly crypto: CryptoService) {}
+  constructor(private readonly agentToken: AgentTokenService) {}
 
   // Per-node undici dispatchers that pin the agent's self-signed cert by its
   // SHA-256 fingerprint (captured at enrollment). Cached to reuse connections.
@@ -274,7 +274,7 @@ export class AgentClient {
     path: string,
     init: RequestInit = {},
   ): Promise<T> {
-    const token = this.crypto.decrypt(node.daemonToken);
+    const token = this.agentToken.authToken(node);
     const init2 = {
       ...init,
       headers: {
@@ -376,7 +376,7 @@ export class AgentClient {
     input: AgentBuildInput,
     onChunk?: (text: string) => void,
   ): Promise<AgentBuildResult> {
-    const token = this.crypto.decrypt(node.daemonToken);
+    const token = this.agentToken.authToken(node);
     const res = await this.doFetch(
       node,
       `${this.baseUrl(node)}/servers/${input.serviceId}/build`,
@@ -601,7 +601,7 @@ export class AgentClient {
 
   /** Opens the raw download stream of a backup file from the node. */
   async downloadBackup(node: NodeRow, file: string, signal?: AbortSignal) {
-    const token = this.crypto.decrypt(node.daemonToken);
+    const token = this.agentToken.authToken(node);
     const res = await this.doFetch(
       node,
       `${this.baseUrl(node)}/backups/download?file=${encodeURIComponent(file)}`,
@@ -632,6 +632,30 @@ export class AgentClient {
   }
 
   /**
+   * Pushes a freshly minted daemon secret to the agent (authenticated with the
+   * CURRENT secret). Returns the raw HTTP outcome so the caller can distinguish
+   * a legacy agent without the endpoint (404) from a transport failure — and
+   * only persist the switch after the agent confirms, so nothing locks out.
+   */
+  async rotate(
+    node: NodeRow,
+    newToken: string,
+  ): Promise<{ ok: boolean; status: number }> {
+    const res = await this.doFetch(node, `${this.baseUrl(node)}/rotate`, {
+      method: 'POST',
+      dispatcher: this.dispatcher(node),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.agentToken.authToken(node)}`,
+      },
+      body: JSON.stringify({ newToken }),
+    });
+    // Drain the body so the socket can be reused.
+    await res.text().catch(() => '');
+    return { ok: res.ok, status: res.status };
+  }
+
+  /**
    * Opens the agent's runtime log stream (`docker logs -f`). Returns the raw
    * fetch Response so the caller can pipe the body straight to the browser.
    */
@@ -640,7 +664,7 @@ export class AgentClient {
     serviceId: string,
     signal?: AbortSignal,
   ): Promise<Response> {
-    const token = this.crypto.decrypt(node.daemonToken);
+    const token = this.agentToken.authToken(node);
     const res = await this.doFetch(
       node,
       `${this.baseUrl(node)}/servers/${serviceId}/logs`,
