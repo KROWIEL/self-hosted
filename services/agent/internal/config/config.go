@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Version is the agent build version reported to the control plane.
@@ -35,6 +36,15 @@ type Config struct {
 	StateDir string
 	// Insecure disables TLS (plain HTTP). Intended for the local dev agent only.
 	Insecure bool
+
+	// --- Build/inspect resource limits (DoS hardening) ---
+	// BuildTimeout caps a single image build; InspectTimeout caps a repo inspect.
+	// Both also cancel automatically when the caller disconnects.
+	BuildTimeout   time.Duration
+	InspectTimeout time.Duration
+	// MaxConcurrentBuilds caps how many builds may run at once on this agent, so
+	// a burst of deploys can't exhaust CPU/RAM/disk. Minimum 1.
+	MaxConcurrentBuilds int
 }
 
 func Load() Config {
@@ -49,6 +59,10 @@ func Load() Config {
 		JoinToken:   envStr("AGENT_JOIN_TOKEN", os.Getenv("JOIN_TOKEN")),
 		StateDir:    envStr("AGENT_STATE_DIR", "/var/lib/selfhosted-agent"),
 		Insecure:    os.Getenv("AGENT_INSECURE_HTTP") == "1",
+
+		BuildTimeout:        envDuration("AGENT_BUILD_TIMEOUT", 20*time.Minute),
+		InspectTimeout:      envDuration("AGENT_INSPECT_TIMEOUT", 2*time.Minute),
+		MaxConcurrentBuilds: envInt("AGENT_MAX_CONCURRENT_BUILDS", 2),
 	}
 }
 
@@ -64,6 +78,23 @@ func envInt(key string, def int) int {
 		if n, err := strconv.Atoi(v); err == nil {
 			return n
 		}
+	}
+	return def
+}
+
+// envDuration reads a Go duration string (e.g. "20m", "90s", "1h30m") from the
+// environment. A bare integer is treated as seconds for convenience. Falls back
+// to def when unset, malformed or non-positive.
+func envDuration(key string, def time.Duration) time.Duration {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return def
+	}
+	if d, err := time.ParseDuration(v); err == nil && d > 0 {
+		return d
+	}
+	if n, err := strconv.Atoi(v); err == nil && n > 0 {
+		return time.Duration(n) * time.Second
 	}
 	return def
 }

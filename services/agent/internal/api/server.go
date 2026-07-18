@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/self-hosted/agent/internal/builder"
 	"github.com/self-hosted/agent/internal/config"
@@ -21,15 +22,38 @@ type Server struct {
 	docker  *docker.Client
 	builder *builder.Builder
 	mux     *http.ServeMux
+
+	// buildSem caps concurrent builds; buildTimeout/inspectTimeout bound their
+	// runtime. Set from config with safe fallbacks so a bare Config still works.
+	buildSem       chan struct{}
+	buildTimeout   time.Duration
+	inspectTimeout time.Duration
 }
 
 func NewServer(cfg config.Config) *Server {
 	d := docker.New()
+
+	maxBuilds := cfg.MaxConcurrentBuilds
+	if maxBuilds < 1 {
+		maxBuilds = 2
+	}
+	buildTimeout := cfg.BuildTimeout
+	if buildTimeout <= 0 {
+		buildTimeout = 20 * time.Minute
+	}
+	inspectTimeout := cfg.InspectTimeout
+	if inspectTimeout <= 0 {
+		inspectTimeout = 2 * time.Minute
+	}
+
 	s := &Server{
-		cfg:     cfg,
-		docker:  d,
-		builder: builder.New(d, cfg.WorkDir),
-		mux:     http.NewServeMux(),
+		cfg:            cfg,
+		docker:         d,
+		builder:        builder.New(d, cfg.WorkDir),
+		mux:            http.NewServeMux(),
+		buildSem:       make(chan struct{}, maxBuilds),
+		buildTimeout:   buildTimeout,
+		inspectTimeout: inspectTimeout,
 	}
 	s.routes()
 	return s
@@ -344,7 +368,21 @@ func (s *Server) handleBuild(w http.ResponseWriter, r *http.Request) {
 	flusher, _ := w.(http.Flusher)
 	w.Header().Set("Content-Type", "application/x-ndjson")
 
-	sha, err := s.builder.Build(context.Background(), builder.BuildRequest{
+	// Concurrency cap: wait for a build slot, but bail out if the client goes
+	// away first so a disconnected deploy can't hold a slot hostage.
+	select {
+	case s.buildSem <- struct{}{}:
+		defer func() { <-s.buildSem }()
+	case <-r.Context().Done():
+		writeJSON(w, map[string]any{"error": "build cancelled while queued"})
+		return
+	}
+
+	// Cancel on client disconnect (r.Context) and hard-cap the total runtime.
+	ctx, cancel := context.WithTimeout(r.Context(), s.buildTimeout)
+	defer cancel()
+
+	sha, err := s.builder.Build(ctx, builder.BuildRequest{
 		ServiceID:         uuid,
 		RepoURL:           body.RepoURL,
 		Branch:            body.Branch,
@@ -375,7 +413,11 @@ func (s *Server) handleInspect(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	res, err := s.builder.Inspect(context.Background(), builder.InspectRequest{
+	// Cancel on client disconnect and hard-cap the inspect (shallow clone + scan).
+	ctx, cancel := context.WithTimeout(r.Context(), s.inspectTimeout)
+	defer cancel()
+
+	res, err := s.builder.Inspect(ctx, builder.InspectRequest{
 		WorkID:   body.WorkID,
 		RepoURL:  body.RepoURL,
 		Branch:   body.Branch,
