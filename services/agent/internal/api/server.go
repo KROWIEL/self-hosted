@@ -595,15 +595,16 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 
 	name := coloredName(uuid, body.Color)
 	opts := docker.RunOptions{
-		Name:        name,
-		Image:       body.Image,
-		Network:     network,
-		MemLimitMb:  body.MemLimit,
-		CPULimit:    body.CPULimit,
-		PublishPort: publishPort,
-		Env:         body.Env,
-		Labels:      traefikLabels(uuid, body.Domain, body.Port, body.HTTPS, body.HealthPath),
-		Volumes:     mounts,
+		Name:           name,
+		Image:          body.Image,
+		Network:        network,
+		MemLimitMb:     body.MemLimit,
+		CPULimit:       body.CPULimit,
+		PublishPort:    publishPort,
+		Env:            body.Env,
+		Labels:         traefikLabels(uuid, body.Domain, body.Port, body.HTTPS, body.HealthPath),
+		Volumes:        mounts,
+		ReadOnlyRootfs: true, // H7: app containers get read-only rootfs + /tmp tmpfs
 	}
 
 	// Capture progress so the HTTP response stays valid JSON.
