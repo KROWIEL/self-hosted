@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import Redis from 'ioredis';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
 import { CryptoService } from '../../common/crypto/crypto.service';
@@ -31,63 +32,102 @@ function isOpenRegistrationEnabled(): boolean {
 // TOTP attempts, the account is locked for LOGIN_LOCKOUT_MS.
 const MAX_FAILED_ATTEMPTS = 5;
 const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
-
-interface FailedAttempts {
-  count: number;
-  lockedUntil: number; // epoch ms; 0 = not locked
-}
+const LOCKOUT_KEY_PREFIX = 'auth:lockout:';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleDestroy {
+  private readonly logger = new Logger(AuthService.name);
+
   /**
-   * In-memory per-account failed-attempt tracker. This is a lightweight
-   * complement to the IP-based throttler and intentionally requires no schema
-   * change: it is per-process (not shared across replicas) and resets on
-   * restart. A persistent, cluster-wide lockout is a documented follow-up.
+   * Durable, cluster-wide per-account failed-attempt tracker backed by Redis
+   * (reuses the shared ioredis connection). Unlike the previous in-memory map it
+   * survives restarts and is shared across replicas. It complements the IP-based
+   * throttler; if Redis is briefly unavailable we fail open on the *check* (so a
+   * Redis blip can't lock everyone out) and rely on the IP throttler meanwhile.
    */
-  private readonly failedLogins = new Map<string, FailedAttempts>();
+  private readonly lockRedis: Redis;
 
   constructor(
     private readonly users: UsersService,
     private readonly jwt: JwtService,
     private readonly crypto: CryptoService,
     private readonly entitlements: EntitlementsService,
-  ) {}
-
-  private assertNotLocked(key: string): void {
-    const rec = this.failedLogins.get(key);
-    if (rec && rec.lockedUntil > Date.now()) {
-      throw AuthErrors.tooManyAttempts();
-    }
+  ) {
+    this.lockRedis = new Redis(
+      process.env.REDIS_URL ?? 'redis://localhost:6379',
+      { maxRetriesPerRequest: null },
+    );
+    // ioredis emits 'error' asynchronously; swallow to a warning so a transient
+    // Redis outage doesn't crash the process (auth degrades to IP throttling).
+    this.lockRedis.on('error', (e) =>
+      this.logger.warn(`lockout Redis error: ${e.message}`),
+    );
   }
 
-  private recordFailure(key: string): void {
-    const now = Date.now();
-    const rec = this.failedLogins.get(key) ?? { count: 0, lockedUntil: 0 };
-    // A previous lock has fully expired — start a fresh window.
-    if (rec.lockedUntil !== 0 && rec.lockedUntil <= now) {
-      rec.count = 0;
-      rec.lockedUntil = 0;
-    }
-    rec.count += 1;
-    if (rec.count >= MAX_FAILED_ATTEMPTS) {
-      rec.lockedUntil = now + LOGIN_LOCKOUT_MS;
-    }
-    this.failedLogins.set(key, rec);
-    this.pruneFailures(now);
+  onModuleDestroy(): void {
+    this.lockRedis.disconnect();
   }
 
-  private clearFailures(key: string): void {
-    this.failedLogins.delete(key);
+  private countKey(key: string): string {
+    return `${LOCKOUT_KEY_PREFIX}count:${key}`;
   }
 
-  /** Opportunistically drop expired entries so the map can't grow unbounded. */
-  private pruneFailures(now: number): void {
-    if (this.failedLogins.size < 1000) return;
-    for (const [k, v] of this.failedLogins) {
-      if (v.lockedUntil !== 0 && v.lockedUntil <= now) {
-        this.failedLogins.delete(k);
+  private lockKey(key: string): string {
+    return `${LOCKOUT_KEY_PREFIX}until:${key}`;
+  }
+
+  private async assertNotLocked(key: string): Promise<void> {
+    let locked: string | null = null;
+    try {
+      locked = await this.lockRedis.get(this.lockKey(key));
+    } catch (e) {
+      // Fail open on transport errors so a Redis blip can't lock everyone out;
+      // the IP throttler still applies.
+      this.logger.warn(
+        `lockout check unavailable (allowing attempt): ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+      return;
+    }
+    if (locked) throw AuthErrors.tooManyAttempts();
+  }
+
+  private async recordFailure(key: string): Promise<void> {
+    try {
+      const count = await this.lockRedis.incr(this.countKey(key));
+      if (count === 1) {
+        // Start the counting window on the first failure.
+        await this.lockRedis.pexpire(this.countKey(key), LOGIN_LOCKOUT_MS);
       }
+      if (count >= MAX_FAILED_ATTEMPTS) {
+        // Trip the lock and reset the counter so a fresh window starts after it.
+        await this.lockRedis.set(
+          this.lockKey(key),
+          '1',
+          'PX',
+          LOGIN_LOCKOUT_MS,
+        );
+        await this.lockRedis.del(this.countKey(key));
+      }
+    } catch (e) {
+      this.logger.warn(
+        `could not record login failure: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+    }
+  }
+
+  private async clearFailures(key: string): Promise<void> {
+    try {
+      await this.lockRedis.del(this.countKey(key), this.lockKey(key));
+    } catch (e) {
+      this.logger.warn(
+        `could not clear login failures: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
     }
   }
 
@@ -119,16 +159,16 @@ export class AuthService {
   async login(dto: LoginDto) {
     const email = dto.email.toLowerCase();
     // Reject early if this account is in a brute-force lockout window.
-    this.assertNotLocked(email);
+    await this.assertNotLocked(email);
 
     const user = await this.users.findByEmail(email);
     if (!user) {
-      this.recordFailure(email);
+      await this.recordFailure(email);
       throw AuthErrors.invalidCredentials();
     }
     const ok = await this.users.verifyPassword(dto.password, user.password);
     if (!ok) {
-      this.recordFailure(email);
+      await this.recordFailure(email);
       throw AuthErrors.invalidCredentials();
     }
 
@@ -137,13 +177,13 @@ export class AuthService {
       if (!dto.totp) throw AuthErrors.totpRequired();
       const secret = this.crypto.decrypt(user.totpSecret);
       if (!authenticator.check(dto.totp, secret)) {
-        this.recordFailure(email);
+        await this.recordFailure(email);
         throw AuthErrors.totpInvalid();
       }
     }
 
     // Successful authentication — clear any accumulated failure state.
-    this.clearFailures(email);
+    await this.clearFailures(email);
 
     // Soft-enforce the current password policy: flag weak passwords so the UI
     // can force a change on next use, without ever blocking sign-in.

@@ -412,6 +412,12 @@ export const licenses = pgTable('licenses', {
 export const installation = pgTable('installation', {
   id: text('id').primaryKey().default('default'),
   instanceId: uuid('instance_id').notNull().defaultRandom(),
+  // Start of the current offline grace window (set on first run / key change).
+  // Persisted so the window survives restarts instead of resetting each boot.
+  activationBaselineAt: timestamp('activation_baseline_at'),
+  // Timestamp of the last successful activation heartbeat, so the grace window
+  // anchors to the last success rather than process start after a restart.
+  lastActivationOkAt: timestamp('last_activation_ok_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
