@@ -269,14 +269,29 @@ export const listAlertEvents = () => api<AlertEvent[]>('/alerts/events');
 
 // ---- Offsite backups (Pro: offsite-backups) ----
 
+export type OffsiteProvider = 's3' | 'gcs' | 'azure' | 'sftp';
+
+export interface OffsiteProviderConfig {
+  accountName?: string;
+  container?: string;
+  useConnectionString?: boolean;
+  host?: string;
+  port?: number;
+  username?: string;
+  remotePath?: string;
+  authMethod?: 'password' | 'privateKey';
+}
+
 export interface OffsiteConfig {
   enabled: boolean;
+  provider: OffsiteProvider;
   endpoint: string;
   region: string;
   bucket: string;
   prefix: string;
   accessKeyId: string;
   forcePathStyle: boolean;
+  providerConfig: OffsiteProviderConfig;
   /** Whether a secret key is stored; the value itself is never returned. */
   secretKeySet: boolean;
   updatedAt: string | null;
@@ -284,6 +299,7 @@ export interface OffsiteConfig {
 
 export interface OffsiteConfigInput {
   enabled?: boolean;
+  provider?: OffsiteProvider;
   endpoint?: string;
   region?: string;
   bucket?: string;
@@ -292,6 +308,7 @@ export interface OffsiteConfigInput {
   /** Omit to keep the stored secret; send a value to rotate it. */
   secretKey?: string;
   forcePathStyle?: boolean;
+  providerConfig?: OffsiteProviderConfig;
 }
 
 export interface OffsiteUpload {
