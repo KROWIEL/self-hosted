@@ -432,7 +432,25 @@ export const domains = pgTable('domains', {
     .references(() => services.id, { onDelete: 'cascade' }),
   host: text('host').notNull().unique(),
   https: boolean('https').notNull().default(true),
+  // 'acme' (Traefik Let's Encrypt) | 'custom' (uploaded PEM cert+key).
+  certSource: text('cert_source').notNull().default('acme'),
+  // Encrypted PEM certificate + private key when certSource = 'custom'.
+  customCertEnc: text('custom_cert_enc'),
+  customKeyEnc: text('custom_key_enc'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/// Panel-side TLS / ACME preferences (Free). Traefik still reads ACME_* from
+/// the host `.env` at container start — these rows document intent and can
+/// hold an optional Cloudflare token for display / future automation.
+export const tlsSettings = pgTable('tls_settings', {
+  id: text('id').primaryKey().default('default'),
+  acmeEmail: text('acme_email').notNull().default(''),
+  dnsProvider: text('dns_provider').notNull().default('cloudflare'),
+  wildcardEnabled: boolean('wildcard_enabled').notNull().default(false),
+  // Encrypted Cloudflare DNS API token (optional; Traefik uses env today).
+  cloudflareTokenEnc: text('cloudflare_token_enc').notNull().default(''),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 /// A reverse tunnel that exposes this (grey-IP) panel/Traefik through a public
@@ -717,6 +735,7 @@ export type DbSchema = {
   envVars: typeof envVars;
   deployments: typeof deployments;
   domains: typeof domains;
+  tlsSettings: typeof tlsSettings;
   volumes: typeof volumes;
   managedDatabases: typeof managedDatabases;
   backups: typeof backups;
