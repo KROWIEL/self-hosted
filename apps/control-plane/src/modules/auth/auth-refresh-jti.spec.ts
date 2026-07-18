@@ -84,6 +84,7 @@ describe('AuthService.refresh jti reuse detection', () => {
       jwt as unknown as JwtService,
       {} as CryptoService,
       { get: jest.fn() } as unknown as EntitlementsService,
+      { consume: jest.fn() } as never,
     );
   });
 

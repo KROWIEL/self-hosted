@@ -9,6 +9,7 @@ import { EntitlementsService } from '../../common/licensing/entitlements.service
 import { AuthErrors } from '../../common/errors/app-errors';
 import { isStrongPassword } from '../../common/validation/password';
 import { UsersService } from '../users/users.service';
+import { InvitesService } from '../invites/invites.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { OnboardingDto } from './dto/onboarding.dto';
@@ -23,7 +24,8 @@ const REFRESH_JTI_PREFIX = 'auth:refresh:jti:';
 /**
  * Self-service registration toggle (H1). Disabled by default so a fresh panel is
  * not open to anonymous account creation; an operator sets ALLOW_OPEN_REGISTRATION
- * to a truthy value to allow public sign-up.
+ * to a truthy value to allow public sign-up. When off, register still works with
+ * a valid admin-issued invite token.
  */
 function isOpenRegistrationEnabled(): boolean {
   const v = process.env.ALLOW_OPEN_REGISTRATION?.trim().toLowerCase();
@@ -54,6 +56,7 @@ export class AuthService implements OnModuleDestroy {
     private readonly jwt: JwtService,
     private readonly crypto: CryptoService,
     private readonly entitlements: EntitlementsService,
+    private readonly invites: InvitesService,
   ) {
     this.lockRedis = new Redis(
       process.env.REDIS_URL ?? 'redis://localhost:6379',
@@ -135,20 +138,26 @@ export class AuthService implements OnModuleDestroy {
 
   /** Stage 1: create the account and sign the user in so they can onboard. */
   async register(dto: RegisterDto) {
-    // Self-service sign-up is OFF by default (H1): only an operator who
-    // explicitly opts in via ALLOW_OPEN_REGISTRATION exposes public registration.
-    // The seeded admin and SSO sign-in do not go through this path.
-    if (!isOpenRegistrationEnabled()) {
-      throw AuthErrors.registrationDisabled();
-    }
     const email = dto.email.toLowerCase();
-    if (await this.users.findByEmail(email)) {
-      throw AuthErrors.emailTaken();
-    }
+    const open = isOpenRegistrationEnabled();
+
     if (!isStrongPassword(dto.password)) {
       throw AuthErrors.weakPassword();
     }
-    const user = await this.users.create(email, dto.password, 'USER');
+    if (await this.users.findByEmail(email)) {
+      throw AuthErrors.emailTaken();
+    }
+
+    // When open registration is OFF, a valid unused invite is required (H1).
+    // When ON, any inviteToken is ignored so public sign-up stays simple.
+    let role: 'ADMIN' | 'USER' = 'USER';
+    if (!open) {
+      if (!dto.inviteToken?.trim()) throw AuthErrors.inviteRequired();
+      const invite = await this.invites.consume(dto.inviteToken, email);
+      role = invite.role === 'ADMIN' ? 'ADMIN' : 'USER';
+    }
+
+    const user = await this.users.create(email, dto.password, role);
     const tokens = await this.issueTokens(
       user.id,
       user.email,

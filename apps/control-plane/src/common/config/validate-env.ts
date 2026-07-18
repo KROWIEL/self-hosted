@@ -20,7 +20,9 @@ export function collectEnvErrors(env: NodeJS.ProcessEnv): string[] {
 
   // Optional feature flags (documented for discoverability; not validated here):
   //   ALLOW_OPEN_REGISTRATION  - "1"/"true" to enable public POST /auth/register
-  //                              (default OFF; seeded admin + SSO are unaffected).
+  //                              (default OFF; without it, register requires a
+  //                              valid admin-issued invite token. Seeded admin
+  //                              + SSO are unaffected).
 
   const require = (key: string): string | undefined => {
     const v = env[key];
