@@ -1,12 +1,36 @@
 package config
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// devSentinel reports whether the explicit AGENT_DEV=1 opt-in is set. Insecure
+// kill-switches (plain HTTP, skip panel TLS verify) are ignored unless it is, so
+// they can't be flipped on by accident in production (L2).
+func devSentinel() bool {
+	return os.Getenv("AGENT_DEV") == "1"
+}
+
+// insecureHTTP resolves AGENT_INSECURE_HTTP, honoring it only alongside the
+// AGENT_DEV sentinel and emitting a hard warning either way.
+func insecureHTTP() bool {
+	if os.Getenv("AGENT_INSECURE_HTTP") != "1" {
+		return false
+	}
+	if !devSentinel() {
+		log.Printf("WARNING: AGENT_INSECURE_HTTP=1 ignored because AGENT_DEV=1 is not set; " +
+			"refusing to serve plain HTTP. Set AGENT_DEV=1 to enable it for local development.")
+		return false
+	}
+	log.Printf("WARNING: AGENT_INSECURE_HTTP is ACTIVE — the agent serves PLAIN HTTP with no TLS. " +
+		"This is for local development only; never expose it on an untrusted network.")
+	return true
+}
 
 // Version is the agent build version reported to the control plane.
 const Version = "0.2.0"
@@ -58,7 +82,7 @@ func Load() Config {
 		PanelURL:    strings.TrimRight(envStr("AGENT_PANEL_URL", os.Getenv("PANEL_URL")), "/"),
 		JoinToken:   envStr("AGENT_JOIN_TOKEN", os.Getenv("JOIN_TOKEN")),
 		StateDir:    envStr("AGENT_STATE_DIR", "/var/lib/selfhosted-agent"),
-		Insecure:    os.Getenv("AGENT_INSECURE_HTTP") == "1",
+		Insecure:    insecureHTTP(),
 
 		BuildTimeout:        envDuration("AGENT_BUILD_TIMEOUT", 20*time.Minute),
 		InspectTimeout:      envDuration("AGENT_INSPECT_TIMEOUT", 2*time.Minute),

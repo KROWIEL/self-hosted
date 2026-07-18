@@ -35,6 +35,31 @@ func TestEnvDuration(t *testing.T) {
 	}
 }
 
+func TestInsecureHTTP(t *testing.T) {
+	cases := []struct {
+		name     string
+		insecure string
+		dev      string
+		want     bool
+	}{
+		{"unset", "", "", false},
+		{"insecure without dev sentinel", "1", "", false},
+		{"insecure with dev disabled", "1", "0", false},
+		{"insecure with dev sentinel", "1", "1", true},
+		{"dev sentinel alone", "", "1", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			t.Setenv("AGENT_INSECURE_HTTP", c.insecure)
+			t.Setenv("AGENT_DEV", c.dev)
+			if got := insecureHTTP(); got != c.want {
+				t.Fatalf("insecureHTTP(INSECURE=%q DEV=%q) = %v, want %v",
+					c.insecure, c.dev, got, c.want)
+			}
+		})
+	}
+}
+
 func TestEnvInt(t *testing.T) {
 	const key = "AGENT_TEST_INT"
 	if got := envInt(key, 2); got != 2 {

@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"math/big"
 	"net/http"
 	"os"
@@ -25,11 +26,20 @@ import (
 )
 
 // httpClient talks to the panel. Set AGENT_PANEL_INSECURE=1 when the panel uses
-// a self-signed certificate (e.g. behind a grey-IP reverse tunnel in dev).
+// a self-signed certificate (e.g. behind a grey-IP reverse tunnel in dev). This
+// kill-switch is honored ONLY when the explicit AGENT_DEV=1 sentinel is also set
+// (L2), so panel TLS verification can't be silently disabled in production.
 func httpClient() *http.Client {
 	tr := &http.Transport{}
 	if os.Getenv("AGENT_PANEL_INSECURE") == "1" {
-		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402 — opt-in
+		if os.Getenv("AGENT_DEV") == "1" {
+			log.Printf("WARNING: AGENT_PANEL_INSECURE is ACTIVE — skipping panel TLS " +
+				"verification. Local development only.")
+			tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402 — opt-in dev
+		} else {
+			log.Printf("WARNING: AGENT_PANEL_INSECURE=1 ignored because AGENT_DEV=1 is not set; " +
+				"verifying panel TLS. Set AGENT_DEV=1 to enable it for local development.")
+		}
 	}
 	return &http.Client{Timeout: 15 * time.Second, Transport: tr}
 }
