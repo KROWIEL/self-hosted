@@ -760,6 +760,33 @@ export class AgentClient {
     );
   }
 
+  /**
+   * Runs a one-shot command inside a service container (per-service cron).
+   * When `container` is empty the agent resolves the live container by service id.
+   */
+  execCmd(
+    node: NodeRow,
+    serviceId: string,
+    input: {
+      container?: string;
+      command: string | string[];
+      timeoutSec?: number;
+    },
+  ) {
+    return this.request<{
+      exitCode: number;
+      stdout: string;
+      stderr: string;
+    }>(node, `/servers/${serviceId}/exec-cmd`, {
+      method: 'POST',
+      body: JSON.stringify({
+        container: input.container ?? '',
+        command: input.command,
+        timeoutSec: input.timeoutSec ?? 300,
+      }),
+    });
+  }
+
   remove(node: NodeRow, serviceId: string) {
     return this.request<{ ok: boolean }>(node, `/servers/${serviceId}`, {
       method: 'DELETE',
