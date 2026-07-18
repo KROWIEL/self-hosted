@@ -25,6 +25,8 @@ export interface AgentBuildInput {
   dockerfile?: string;
   /** Prefer the repo's own Dockerfile (if present) over the template. */
   useRepoDockerfile?: boolean;
+  /** template | dockerfile | nixpacks — how the agent builds the image. */
+  buildMode?: string;
   imageTag: string;
 }
 
@@ -409,6 +411,7 @@ export class AgentClient {
           runImage: input.runImage,
           dockerfile: input.dockerfile ?? '',
           useRepoDockerfile: input.useRepoDockerfile ?? false,
+          buildMode: input.buildMode ?? '',
           imageTag: input.imageTag,
         }),
       },

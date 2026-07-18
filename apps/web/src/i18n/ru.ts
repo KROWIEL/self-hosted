@@ -514,6 +514,12 @@ export const ru: Dict = {
   'project.useRepoDockerfile': 'Использовать Dockerfile из репозитория (если есть)',
   'project.useRepoDockerfileHint':
     'Выкл: сборка по выбранному шаблону. Вкл: использовать Dockerfile из репозитория (он должен собирать из исходников).',
+  'project.buildMode': 'Режим сборки',
+  'project.buildModeHint':
+    'Шаблон — Dockerfile языкового стека. Repo Dockerfile — из репозитория. Nixpacks — автоопределение стека (нужен nixpacks на ноде).',
+  'project.buildMode.template': 'Dockerfile шаблона',
+  'project.buildMode.dockerfile': 'Dockerfile репозитория',
+  'project.buildMode.nixpacks': 'Nixpacks',
   'project.gitCred': 'Git-доступ',
   'project.gitCredNone': 'Публичный (без токена)',
   'project.gitCredHint': 'Выберите доступ для клонирования приватного репозитория.',

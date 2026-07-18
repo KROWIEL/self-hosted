@@ -514,6 +514,12 @@ export const en = {
   'project.useRepoDockerfile': "Use the repo's own Dockerfile (if present)",
   'project.useRepoDockerfileHint':
     'Off: build with the selected template. On: use a Dockerfile from the repository (must build from source).',
+  'project.buildMode': 'Build mode',
+  'project.buildModeHint':
+    'Template uses the language stack Dockerfile. Repo Dockerfile builds from the repository. Nixpacks auto-detects the stack (requires nixpacks on the node).',
+  'project.buildMode.template': 'Template Dockerfile',
+  'project.buildMode.dockerfile': 'Repo Dockerfile',
+  'project.buildMode.nixpacks': 'Nixpacks',
   'project.gitCred': 'Git access',
   'project.gitCredNone': 'Public (no token)',
   'project.gitCredHint': 'Select a credential to clone a private repository.',

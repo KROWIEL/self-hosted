@@ -1250,6 +1250,7 @@ function SettingsBox({
       port: service.port ?? undefined,
       gitCredId: service.gitCredId ?? '',
       useRepoDockerfile: service.useRepoDockerfile,
+      buildMode: service.buildMode ?? (service.useRepoDockerfile ? 'dockerfile' : 'template'),
       image: service.image ?? '',
       composeFile: service.composeFile ?? 'docker-compose.yml',
       cpuLimit: service.cpuLimit,
@@ -1315,7 +1316,8 @@ function SettingsBox({
         branch: form.branch.trim(),
         port: form.port ? Number(form.port) : undefined,
         gitCredId: form.gitCredId,
-        useRepoDockerfile: form.useRepoDockerfile,
+        useRepoDockerfile: form.buildMode === 'dockerfile',
+        buildMode: form.buildMode,
         image: form.image.trim() || undefined,
         composeFile: form.composeFile.trim() || undefined,
         cpuLimit: Number(form.cpuLimit),
@@ -1478,18 +1480,36 @@ function SettingsBox({
               ))}
             </select>
           </Labeled>
-          <label className="flex items-start gap-2 text-sm text-neutral-300">
-            <input
-              type="checkbox"
-              checked={form.useRepoDockerfile}
-              onChange={(e) =>
-                setForm({ ...form, useRepoDockerfile: e.target.checked })
-              }
+          {(service.deployKind ?? 'git') === 'git' && (
+          <Labeled label={t('project.buildMode')} hint={t('project.buildModeHint')}>
+            <select
+              value={form.buildMode}
+              onChange={(e) => {
+                const buildMode = e.target.value as
+                  | 'template'
+                  | 'dockerfile'
+                  | 'nixpacks';
+                setForm({
+                  ...form,
+                  buildMode,
+                  useRepoDockerfile: buildMode === 'dockerfile',
+                });
+              }}
               disabled={ro}
-              className="mt-0.5 accent-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-            <span>{t('project.useRepoDockerfile')}</span>
-          </label>
+              className={field}
+            >
+              <option value="template" className="bg-ink-850">
+                {t('project.buildMode.template')}
+              </option>
+              <option value="dockerfile" className="bg-ink-850">
+                {t('project.buildMode.dockerfile')}
+              </option>
+              <option value="nixpacks" className="bg-ink-850">
+                {t('project.buildMode.nixpacks')}
+              </option>
+            </select>
+          </Labeled>
+          )}
           <div className="rounded-lg border border-white/5 bg-white/[0.02] p-3">
             <label className="flex items-start gap-2 text-sm text-neutral-300">
               <input

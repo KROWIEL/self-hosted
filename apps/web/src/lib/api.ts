@@ -33,6 +33,7 @@ export interface Service {
   composeYaml: string | null;
   branch: string;
   useRepoDockerfile: boolean;
+  buildMode: 'template' | 'dockerfile' | 'nixpacks';
   port: number | null;
   cpuLimit: number;
   memLimit: number;
@@ -60,6 +61,7 @@ export interface UpdateServiceBody {
   branch?: string;
   gitCredId?: string;
   useRepoDockerfile?: boolean;
+  buildMode?: 'template' | 'dockerfile' | 'nixpacks';
   image?: string;
   composeFile?: string;
   composeYaml?: string;
@@ -1154,6 +1156,7 @@ export interface CreateServiceBody {
   branch?: string;
   gitCredId?: string;
   useRepoDockerfile?: boolean;
+  buildMode?: 'template' | 'dockerfile' | 'nixpacks';
   port?: number;
   cpuLimit?: number;
   memLimit?: number;
