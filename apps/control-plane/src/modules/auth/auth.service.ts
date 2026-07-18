@@ -91,7 +91,12 @@ export class AuthService {
       throw AuthErrors.weakPassword();
     }
     const user = await this.users.create(email, dto.password, 'USER');
-    const tokens = await this.issueTokens(user.id, user.email, user.role);
+    const tokens = await this.issueTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.tokenVersion,
+    );
     return { ...tokens, needsOnboarding: true };
   }
 
@@ -131,7 +136,12 @@ export class AuthService {
       await this.users.setMustChangePassword(user.id, mustChangePassword);
     }
 
-    const tokens = await this.issueTokens(user.id, user.email, user.role);
+    const tokens = await this.issueTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.tokenVersion,
+    );
     return {
       ...tokens,
       needsOnboarding: !user.onboardedAt,
@@ -218,6 +228,18 @@ export class AuthService {
     const ok = await this.users.verifyPassword(dto.password, user.password);
     if (!ok) throw AuthErrors.currentPasswordInvalid();
     await this.users.setTotpSecret(userId, null);
+    // Disabling a second factor is a downgrade of account security — invalidate
+    // every existing session so a stolen token can't ride along.
+    await this.users.bumpTokenVersion(userId);
+    return { ok: true };
+  }
+
+  /**
+   * Explicit server-side logout: bumps tokenVersion so the caller's access and
+   * refresh tokens (and any other live sessions for the account) stop working.
+   */
+  async logout(userId: string) {
+    await this.users.bumpTokenVersion(userId);
     return { ok: true };
   }
 
@@ -240,12 +262,22 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     try {
-      const payload = await this.jwt.verifyAsync<{ sub: string }>(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
-      });
+      const payload = await this.jwt.verifyAsync<{ sub: string; tv?: number }>(
+        refreshToken,
+        { secret: process.env.JWT_REFRESH_SECRET },
+      );
       const user = await this.users.findById(payload.sub);
       if (!user) throw AuthErrors.invalidRefresh();
-      return this.issueTokens(user.id, user.email, user.role);
+      // Reject a refresh token minted before the account's session epoch was
+      // bumped (password change, 2FA disable, logout).
+      if (payload.tv !== user.tokenVersion) throw AuthErrors.invalidRefresh();
+      // Rotate: issue a brand-new access AND refresh token on every refresh.
+      return this.issueTokens(
+        user.id,
+        user.email,
+        user.role,
+        user.tokenVersion,
+      );
     } catch {
       throw AuthErrors.invalidRefresh();
     }
@@ -256,12 +288,24 @@ export class AuthService {
    * successful SSO / OIDC sign-in). The caller is responsible for verifying the
    * external identity before calling this.
    */
-  issueSessionFor(user: { id: string; email: string; role: string }) {
-    return this.issueTokens(user.id, user.email, user.role);
+  issueSessionFor(user: {
+    id: string;
+    email: string;
+    role: string;
+    tokenVersion: number;
+  }) {
+    return this.issueTokens(user.id, user.email, user.role, user.tokenVersion);
   }
 
-  private async issueTokens(sub: string, email: string, role: string) {
-    const payload = { sub, email, role };
+  private async issueTokens(
+    sub: string,
+    email: string,
+    role: string,
+    tokenVersion: number,
+  ) {
+    // `tv` binds the token to the account's current session epoch; jwt.strategy
+    // and the refresh/exec paths reject tokens whose tv is stale.
+    const payload = { sub, email, role, tv: tokenVersion };
     const accessToken = await this.jwt.signAsync(payload, {
       secret: process.env.JWT_SECRET,
       expiresIn: process.env.JWT_EXPIRES_IN ?? '15m',

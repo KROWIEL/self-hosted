@@ -94,6 +94,12 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  logout(@Request() req: { user: { id: string } }) {
+    return this.auth.logout(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   me(@Request() req: { user: { id: string } }) {
     return this.auth.me(req.user.id);

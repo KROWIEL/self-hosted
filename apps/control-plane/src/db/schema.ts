@@ -56,6 +56,10 @@ export const users = pgTable('users', {
   // TOTP shared secret, encrypted at rest (AES-256-GCM). Non-null = 2FA on.
   totpSecret: text('totp_secret'),
   role: roleEnum('role').notNull().default('USER'),
+  // Monotonic session epoch. Every access/refresh token embeds the value it was
+  // signed with (claim `tv`); bumping it (password change, 2FA disable, logout)
+  // invalidates all previously issued tokens for the user.
+  tokenVersion: integer('token_version').notNull().default(0),
   // Set at login when the account password fails the current strength policy;
   // the UI then forces a password change (without blocking sign-in).
   mustChangePassword: boolean('must_change_password').notNull().default(false),

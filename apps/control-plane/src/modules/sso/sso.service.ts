@@ -232,6 +232,7 @@ export class SsoService {
         id: user.id,
         email: user.email,
         role: user.role,
+        tokenVersion: user.tokenVersion,
       });
       const frag = new URLSearchParams({
         access: session.accessToken,

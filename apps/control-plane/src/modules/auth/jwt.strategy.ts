@@ -7,6 +7,8 @@ export interface JwtPayload {
   sub: string;
   email: string;
   role: string;
+  /** Session epoch the token was signed with; must match the user's current one. */
+  tv?: number;
 }
 
 /**
@@ -37,6 +39,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return { id: user.id, email: user.email, role: user.role };
+    // Reject tokens minted before the account's session epoch was bumped
+    // (password change, 2FA disable, logout). Also rejects pre-upgrade tokens
+    // that carry no `tv` claim.
+    if (payload.tv !== user.tokenVersion) {
+      throw new UnauthorizedException();
+    }
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
+    };
   }
 }
