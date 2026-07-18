@@ -23,7 +23,9 @@ export function collectEnvErrors(env: NodeJS.ProcessEnv): string[] {
   //                              (default OFF; without it, register requires a
   //                              valid admin-issued invite token. Seeded admin
   //                              + SSO are unaffected).
-
+  //   DAEMON_TOKEN_ROTATION_DAYS - days between automatic daemon-token rotations
+  //                              for online nodes (default 30; 0 disables).
+  //                              Reuses the confirmation-gated rotate path.
   const require = (key: string): string | undefined => {
     const v = env[key];
     if (!v || v.trim() === '') errors.push(`${key} is required`);
