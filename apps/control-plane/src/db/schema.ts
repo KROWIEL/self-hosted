@@ -402,6 +402,24 @@ export const backupSchedules = pgTable('backup_schedules', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+/// Per-service scheduled command run inside the service container (Home-Lab: service-cron).
+export const serviceCrons = pgTable('service_crons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  serviceId: uuid('service_id')
+    .notNull()
+    .references(() => services.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  cron: text('cron').notNull(),
+  command: text('command').notNull(),
+  enabled: boolean('enabled').notNull().default(true),
+  timeoutSec: integer('timeout_sec').notNull().default(300),
+  lastRunAt: timestamp('last_run_at'),
+  lastStatus: text('last_status'),
+  lastOutput: text('last_output'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 /// Public domain mapped to a service via the reverse proxy.
 export const domains = pgTable('domains', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -691,6 +709,7 @@ export type DbSchema = {
   managedDatabases: typeof managedDatabases;
   backups: typeof backups;
   backupSchedules: typeof backupSchedules;
+  serviceCrons: typeof serviceCrons;
   tunnels: typeof tunnels;
   licenses: typeof licenses;
   installation: typeof installation;
