@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -27,12 +28,41 @@ func (c *Client) BuildImage(ctx context.Context, contextDir, dockerfile, tag str
 	return c.run(ctx, w, args...)
 }
 
+// Baseline container hardening applied to every managed run (services + managed
+// databases). read-only rootfs and userns remapping are intentionally NOT set
+// here — they need per-app validation and are tracked as a follow-up.
+const (
+	// defaultMemLimitMb caps memory when the caller provides no explicit limit,
+	// so a container can't exhaust host RAM. It's generous enough for typical
+	// apps (incl. small JVM services) while still bounding runaway usage.
+	defaultMemLimitMb = 1024
+	// defaultPidsLimit bounds the number of processes/threads per container.
+	defaultPidsLimit = 1024
+)
+
+// hardenedCaps is the "drop ALL, add back common" Linux capability set. It keeps
+// typical apps (chown/setuid at startup, binding <1024, etc.) working while
+// removing capabilities they don't need.
+var hardenedCaps = []string{
+	"CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "SETGID", "SETUID",
+	"SETPCAP", "NET_BIND_SERVICE", "KILL",
+}
+
 // RunContainer (re)creates and starts a container for a service.
 // Returns the new container ID.
 func (c *Client) RunContainer(ctx context.Context, opts RunOptions, w io.Writer) (string, error) {
 	_ = c.run(ctx, io.Discard, "rm", "-f", opts.Name)
 
 	args := []string{"run", "-d", "--name", opts.Name, "--restart", "unless-stopped"}
+
+	// Baseline hardening on every managed container.
+	args = append(args, "--security-opt=no-new-privileges")
+	args = append(args, "--pids-limit", fmt.Sprintf("%d", defaultPidsLimit))
+	args = append(args, "--cap-drop=ALL")
+	for _, capName := range hardenedCaps {
+		args = append(args, "--cap-add", capName)
+	}
+
 	if opts.Network != "" {
 		args = append(args, "--network", opts.Network)
 	}
@@ -43,6 +73,9 @@ func (c *Client) RunContainer(ctx context.Context, opts RunOptions, w io.Writer)
 	}
 	if opts.MemLimitMb > 0 {
 		args = append(args, "--memory", fmt.Sprintf("%dm", opts.MemLimitMb))
+	} else {
+		// Enforce a default cap when the caller doesn't specify one.
+		args = append(args, "--memory", fmt.Sprintf("%dm", defaultMemLimitMb))
 	}
 	if opts.CPULimit > 0 {
 		args = append(args, "--cpus", fmt.Sprintf("%.2f", float64(opts.CPULimit)/100.0))
@@ -99,6 +132,56 @@ func (c *Client) ExecCapture(ctx context.Context, name string, out io.Writer, cm
 func (c *Client) ExecStdin(ctx context.Context, name string, in io.Reader, cmd ...string) error {
 	args := append([]string{"exec", "-i", name}, cmd...)
 	command := exec.CommandContext(ctx, "docker", args...)
+	command.Stdin = in
+	command.Stdout = io.Discard
+	command.Stderr = io.Discard
+	return command.Run()
+}
+
+// execEnvArgs builds `docker exec [extra...] [-e KEY ...] name cmd...`, where
+// each env key is forwarded into the container BY NAME ONLY — its value is
+// supplied through the docker process environment (returned as procEnv). This
+// keeps secrets (DB passwords) out of argv on both the host and the container.
+func execEnvArgs(name string, extra []string, env map[string]string, cmd []string) (args []string, procEnv []string) {
+	args = append([]string{"exec"}, extra...)
+	procEnv = os.Environ()
+	for k, v := range env {
+		args = append(args, "-e", k)
+		procEnv = append(procEnv, k+"="+v)
+	}
+	args = append(args, name)
+	args = append(args, cmd...)
+	return args, procEnv
+}
+
+// ExecEnv is Exec with extra environment variables forwarded into the container
+// without exposing their values in argv. Returns trimmed stdout.
+func (c *Client) ExecEnv(ctx context.Context, name string, env map[string]string, cmd ...string) (string, error) {
+	args, procEnv := execEnvArgs(name, nil, env, cmd)
+	command := exec.CommandContext(ctx, "docker", args...)
+	command.Env = procEnv
+	var out bytes.Buffer
+	command.Stdout = &out
+	command.Stderr = io.Discard
+	err := command.Run()
+	return strings.TrimSpace(out.String()), err
+}
+
+// ExecCaptureEnv is ExecCapture with forwarded env vars (see ExecEnv).
+func (c *Client) ExecCaptureEnv(ctx context.Context, name string, env map[string]string, out io.Writer, cmd ...string) error {
+	args, procEnv := execEnvArgs(name, nil, env, cmd)
+	command := exec.CommandContext(ctx, "docker", args...)
+	command.Env = procEnv
+	command.Stdout = out
+	command.Stderr = io.Discard
+	return command.Run()
+}
+
+// ExecStdinEnv is ExecStdin with forwarded env vars (see ExecEnv).
+func (c *Client) ExecStdinEnv(ctx context.Context, name string, env map[string]string, in io.Reader, cmd ...string) error {
+	args, procEnv := execEnvArgs(name, []string{"-i"}, env, cmd)
+	command := exec.CommandContext(ctx, "docker", args...)
+	command.Env = procEnv
 	command.Stdin = in
 	command.Stdout = io.Discard
 	command.Stderr = io.Discard
