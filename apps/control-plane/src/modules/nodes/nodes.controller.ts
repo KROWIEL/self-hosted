@@ -19,6 +19,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../../common/guards/admin.guard';
 import { NodesService } from './nodes.service';
 import { AgentRunnerService } from './agent-runner.service';
 
@@ -78,7 +79,8 @@ class PruneNodeDto {
   volumes?: boolean;
 }
 
-@UseGuards(JwtAuthGuard)
+// Node lifecycle + cross-tenant workload/metrics are platform-admin only.
+@UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('nodes')
 export class NodesController {
   constructor(
