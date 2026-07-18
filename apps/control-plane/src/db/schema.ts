@@ -574,10 +574,15 @@ export const apiTokens = pgTable('api_tokens', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-/// Offsite backups (Pro: offsite-backups). Singleton S3-compatible destination.
+/// Offsite backups (Pro: offsite-backups). Singleton destination.
+/// `provider` selects the backend: s3 | gcs | azure | sftp (default s3).
+/// S3/GCS reuse endpoint/region/bucket/keys; Azure/SFTP store non-secret
+/// fields in `providerConfig` and secrets in `secretKeyEnc` (AES-256-GCM).
 export const offsiteConfig = pgTable('offsite_config', {
   id: text('id').primaryKey().default('default'),
   enabled: boolean('enabled').notNull().default(false),
+  // 's3' | 'gcs' | 'azure' | 'sftp'
+  provider: text('provider').notNull().default('s3'),
   endpoint: text('endpoint').notNull().default(''),
   region: text('region').notNull().default('us-east-1'),
   bucket: text('bucket').notNull().default(''),
@@ -586,6 +591,10 @@ export const offsiteConfig = pgTable('offsite_config', {
   secretKeyEnc: text('secret_key_enc').notNull().default(''),
   // MinIO and most non-AWS providers need path-style addressing.
   forcePathStyle: boolean('force_path_style').notNull().default(true),
+  // Provider-specific non-secret settings (Azure account/container, SFTP host…).
+  providerConfig: jsonb('provider_config')
+    .notNull()
+    .default(sql`'{}'::jsonb`),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
