@@ -17,6 +17,16 @@ import { Disable2faDto } from './dto/disable-2fa.dto';
 
 const TOTP_ISSUER = process.env.TOTP_ISSUER ?? 'Self-Hosted Panel';
 
+/**
+ * Self-service registration toggle (H1). Disabled by default so a fresh panel is
+ * not open to anonymous account creation; an operator sets ALLOW_OPEN_REGISTRATION
+ * to a truthy value to allow public sign-up.
+ */
+function isOpenRegistrationEnabled(): boolean {
+  const v = process.env.ALLOW_OPEN_REGISTRATION?.trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes' || v === 'on';
+}
+
 // Per-account brute-force backoff: after this many consecutive failed login /
 // TOTP attempts, the account is locked for LOGIN_LOCKOUT_MS.
 const MAX_FAILED_ATTEMPTS = 5;
@@ -83,6 +93,12 @@ export class AuthService {
 
   /** Stage 1: create the account and sign the user in so they can onboard. */
   async register(dto: RegisterDto) {
+    // Self-service sign-up is OFF by default (H1): only an operator who
+    // explicitly opts in via ALLOW_OPEN_REGISTRATION exposes public registration.
+    // The seeded admin and SSO sign-in do not go through this path.
+    if (!isOpenRegistrationEnabled()) {
+      throw AuthErrors.registrationDisabled();
+    }
     const email = dto.email.toLowerCase();
     if (await this.users.findByEmail(email)) {
       throw AuthErrors.emailTaken();

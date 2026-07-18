@@ -19,6 +19,12 @@ export const AuthErrors = {
       code: 'auth.emailTaken',
       message: 'An account with this email already exists.',
     }),
+  registrationDisabled: () =>
+    new ForbiddenException({
+      code: 'auth.registrationDisabled',
+      message:
+        'Self-service registration is disabled. Ask an administrator to create your account.',
+    }),
   invalidCredentials: () =>
     new UnauthorizedException({
       code: 'auth.invalidCredentials',

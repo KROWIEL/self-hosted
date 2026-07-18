@@ -18,6 +18,10 @@ import { config as loadEnv } from 'dotenv';
 export function collectEnvErrors(env: NodeJS.ProcessEnv): string[] {
   const errors: string[] = [];
 
+  // Optional feature flags (documented for discoverability; not validated here):
+  //   ALLOW_OPEN_REGISTRATION  - "1"/"true" to enable public POST /auth/register
+  //                              (default OFF; seeded admin + SSO are unaffected).
+
   const require = (key: string): string | undefined => {
     const v = env[key];
     if (!v || v.trim() === '') errors.push(`${key} is required`);
