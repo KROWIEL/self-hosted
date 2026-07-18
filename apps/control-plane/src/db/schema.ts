@@ -233,7 +233,10 @@ export const services = pgTable('services', {
   gitCredId: uuid('git_cred_id').references(() => gitCredentials.id),
   // When true, build from the repo's own Dockerfile (if present) instead of the
   // selected template's Dockerfile. Default: use the template (predictable builds).
+  // Kept in sync with buildMode === 'dockerfile' for back-compat.
   useRepoDockerfile: boolean('use_repo_dockerfile').notNull().default(false),
+  // How git services are built: template Dockerfile, repo Dockerfile, or nixpacks.
+  buildMode: text('build_mode').notNull().default('template'),
   buildCommand: text('build_command'),
   runCommand: text('run_command'),
   port: integer('port'),
