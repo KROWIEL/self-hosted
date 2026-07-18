@@ -81,6 +81,7 @@ export const en = {
   'nav.nodes': 'Nodes',
   'nav.tunnels': 'Exposure',
   'nav.templates': 'Templates',
+  'nav.catalog': 'App catalog',
   'nav.git': 'Git access',
   'nav.audit': 'Audit log',
   'nav.alerts': 'Alerts',
@@ -406,6 +407,35 @@ export const en = {
   // Templates
   'templates.title': 'Templates',
   'templates.subtitle': 'Stack definitions used to build & run services.',
+
+  // App catalog
+  'catalog.title': 'App catalog',
+  'catalog.subtitle':
+    'One-click apps you can install into a project. Free apps are always available; Home-Lab unlocks the full set.',
+  'catalog.install': 'Install',
+  'catalog.installing': 'Installing…',
+  'catalog.upgradeHint': 'Requires Home-Lab or higher',
+  'catalog.pickProject': 'Project',
+  'catalog.pickNode': 'Node',
+  'catalog.serviceName': 'Service name',
+  'catalog.envTitle': 'Environment',
+  'catalog.envRequired': 'Required',
+  'catalog.empty': 'No catalog apps yet. Run db:seed to load the built-in set.',
+  'catalog.tier.free': 'Free',
+  'catalog.tier.homelab': 'Home-Lab',
+  'catalog.kind.image': 'Docker image',
+  'catalog.kind.compose': 'Compose',
+  'catalog.installed': 'Installed — opening service…',
+
+  // Deploy kinds (create service)
+  'deploy.kind': 'Deploy kind',
+  'deploy.kind.git': 'Git + template',
+  'deploy.kind.image': 'Docker image',
+  'deploy.kind.compose': 'Docker Compose',
+  'deploy.image': 'Image',
+  'deploy.imagePlaceholder': 'nginx:alpine',
+  'deploy.composeFile': 'Compose file',
+  'deploy.composeFileHint': 'Path inside the repository (e.g. docker-compose.yml)',
   'templates.aboutTitle': 'What are templates?',
   'templates.aboutBody':
     'A template is a ready-made recipe for a stack — which image builds your code, which image runs it, the Dockerfile and the default port. When you create a service you pick a template, and the node’s agent uses it to build and run your app. You can override the port or use the repo’s own Dockerfile per service.',

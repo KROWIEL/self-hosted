@@ -82,6 +82,7 @@ export const ru: Dict = {
   'nav.nodes': 'Ноды',
   'nav.tunnels': 'Публикация',
   'nav.templates': 'Шаблоны',
+  'nav.catalog': 'Каталог приложений',
   'nav.git': 'Git-доступы',
   'nav.audit': 'Журнал аудита',
   'nav.alerts': 'Оповещения',
@@ -406,6 +407,35 @@ export const ru: Dict = {
   // Templates
   'templates.title': 'Шаблоны',
   'templates.subtitle': 'Определения стеков для сборки и запуска сервисов.',
+
+  // App catalog
+  'catalog.title': 'Каталог приложений',
+  'catalog.subtitle':
+    'Приложения в один клик. Бесплатные доступны всегда; Home-Lab открывает полный набор.',
+  'catalog.install': 'Установить',
+  'catalog.installing': 'Установка…',
+  'catalog.upgradeHint': 'Требуется Home-Lab или выше',
+  'catalog.pickProject': 'Проект',
+  'catalog.pickNode': 'Нода',
+  'catalog.serviceName': 'Имя сервиса',
+  'catalog.envTitle': 'Переменные окружения',
+  'catalog.envRequired': 'Обязательно',
+  'catalog.empty': 'Каталог пуст. Запустите db:seed, чтобы загрузить приложения.',
+  'catalog.tier.free': 'Free',
+  'catalog.tier.homelab': 'Home-Lab',
+  'catalog.kind.image': 'Docker-образ',
+  'catalog.kind.compose': 'Compose',
+  'catalog.installed': 'Установлено — открываем сервис…',
+
+  // Deploy kinds (create service)
+  'deploy.kind': 'Способ деплоя',
+  'deploy.kind.git': 'Git + шаблон',
+  'deploy.kind.image': 'Docker-образ',
+  'deploy.kind.compose': 'Docker Compose',
+  'deploy.image': 'Образ',
+  'deploy.imagePlaceholder': 'nginx:alpine',
+  'deploy.composeFile': 'Compose-файл',
+  'deploy.composeFileHint': 'Путь в репозитории (например docker-compose.yml)',
   'templates.aboutTitle': 'Что такое шаблоны?',
   'templates.aboutBody':
     'Шаблон — готовый рецепт стека: какой образ собирает код, какой его запускает, Dockerfile и порт по умолчанию. При создании сервиса вы выбираете шаблон, и агент ноды по нему собирает и запускает приложение. Порт или использование собственного Dockerfile репозитория можно переопределить у каждого сервиса.',
