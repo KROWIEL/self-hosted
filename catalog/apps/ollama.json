@@ -1,0 +1,27 @@
+{
+  "slug": "ollama",
+  "name": "Ollama",
+  "description": "Run large language models locally and expose them over an OpenAI-compatible HTTP API.",
+  "category": "AI",
+  "translations": {
+    "ru": {
+      "description": "Запуск больших языковых моделей локально с HTTP-API, совместимым с OpenAI."
+    }
+  },
+  "icon": "ai",
+  "upstream": "ollama",
+  "deployKind": "image",
+  "image": "ollama/ollama:latest",
+  "defaultPort": 11434,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/root/.ollama"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "OLLAMA_HOST",
+      "value": "0.0.0.0:11434"
+    }
+  ]
+}

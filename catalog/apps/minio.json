@@ -1,16 +1,30 @@
 {
   "slug": "minio",
   "name": "MinIO",
-  "description": "S3-compatible object storage. Set a strong root password before deploy.",
+  "description": "S3-compatible object storage with a web console on port 9001. Set a strong root password before deploy.",
   "category": "Storage",
+  "translations": {
+    "ru": {
+      "description": "S3-совместимое объектное хранилище с веб-консолью на порту 9001. Задайте надёжный root-пароль перед деплоем."
+    }
+  },
   "icon": "storage",
-  "minTier": "free",
-  "deployKind": "image",
-  "image": "bitnami/minio:latest",
+  "upstream": "none",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  minio:\n    image: minio/minio:latest\n    restart: unless-stopped\n    command: server /data --console-address \":9001\"\n    ports:\n      - \"9000:9000\"\n      - \"9001:9001\"\n    environment:\n      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}\n      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}\n    volumes:\n      - data:/data\nvolumes:\n  data:\n",
   "defaultPort": 9000,
-  "recommendedVolumes": [{ "mountPath": "/bitnami/minio/data" }],
+  "recommendedVolumes": [],
   "envDefaults": [
-    { "key": "MINIO_ROOT_USER", "value": "minioadmin", "required": true },
-    { "key": "MINIO_ROOT_PASSWORD", "secret": true, "required": true }
+    {
+      "key": "MINIO_ROOT_USER",
+      "value": "minioadmin",
+      "required": true
+    },
+    {
+      "key": "MINIO_ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    }
   ]
 }

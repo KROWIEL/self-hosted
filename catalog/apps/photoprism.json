@@ -1,0 +1,35 @@
+{
+  "slug": "photoprism",
+  "name": "PhotoPrism",
+  "description": "AI-powered photo library that tags, groups and searches your pictures locally.",
+  "category": "Media",
+  "translations": {
+    "ru": {
+      "description": "Фотоархив с ИИ: локально размечает, группирует и ищет ваши снимки."
+    }
+  },
+  "icon": "photo",
+  "upstream": "photoprism",
+  "deployKind": "image",
+  "image": "photoprism/photoprism:latest",
+  "defaultPort": 2342,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/photoprism/storage"
+    },
+    {
+      "mountPath": "/photoprism/originals"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "PHOTOPRISM_ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "PHOTOPRISM_SITE_URL",
+      "required": true
+    }
+  ]
+}

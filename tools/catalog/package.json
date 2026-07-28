@@ -1,0 +1,12 @@
+{
+  "name": "catalog-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Validates catalog/apps manifests and tracks them against awesome-selfhosted-data.",
+  "scripts": {
+    "validate": "node validate.mjs",
+    "check-images": "node check-images.mjs",
+    "sync": "node sync.mjs"
+  }
+}

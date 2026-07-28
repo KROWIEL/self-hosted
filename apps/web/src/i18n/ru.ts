@@ -416,20 +416,38 @@ export const ru: Dict = {
   // App catalog
   'catalog.title': 'Каталог приложений',
   'catalog.subtitle':
-    'Приложения в один клик. Бесплатные доступны всегда; Home-Lab открывает полный набор.',
+    'Приложения в один клик. Весь каталог бесплатен на любом тарифе.',
   'catalog.install': 'Установить',
   'catalog.installing': 'Установка…',
-  'catalog.upgradeHint': 'Требуется Home-Lab или выше',
   'catalog.pickProject': 'Проект',
   'catalog.pickNode': 'Нода',
   'catalog.serviceName': 'Имя сервиса',
   'catalog.envTitle': 'Переменные окружения',
   'catalog.envRequired': 'Обязательно',
   'catalog.empty': 'Каталог пуст. Запустите db:seed, чтобы загрузить приложения.',
-  'catalog.tier.free': 'Free',
-  'catalog.tier.homelab': 'Home-Lab',
+  'catalog.searchPlaceholder': 'Поиск приложений…',
+  'catalog.filter.all': 'Все',
+  'catalog.noMatches': 'Под этот фильтр ничего не подходит.',
   'catalog.kind.image': 'Docker-образ',
   'catalog.kind.compose': 'Compose',
+  // Заголовки категорий. Неизвестные категории показываются как есть.
+  'catalog.category.AI': 'ИИ',
+  'catalog.category.Analytics': 'Аналитика',
+  'catalog.category.Apps': 'Приложения',
+  'catalog.category.Automation': 'Автоматизация',
+  'catalog.category.CMS': 'Сайты и CMS',
+  'catalog.category.Dashboards': 'Дашборды',
+  'catalog.category.Databases': 'Базы данных',
+  'catalog.category.Demo': 'Демо',
+  'catalog.category.DevTools': 'Разработка',
+  'catalog.category.Documents': 'Документы',
+  'catalog.category.Feeds': 'RSS-ленты',
+  'catalog.category.Media': 'Медиа',
+  'catalog.category.Monitoring': 'Мониторинг',
+  'catalog.category.Productivity': 'Продуктивность',
+  'catalog.category.Search': 'Поиск',
+  'catalog.category.Security': 'Безопасность',
+  'catalog.category.Storage': 'Хранилища',
   'catalog.installed': 'Установлено — открываем сервис…',
 
   // Deploy kinds (create service)
@@ -917,9 +935,9 @@ export const ru: Dict = {
   'billing.feat.free.deploy.title': 'Git, образ и Compose-деплой',
   'billing.feat.free.deploy.desc':
     'Клонируйте и собирайте из Git (шаблон, Dockerfile в репо или Nixpacks), запускайте готовый образ или поднимайте Docker Compose — с live-логами сборки.',
-  'billing.feat.free.catalog.title': 'Каталог приложений (стартовый набор)',
+  'billing.feat.free.catalog.title': 'Полный каталог приложений',
   'billing.feat.free.catalog.desc':
-    'Установка в один клик курируемых приложений (Uptime Kuma, MinIO, Gitea, n8n и др.) с томами и пресетами env.',
+    'Установка в один клик любого приложения каталога (Jellyfin, Vaultwarden, Paperless-ngx, Open WebUI, Gitea и др.) с томами и пресетами env — без всякого тарифа.',
   'billing.feat.free.volumes.title': 'Постоянные тома',
   'billing.feat.free.volumes.desc':
     'Подключайте именованные тома к сервисам, чтобы данные переживали редеплои, и делайте бэкапы томов из панели.',
@@ -938,13 +956,10 @@ export const ru: Dict = {
   'billing.feat.free.node.title': '1 нода включена',
   'billing.feat.free.node.desc':
     'Запускайте всю платформу на одном сервере — идеально для личного проекта или знакомства.',
-  // Тариф Home-Lab — ядро Free плюс reverse-туннели, cron, полный каталог.
+  // Тариф Home-Lab — ядро Free плюс reverse-туннели и cron.
   'billing.feat.homelab.allFree.title': 'Всё из Free',
   'billing.feat.homelab.allFree.desc':
     'Полное бесплатное ядро плюс возможности для домашней лаборатории ниже.',
-  'billing.feat.homelab.catalog.title': 'Полный каталог приложений',
-  'billing.feat.homelab.catalog.desc':
-    'Открывает приложения Home-Lab каталога (Vaultwarden, SFTPGo, Umami и др.) сверх стартового набора Free.',
   'billing.feat.homelab.tunnels.title': 'Защищённые reverse-туннели',
   'billing.feat.homelab.cron.title': 'Cron-задачи на сервис',
   'billing.feat.homelab.limits.title': '3 ноды + 3 туннеля',
@@ -953,7 +968,7 @@ export const ru: Dict = {
   // Тариф Pro — всё, без ограничений, все модули.
   'billing.feat.pro.allHomelab.title': 'Всё из Free и Home-Lab',
   'billing.feat.pro.allHomelab.desc':
-    'Полный каталог, reverse-туннели, cron на сервис плюс все модули Pro ниже.',
+    'Reverse-туннели, cron на сервис плюс все модули Pro ниже.',
   'billing.feat.pro.unlimited.title': 'Неограниченные ноды и туннели',
   'billing.feat.pro.unlimited.desc':
     'Масштабируйтесь на любое число серверов и публикуйте сколько угодно сервисов — без ограничений.',

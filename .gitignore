@@ -39,6 +39,11 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+# Multi-root workspaces point at sibling checkouts on one machine
+*.code-workspace
+
+# Helper binaries downloaded for docs tooling (ffmpeg)
+.tools/
 
 # Docker volumes (local)
 .docker-data/

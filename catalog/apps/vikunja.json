@@ -1,0 +1,32 @@
+{
+  "slug": "vikunja",
+  "name": "Vikunja",
+  "description": "To-do and project tracker with list, gantt, table and kanban views.",
+  "category": "Productivity",
+  "translations": {
+    "ru": {
+      "description": "Планировщик задач и проектов с представлениями «список», «гант», «таблица» и «канбан»."
+    }
+  },
+  "icon": "check",
+  "upstream": "vikunja",
+  "deployKind": "image",
+  "image": "vikunja/vikunja:latest",
+  "defaultPort": 3456,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/app/vikunja/files"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "VIKUNJA_SERVICE_JWTSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "VIKUNJA_SERVICE_PUBLICURL",
+      "required": true
+    }
+  ]
+}

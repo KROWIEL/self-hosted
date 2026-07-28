@@ -1,0 +1,31 @@
+{
+  "slug": "syncthing",
+  "name": "Syncthing",
+  "description": "Continuous peer-to-peer file synchronisation between your devices, with no cloud in between.",
+  "category": "Storage",
+  "translations": {
+    "ru": {
+      "description": "Постоянная P2P-синхронизация файлов между вашими устройствами без облака-посредника."
+    }
+  },
+  "icon": "sync",
+  "upstream": "syncthing",
+  "deployKind": "image",
+  "image": "syncthing/syncthing:latest",
+  "defaultPort": 8384,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/var/syncthing"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "PUID",
+      "value": "1000"
+    },
+    {
+      "key": "PGID",
+      "value": "1000"
+    }
+  ]
+}

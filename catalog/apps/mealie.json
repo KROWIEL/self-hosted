@@ -1,0 +1,35 @@
+{
+  "slug": "mealie",
+  "name": "Mealie",
+  "description": "Recipe manager and meal planner that imports recipes from a URL and builds shopping lists.",
+  "category": "Productivity",
+  "translations": {
+    "ru": {
+      "description": "Менеджер рецептов и планировщик меню: импортирует рецепты по ссылке и составляет списки покупок."
+    }
+  },
+  "icon": "note",
+  "upstream": "mealie",
+  "deployKind": "image",
+  "image": "ghcr.io/mealie-recipes/mealie:latest",
+  "defaultPort": 9000,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/app/data"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "ALLOW_SIGNUP",
+      "value": "false"
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    },
+    {
+      "key": "BASE_URL",
+      "required": true
+    }
+  ]
+}

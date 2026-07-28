@@ -80,6 +80,12 @@ export interface CatalogVolumeHint {
   mountPath: string;
 }
 
+/** Localized overrides for a catalog entry, keyed by language code. */
+export interface CatalogTranslation {
+  name?: string;
+  description?: string;
+}
+
 export interface CatalogApp {
   id: string;
   slug: string;
@@ -87,7 +93,7 @@ export interface CatalogApp {
   description: string | null;
   category: string | null;
   icon: string | null;
-  minTier: 'free' | 'homelab';
+  translations: Record<string, CatalogTranslation>;
   deployKind: DeployKind;
   image: string | null;
   composeYaml: string | null;

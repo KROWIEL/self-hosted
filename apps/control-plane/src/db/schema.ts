@@ -26,8 +26,6 @@ export const gitProviderEnum = pgEnum('git_provider', ['GITHUB', 'GITLAB']);
 export const serviceTypeEnum = pgEnum('service_type', ['BACKEND', 'FRONTEND']);
 /** How a service is deployed onto a node. */
 export const deployKindEnum = pgEnum('deploy_kind', ['git', 'image', 'compose']);
-/** Lowest commercial tier that can install a catalog app. */
-export const catalogTierEnum = pgEnum('catalog_tier', ['free', 'homelab']);
 export const serviceStatusEnum = pgEnum('service_status', [
   'CREATED',
   'BUILDING',
@@ -273,7 +271,11 @@ export const catalogApps = pgTable('catalog_apps', {
   description: text('description'),
   category: text('category'),
   icon: text('icon'),
-  minTier: catalogTierEnum('min_tier').notNull().default('free'),
+  // Per-locale overrides: { [lang]: { name?, description? } }. Falls back to the
+  // English `name` / `description` columns above when a locale is missing.
+  translations: jsonb('translations')
+    .notNull()
+    .default(sql`'{}'::jsonb`),
   deployKind: deployKindEnum('deploy_kind').notNull(),
   image: text('image'),
   composeYaml: text('compose_yaml'),

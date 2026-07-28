@@ -7,8 +7,8 @@ unlock add-on modules through a signed, offline-verifiable license key.
 
 | Tier | Price (suggested) | What it unlocks |
 |------|-------------------|-----------------|
-| **Free** | $0 forever | Full core: git / image / compose deploys, templates & Nixpacks, app catalog (basic), HTTPS + custom PEMs, managed DBs, volumes, logs & live metrics, projects, RBAC, 2FA (**1 node**, **0 tunnels**) |
-| **Home-Lab** | ~$3 / mo | Everything in Free **+** `reverse-tunnels` **+** `service-cron`, full catalog, up to **3 nodes** and **3 tunnels** |
+| **Free** | $0 forever | Full core: git / image / compose deploys, templates & Nixpacks, the **complete app catalog**, HTTPS + custom PEMs, managed DBs, volumes, logs & live metrics, projects, RBAC, 2FA (**1 node**, **0 tunnels**) |
+| **Home-Lab** | ~$3 / mo | Everything in Free **+** `reverse-tunnels` **+** `service-cron`, up to **3 nodes** and **3 tunnels** |
 | **Pro** | ~$15 / mo | Everything + **all 11 modules** below, **unlimited** nodes & tunnels |
 
 ### Quantitative limits

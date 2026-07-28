@@ -138,3 +138,12 @@ export function useTypeLabel() {
     return key in en ? t(key) : type;
   };
 }
+
+/** Localizes a catalog category name (falls back to the raw manifest value). */
+export function useCategoryLabel() {
+  const { t } = useI18n();
+  return (category: string) => {
+    const key = `catalog.category.${category}` as TKey;
+    return key in en ? t(key) : category;
+  };
+}

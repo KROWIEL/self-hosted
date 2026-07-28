@@ -1,0 +1,17 @@
+{
+  "slug": "hoppscotch",
+  "name": "Hoppscotch",
+  "description": "API development and testing workbench for REST, GraphQL, WebSocket and MQTT.",
+  "category": "DevTools",
+  "translations": {
+    "ru": {
+      "description": "Среда разработки и тестирования API: REST, GraphQL, WebSocket и MQTT."
+    }
+  },
+  "icon": "code",
+  "upstream": "hoppscotch-community-edition",
+  "deployKind": "image",
+  "image": "hoppscotch/hoppscotch:latest",
+  "defaultPort": 3000,
+  "envDefaults": []
+}

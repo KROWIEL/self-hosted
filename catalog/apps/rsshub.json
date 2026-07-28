@@ -1,0 +1,26 @@
+{
+  "slug": "rsshub",
+  "name": "RSSHub",
+  "description": "Generates RSS feeds for sites that never offered one, from a large library of routes.",
+  "category": "Feeds",
+  "translations": {
+    "ru": {
+      "description": "Создаёт RSS-ленты для сайтов, у которых их нет, на основе большой библиотеки маршрутов."
+    }
+  },
+  "icon": "rss",
+  "upstream": "rsshub",
+  "deployKind": "image",
+  "image": "diygod/rsshub:latest",
+  "defaultPort": 1200,
+  "envDefaults": [
+    {
+      "key": "NODE_ENV",
+      "value": "production"
+    },
+    {
+      "key": "CACHE_TYPE",
+      "value": "memory"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "slug": "actual",
+  "name": "Actual Budget",
+  "description": "Local-first envelope budgeting with multi-device sync and no bank lock-in.",
+  "category": "Productivity",
+  "translations": {
+    "ru": {
+      "description": "Конвертное бюджетирование по принципу local-first: синхронизация между устройствами без привязки к банку."
+    }
+  },
+  "icon": "wallet",
+  "upstream": "actual",
+  "deployKind": "image",
+  "image": "actualbudget/actual-server:latest",
+  "defaultPort": 5006,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/data"
+    }
+  ],
+  "envDefaults": []
+}

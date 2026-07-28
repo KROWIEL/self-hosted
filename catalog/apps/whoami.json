@@ -3,8 +3,13 @@
   "name": "Whoami",
   "description": "Tiny Traefik whoami demo — useful for smoke-testing domains and TLS.",
   "category": "Demo",
+  "translations": {
+    "ru": {
+      "description": "Крошечное демо Traefik whoami — удобно для проверки доменов и TLS."
+    }
+  },
   "icon": "demo",
-  "minTier": "free",
+  "upstream": "none",
   "deployKind": "image",
   "image": "traefik/whoami:v1.10",
   "defaultPort": 80,

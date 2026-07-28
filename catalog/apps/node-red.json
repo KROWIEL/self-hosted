@@ -1,0 +1,27 @@
+{
+  "slug": "node-red",
+  "name": "Node-RED",
+  "description": "Flow-based wiring of APIs, devices and online services in a browser editor.",
+  "category": "Automation",
+  "translations": {
+    "ru": {
+      "description": "Визуальное связывание API, устройств и онлайн-сервисов в браузерном редакторе потоков."
+    }
+  },
+  "icon": "workflow",
+  "upstream": "node-red",
+  "deployKind": "image",
+  "image": "nodered/node-red:latest",
+  "defaultPort": 1880,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/data"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "TZ",
+      "value": "UTC"
+    }
+  ]
+}

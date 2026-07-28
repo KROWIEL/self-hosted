@@ -1,0 +1,34 @@
+{
+  "slug": "freshrss",
+  "name": "FreshRSS",
+  "description": "Self-hosted feed aggregator with multi-user support, filters and a mobile-friendly UI.",
+  "category": "Feeds",
+  "translations": {
+    "ru": {
+      "description": "Агрегатор RSS-лент с поддержкой нескольких пользователей, фильтрами и мобильным интерфейсом."
+    }
+  },
+  "icon": "rss",
+  "upstream": "freshrss",
+  "deployKind": "image",
+  "image": "freshrss/freshrss:latest",
+  "defaultPort": 80,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/var/www/FreshRSS/data"
+    },
+    {
+      "mountPath": "/var/www/FreshRSS/extensions"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "TZ",
+      "value": "UTC"
+    },
+    {
+      "key": "CRON_MIN",
+      "value": "*/20"
+    }
+  ]
+}

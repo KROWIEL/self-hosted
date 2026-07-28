@@ -1,0 +1,42 @@
+{
+  "slug": "paperless-ngx",
+  "name": "Paperless-ngx",
+  "description": "Scan, index and archive documents with full-text search and OCR (compose stack with Postgres and Redis).",
+  "category": "Documents",
+  "translations": {
+    "ru": {
+      "description": "Сканирование, индексация и архив документов с полнотекстовым поиском и OCR (compose-стек с Postgres и Redis)."
+    }
+  },
+  "icon": "doc",
+  "upstream": "paperless-ngx",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  broker:\n    image: docker.io/library/redis:7-alpine\n    restart: unless-stopped\n    volumes:\n      - redisdata:/data\n  db:\n    image: docker.io/library/postgres:16-alpine\n    restart: unless-stopped\n    environment:\n      POSTGRES_DB: paperless\n      POSTGRES_USER: paperless\n      POSTGRES_PASSWORD: paperless\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n  webserver:\n    image: ghcr.io/paperless-ngx/paperless-ngx:latest\n    restart: unless-stopped\n    depends_on:\n      - db\n      - broker\n    ports:\n      - \"8000:8000\"\n    environment:\n      PAPERLESS_REDIS: redis://broker:6379\n      PAPERLESS_DBHOST: db\n      PAPERLESS_DBNAME: paperless\n      PAPERLESS_DBUSER: paperless\n      PAPERLESS_DBPASS: paperless\n      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY}\n      PAPERLESS_URL: ${PAPERLESS_URL:-http://localhost:8000}\n      PAPERLESS_TIME_ZONE: ${PAPERLESS_TIME_ZONE:-UTC}\n      PAPERLESS_OCR_LANGUAGE: ${PAPERLESS_OCR_LANGUAGE:-eng}\n      PAPERLESS_ADMIN_USER: ${PAPERLESS_ADMIN_USER:-admin}\n      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD}\n    volumes:\n      - data:/usr/src/paperless/data\n      - media:/usr/src/paperless/media\n      - export:/usr/src/paperless/export\n      - consume:/usr/src/paperless/consume\nvolumes:\n  redisdata:\n  pgdata:\n  data:\n  media:\n  export:\n  consume:\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "PAPERLESS_SECRET_KEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "PAPERLESS_ADMIN_USER",
+      "value": "admin"
+    },
+    {
+      "key": "PAPERLESS_ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "PAPERLESS_OCR_LANGUAGE",
+      "value": "eng"
+    },
+    {
+      "key": "PAPERLESS_TIME_ZONE",
+      "value": "UTC"
+    }
+  ]
+}

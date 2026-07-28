@@ -1,0 +1,22 @@
+{
+  "slug": "nocodb",
+  "name": "NocoDB",
+  "description": "Turns any database into a smart spreadsheet with grid, gallery and kanban views.",
+  "category": "Databases",
+  "translations": {
+    "ru": {
+      "description": "Превращает любую базу данных в умную таблицу с видами «сетка», «галерея» и «канбан»."
+    }
+  },
+  "icon": "database",
+  "upstream": "nocodb",
+  "deployKind": "image",
+  "image": "nocodb/nocodb:latest",
+  "defaultPort": 8080,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/usr/app/data"
+    }
+  ],
+  "envDefaults": []
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "drawio",
+  "name": "draw.io",
+  "description": "Diagram editor for flowcharts, network maps and UML, running entirely on your server.",
+  "category": "Productivity",
+  "translations": {
+    "ru": {
+      "description": "Редактор диаграмм — блок-схемы, схемы сетей и UML — целиком на вашем сервере."
+    }
+  },
+  "icon": "pen",
+  "upstream": "draw.io",
+  "deployKind": "image",
+  "image": "jgraph/drawio:latest",
+  "defaultPort": 8080,
+  "envDefaults": []
+}

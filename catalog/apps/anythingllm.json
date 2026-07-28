@@ -1,0 +1,27 @@
+{
+  "slug": "anythingllm",
+  "name": "AnythingLLM",
+  "description": "All-in-one chat interface over your own documents, with RAG, agents and multi-user workspaces.",
+  "category": "AI",
+  "translations": {
+    "ru": {
+      "description": "Чат по вашим собственным документам: RAG, агенты и многопользовательские рабочие пространства."
+    }
+  },
+  "icon": "ai",
+  "upstream": "anythingllm",
+  "deployKind": "image",
+  "image": "mintplexlabs/anythingllm:latest",
+  "defaultPort": 3001,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/app/server/storage"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "STORAGE_DIR",
+      "value": "/app/server/storage"
+    }
+  ]
+}

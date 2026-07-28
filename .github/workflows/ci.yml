@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate app catalog manifests
+        run: npm run catalog:validate
+
       - name: Build shared package
         run: npm run build --workspace @selfhosted/shared
 

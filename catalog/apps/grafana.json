@@ -1,0 +1,28 @@
+{
+  "slug": "grafana",
+  "name": "Grafana",
+  "description": "Dashboards and alerting for metrics, logs and traces from Prometheus, Loki and friends.",
+  "category": "Monitoring",
+  "translations": {
+    "ru": {
+      "description": "Дашборды и алерты по метрикам, логам и трейсам из Prometheus, Loki и других источников."
+    }
+  },
+  "icon": "chart",
+  "upstream": "none",
+  "deployKind": "image",
+  "image": "grafana/grafana:latest",
+  "defaultPort": 3000,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/var/lib/grafana"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "GF_SECURITY_ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ]
+}

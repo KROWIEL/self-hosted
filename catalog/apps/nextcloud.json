@@ -1,0 +1,38 @@
+{
+  "slug": "nextcloud",
+  "name": "Nextcloud",
+  "description": "Files, calendar, contacts and collaboration on your own server (compose stack with MariaDB).",
+  "category": "Storage",
+  "translations": {
+    "ru": {
+      "description": "Файлы, календарь, контакты и совместная работа на своём сервере (compose-стек с MariaDB)."
+    }
+  },
+  "icon": "cloud",
+  "upstream": "nextcloud",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  db:\n    image: mariadb:11\n    restart: unless-stopped\n    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW\n    environment:\n      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}\n      MARIADB_DATABASE: nextcloud\n      MARIADB_USER: nextcloud\n      MARIADB_PASSWORD: ${DB_PASSWORD}\n    volumes:\n      - dbdata:/var/lib/mysql\n  app:\n    image: nextcloud:30-apache\n    restart: unless-stopped\n    depends_on:\n      - db\n    ports:\n      - \"8080:80\"\n    environment:\n      MYSQL_HOST: db\n      MYSQL_DATABASE: nextcloud\n      MYSQL_USER: nextcloud\n      MYSQL_PASSWORD: ${DB_PASSWORD}\n      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER:-admin}\n      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}\n      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS:-localhost}\n    volumes:\n      - nextcloud:/var/www/html\nvolumes:\n  dbdata:\n  nextcloud:\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "NEXTCLOUD_ADMIN_USER",
+      "value": "admin"
+    },
+    {
+      "key": "NEXTCLOUD_ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "NEXTCLOUD_TRUSTED_DOMAINS",
+      "value": "localhost"
+    }
+  ]
+}

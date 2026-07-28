@@ -20,18 +20,61 @@ import {
   Spinner,
 } from '@/components/ui';
 import { useToast } from '@/components/toast';
-import { TKey, useErrorText, useI18n } from '@/i18n';
-import Link from 'next/link';
+import { CatalogIcon } from '@/components/catalog-icons';
+import { Lang, TKey, useCategoryLabel, useErrorText, useI18n } from '@/i18n';
+
+/** Sentinel for the "no category filter" chip. */
+const ALL = '*';
+
+/** Manifests carry English text plus optional per-locale overrides. */
+function localized(app: CatalogApp, lang: Lang) {
+  const tr = app.translations?.[lang];
+  return {
+    name: tr?.name || app.name,
+    description: tr?.description || app.description,
+  };
+}
+
+function FilterChip({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-full border px-3 py-1 text-xs transition ${
+        active
+          ? 'border-violet-400/40 bg-violet-500/20 text-violet-100'
+          : 'border-white/10 bg-white/[0.02] text-neutral-400 hover:border-white/20 hover:text-neutral-200'
+      }`}
+    >
+      {label}
+      <span className="ml-1.5 text-neutral-500">{count}</span>
+    </button>
+  );
+}
 
 export default function CatalogPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const errText = useErrorText();
   const toast = useToast();
   const router = useRouter();
 
-  const [apps, setApps] = useState<(CatalogApp & { locked: boolean })[]>([]);
+  const [apps, setApps] = useState<CatalogApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [installing, setInstalling] = useState<CatalogApp | null>(null);
+  const [category, setCategory] = useState<string>(ALL);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     listCatalog()
@@ -40,16 +83,31 @@ export default function CatalogPage() {
       .finally(() => setLoading(false));
   }, [errText, toast]);
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, (CatalogApp & { locked: boolean })[]>();
+  /** Categories present in the catalog, with counts, sorted by localized name. */
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
     for (const app of apps) {
       const cat = app.category || 'Apps';
-      const list = map.get(cat) ?? [];
-      list.push(app);
-      map.set(cat, list);
+      counts.set(cat, (counts.get(cat) ?? 0) + 1);
     }
-    return [...map.entries()];
-  }, [apps]);
+    return [...counts.entries()].sort((a, b) =>
+      categoryLabel(a[0]).localeCompare(categoryLabel(b[0]), lang),
+    );
+  }, [apps, categoryLabel, lang]);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return apps.filter((app) => {
+      if (category !== ALL && (app.category || 'Apps') !== category) return false;
+      if (!q) return true;
+      const { name, description } = localized(app, lang);
+      return (
+        name.toLowerCase().includes(q) ||
+        app.slug.includes(q) ||
+        (description ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [apps, category, lang, query]);
 
   return (
     <AppShell>
@@ -59,63 +117,76 @@ export default function CatalogPage() {
       ) : apps.length === 0 ? (
         <EmptyState>{t('catalog.empty')}</EmptyState>
       ) : (
-        <div className="space-y-8">
-          {grouped.map(([category, list]) => (
-            <section key={category}>
-              <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-neutral-500">
-                {category}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {list.map((app) => (
-                  <article
-                    key={app.slug}
-                    className="flex flex-col rounded-xl border border-white/10 bg-white/[0.02] p-4"
-                  >
-                    <div className="mb-2 flex items-start justify-between gap-2">
-                      <h3 className="text-base font-semibold text-white">
-                        {app.name}
+        <>
+          <div className="mb-5 space-y-3">
+            <input
+              className="field w-full sm:max-w-xs"
+              type="search"
+              value={query}
+              placeholder={t('catalog.searchPlaceholder')}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label={t('catalog.searchPlaceholder')}
+            />
+            <div className="flex flex-wrap gap-2">
+              <FilterChip
+                label={t('catalog.filter.all')}
+                count={apps.length}
+                active={category === ALL}
+                onClick={() => setCategory(ALL)}
+              />
+              {categories.map(([cat, count]) => (
+                <FilterChip
+                  key={cat}
+                  label={categoryLabel(cat)}
+                  count={count}
+                  active={category === cat}
+                  onClick={() => setCategory(cat)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {visible.length === 0 ? (
+            <EmptyState>{t('catalog.noMatches')}</EmptyState>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {visible.map((app) => (
+                <article
+                  key={app.slug}
+                  className="flex flex-col rounded-xl border border-white/10 bg-white/[0.02] p-4"
+                >
+                  <div className="mb-3 flex items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-neutral-300">
+                      <CatalogIcon icon={app.icon} />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-base font-semibold text-white">
+                        {localized(app, lang).name}
                       </h3>
-                      <span className="shrink-0 rounded-md bg-white/5 px-2 py-0.5 text-xs text-neutral-400">
-                        {t(
-                          `catalog.tier.${app.minTier}` as TKey,
-                        )}
-                      </span>
+                      <p className="truncate text-xs text-neutral-500">
+                        {categoryLabel(app.category || 'Apps')}
+                      </p>
                     </div>
-                    <p className="mb-3 flex-1 text-sm text-neutral-400">
-                      {app.description}
-                    </p>
-                    <div className="mb-3 flex flex-wrap gap-2 text-xs text-neutral-500">
-                      <span>
-                        {t(`catalog.kind.${app.deployKind}` as TKey)}
-                      </span>
-                      {app.defaultPort != null && (
-                        <span>:{app.defaultPort}</span>
-                      )}
-                    </div>
-                    {app.locked ? (
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-amber-400/90">
-                          {t('catalog.upgradeHint')}
-                        </span>
-                        <Link href="/billing" className="btn-ghost btn-sm">
-                          {t('nav.billing')}
-                        </Link>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn-primary btn-sm self-start"
-                        onClick={() => setInstalling(app)}
-                      >
-                        {t('catalog.install')}
-                      </button>
-                    )}
-                  </article>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+                  </div>
+                  <p className="mb-3 flex-1 text-sm text-neutral-400">
+                    {localized(app, lang).description}
+                  </p>
+                  <div className="mb-3 flex flex-wrap gap-2 text-xs text-neutral-500">
+                    <span>{t(`catalog.kind.${app.deployKind}` as TKey)}</span>
+                    {app.defaultPort != null && <span>:{app.defaultPort}</span>}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-primary btn-sm self-start"
+                    onClick={() => setInstalling(app)}
+                  >
+                    {t('catalog.install')}
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </>
       )}
       {installing && (
         <InstallModal
@@ -141,7 +212,7 @@ function InstallModal({
   onClose: () => void;
   onInstalled: (serviceId: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const errText = useErrorText();
   const [projects, setProjects] = useState<Project[]>([]);
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -190,7 +261,7 @@ function InstallModal({
 
   return (
     <Modal
-      title={`${t('catalog.install')}: ${app.name}`}
+      title={`${t('catalog.install')}: ${localized(app, lang).name}`}
       onClose={onClose}
     >
       {err && (

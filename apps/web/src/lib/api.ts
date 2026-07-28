@@ -1319,7 +1319,7 @@ export interface CatalogApp {
   description: string | null;
   category: string | null;
   icon: string | null;
-  minTier: 'free' | 'homelab';
+  translations: Record<string, { name?: string; description?: string }>;
   deployKind: DeployKind;
   image: string | null;
   composeYaml: string | null;
@@ -1328,13 +1328,11 @@ export interface CatalogApp {
   defaultPort: number | null;
   recommendedVolumes: { mountPath: string }[];
   envDefaults: CatalogEnvDefault[];
-  locked?: boolean;
 }
 
-export const listCatalog = () =>
-  api<(CatalogApp & { locked: boolean })[]>('/catalog');
+export const listCatalog = () => api<CatalogApp[]>('/catalog');
 export const getCatalogApp = (slug: string) =>
-  api<CatalogApp & { locked: boolean }>(`/catalog/${slug}`);
+  api<CatalogApp>(`/catalog/${slug}`);
 export const installCatalogApp = (
   slug: string,
   body: {

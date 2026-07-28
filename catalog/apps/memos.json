@@ -1,0 +1,27 @@
+{
+  "slug": "memos",
+  "name": "Memos",
+  "description": "Lightweight self-hosted notes and micro-journal with Markdown support.",
+  "category": "Productivity",
+  "translations": {
+    "ru": {
+      "description": "Лёгкий сервис заметок и микро-дневник с поддержкой Markdown."
+    }
+  },
+  "icon": "note",
+  "upstream": "memos",
+  "deployKind": "image",
+  "image": "neosmemo/memos:stable",
+  "defaultPort": 5230,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/var/opt/memos"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "MEMOS_MODE",
+      "value": "prod"
+    }
+  ]
+}

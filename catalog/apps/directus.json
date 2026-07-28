@@ -1,0 +1,53 @@
+{
+  "slug": "directus",
+  "name": "Directus",
+  "description": "Instant REST and GraphQL API plus an admin app on top of your own SQL database.",
+  "category": "Databases",
+  "translations": {
+    "ru": {
+      "description": "Мгновенный REST- и GraphQL-API и админ-панель поверх вашей SQL-базы."
+    }
+  },
+  "icon": "database",
+  "upstream": "directus",
+  "deployKind": "image",
+  "image": "directus/directus:12",
+  "defaultPort": 8055,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/directus/database"
+    },
+    {
+      "mountPath": "/directus/uploads"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "KEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "DB_CLIENT",
+      "value": "sqlite3"
+    },
+    {
+      "key": "DB_FILENAME",
+      "value": "/directus/database/data.db"
+    },
+    {
+      "key": "ADMIN_EMAIL",
+      "value": "admin@example.com"
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ]
+}

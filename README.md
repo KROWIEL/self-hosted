@@ -99,8 +99,11 @@ and catalog apps.
   `Dockerfile`), or `nixpacks` (auto-detect build).
 - **Git-based deploys** — connect a repo (public, or private via a Personal
   Access Token), pick a build mode, deploy. Build logs stream live to the UI.
-- **App catalog** (`/catalog`) — one-click install of curated apps; Free sees
-  basic apps, Home-Lab unlocks the full catalog (`minTier`).
+- **App catalog** (`/catalog`) — one-click install of 40+ curated apps, from
+  Immich and Jellyfin to Gitea, Vaultwarden and Ollama, searchable and filtered
+  by category. The whole catalog is free on every plan; it is never gated by a
+  license. Manifests live in [`catalog/apps`](catalog/apps) and are checked
+  against upstream by [`tools/catalog`](tools/catalog/README.md).
 - **Persistent volumes** — attach named volumes to services for durable data.
 - **Zero-downtime deployments** — blue-green rollout with agent-side health
   checks; traffic switches to the new container only once it is healthy.
@@ -180,14 +183,14 @@ and catalog apps.
 
 ### Paid modules (open-core)
 
-The core above is free (including catalog basics, compose/image/git deploys,
-Nixpacks, volumes, and the certificates page). Add-on modules are gated by a
-signed license key (see [`docs/LICENSING.md`](docs/LICENSING.md)).
+The core above is free (including the entire app catalog, compose/image/git
+deploys, Nixpacks, volumes, and the certificates page). Add-on modules are gated
+by a signed license key (see [`docs/LICENSING.md`](docs/LICENSING.md)).
 
 | Tier | Limits | Unlocks |
 |---|---|---|
 | **Free** | 1 node, 0 tunnels | Full core |
-| **Home-Lab** | 3 nodes, 3 tunnels | `reverse-tunnels`, `service-cron`, full catalog |
+| **Home-Lab** | 3 nodes, 3 tunnels | `reverse-tunnels`, `service-cron` |
 | **Pro** | unlimited | All **11** modules below |
 
 | Module | Tier | What it does |
@@ -239,7 +242,7 @@ A **control plane + agent** design:
 | `Member` | A user attached to a project with a role (`OWNER`/`ADMIN`/`MEMBER`/`VIEWER`) |
 | `Service` | A deployable unit (`deployKind`: git / image / compose) |
 | `Template` | A stack definition describing how to build & run a git service |
-| `Catalog app` | A curated installable app (image/compose/git) gated by `minTier` |
+| `Catalog app` | A curated installable app (image/compose/git), free on every tier |
 | `Domain` | A hostname routed to a service via Traefik |
 | `Managed database` | A PostgreSQL/MySQL container owned by a project |
 | `Tunnel` | A reverse tunnel exposing a NATed node via a public relay |
@@ -272,7 +275,12 @@ packages/
 services/
   agent/           Go agent (installed on each node)
   tunnel-dist/     Reverse-tunnel relay install scripts
+catalog/apps/      One-click app manifests (one JSON file per app)
 templates/         Dockerfile templates per stack
+tools/
+  catalog/         Validates app manifests, tracks them against upstream
+  license-issuer/  Seller-side license signing
+  license-server/  License delivery endpoint
 docs/              Roadmap and design notes
 docker-compose.yml Local infrastructure: Postgres + Redis + Traefik
 start.ps1 / start.sh  One-command local launchers (Windows / Linux-macOS)

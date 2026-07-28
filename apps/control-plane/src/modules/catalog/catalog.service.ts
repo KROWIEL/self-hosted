@@ -6,16 +6,13 @@ import {
 } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import {
-  TIER_RANK,
   type CatalogApp,
   type CatalogEnvDefault,
+  type CatalogTranslation,
   type CatalogVolumeHint,
-  type LicenseTier,
 } from '@selfhosted/shared';
 import { DRIZZLE, Database } from '../../db/database.module';
 import { catalogApps } from '../../db/schema';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
-import { LicenseErrors } from '../../common/errors/app-errors';
 import { ServicesService } from '../services/services.service';
 import { InstallCatalogAppDto } from './dto/install-catalog.dto';
 
@@ -23,42 +20,21 @@ import { InstallCatalogAppDto } from './dto/install-catalog.dto';
 export class CatalogService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
-    private readonly entitlements: EntitlementsService,
     private readonly services: ServicesService,
   ) {}
 
-  async list(): Promise<(CatalogApp & { locked: boolean })[]> {
-    const ent = await this.entitlements.get();
+  async list(): Promise<CatalogApp[]> {
     const rows = await this.db.select().from(catalogApps).orderBy(catalogApps.name);
-    return rows.map((row) => {
-      const app = this.toApp(row);
-      return {
-        ...app,
-        locked: TIER_RANK[ent.tier] < TIER_RANK[app.minTier as LicenseTier],
-      };
-    });
+    return rows.map((row) => this.toApp(row));
   }
 
-  async get(slug: string): Promise<CatalogApp & { locked: boolean }> {
-    const row = await this.bySlug(slug);
-    const ent = await this.entitlements.get();
-    const app = this.toApp(row);
-    return {
-      ...app,
-      locked: TIER_RANK[ent.tier] < TIER_RANK[app.minTier as LicenseTier],
-    };
+  async get(slug: string): Promise<CatalogApp> {
+    return this.toApp(await this.bySlug(slug));
   }
 
   async install(slug: string, dto: InstallCatalogAppDto) {
     const row = await this.bySlug(slug);
     const app = this.toApp(row);
-    const ent = await this.entitlements.get();
-    if (TIER_RANK[ent.tier] < TIER_RANK[app.minTier as LicenseTier]) {
-      throw LicenseErrors.moduleLocked(
-        `catalog:${app.slug}`,
-        app.minTier === 'homelab' ? 'Home-Lab' : 'Pro',
-      );
-    }
 
     const env: Record<string, string> = { ...(dto.env ?? {}) };
     for (const def of app.envDefaults) {
@@ -117,7 +93,7 @@ export class CatalogService {
       description: row.description,
       category: row.category,
       icon: row.icon,
-      minTier: row.minTier,
+      translations: (row.translations ?? {}) as Record<string, CatalogTranslation>,
       deployKind: row.deployKind,
       image: row.image,
       composeYaml: row.composeYaml,

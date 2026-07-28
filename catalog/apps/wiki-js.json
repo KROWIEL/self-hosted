@@ -1,0 +1,25 @@
+{
+  "slug": "wiki-js",
+  "name": "Wiki.js",
+  "description": "Modern wiki with a Markdown and WYSIWYG editor, git sync and granular permissions (compose stack with Postgres).",
+  "category": "Productivity",
+  "translations": {
+    "ru": {
+      "description": "Современная вики с редакторами Markdown и WYSIWYG, синхронизацией с git и гибкими правами (compose-стек с Postgres)."
+    }
+  },
+  "icon": "doc",
+  "upstream": "wiki.js",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  db:\n    image: postgres:16-alpine\n    restart: unless-stopped\n    environment:\n      POSTGRES_DB: wiki\n      POSTGRES_USER: wiki\n      POSTGRES_PASSWORD: ${DB_PASSWORD}\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n  wiki:\n    image: ghcr.io/requarks/wiki:2\n    restart: unless-stopped\n    depends_on:\n      - db\n    ports:\n      - \"3000:3000\"\n    environment:\n      DB_TYPE: postgres\n      DB_HOST: db\n      DB_PORT: \"5432\"\n      DB_NAME: wiki\n      DB_USER: wiki\n      DB_PASS: ${DB_PASSWORD}\n    volumes:\n      - wikidata:/wiki/data/content\nvolumes:\n  pgdata:\n  wikidata:\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DB_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ]
+}

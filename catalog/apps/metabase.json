@@ -1,0 +1,27 @@
+{
+  "slug": "metabase",
+  "name": "Metabase",
+  "description": "Business intelligence and dashboards for your databases, with a visual query builder.",
+  "category": "Analytics",
+  "translations": {
+    "ru": {
+      "description": "BI и дашборды поверх ваших баз данных с визуальным конструктором запросов."
+    }
+  },
+  "icon": "chart",
+  "upstream": "metabase",
+  "deployKind": "image",
+  "image": "metabase/metabase:latest",
+  "defaultPort": 3000,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/metabase-data"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "MB_DB_FILE",
+      "value": "/metabase-data/metabase.db"
+    }
+  ]
+}

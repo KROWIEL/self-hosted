@@ -305,7 +305,6 @@ function BillingContent() {
           highlight
           features={[
             feat('billing.feat.homelab.allFree'),
-            feat('billing.feat.homelab.catalog'),
             {
               title: t('billing.feat.homelab.tunnels.title'),
               desc: t('billing.moduleDesc.reverse-tunnels'),

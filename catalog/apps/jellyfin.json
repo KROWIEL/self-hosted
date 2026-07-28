@@ -1,0 +1,33 @@
+{
+  "slug": "jellyfin",
+  "name": "Jellyfin",
+  "description": "Media server for streaming your own movies, series and music to any device.",
+  "category": "Media",
+  "translations": {
+    "ru": {
+      "description": "Медиасервер для стриминга своих фильмов, сериалов и музыки на любые устройства."
+    }
+  },
+  "icon": "media",
+  "upstream": "jellyfin",
+  "deployKind": "image",
+  "image": "jellyfin/jellyfin:latest",
+  "defaultPort": 8096,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/config"
+    },
+    {
+      "mountPath": "/cache"
+    },
+    {
+      "mountPath": "/media"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "JELLYFIN_PublishedServerUrl",
+      "required": false
+    }
+  ]
+}

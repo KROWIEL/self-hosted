@@ -1,0 +1,31 @@
+{
+  "slug": "ghost",
+  "name": "Ghost",
+  "description": "Publishing platform for blogs and newsletters, with memberships and paid subscriptions.",
+  "category": "CMS",
+  "translations": {
+    "ru": {
+      "description": "Платформа для блогов и рассылок с подписками и платным доступом."
+    }
+  },
+  "icon": "globe",
+  "upstream": "ghost",
+  "deployKind": "image",
+  "image": "ghost:6-alpine",
+  "defaultPort": 2368,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/var/lib/ghost/content"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "url",
+      "required": true
+    },
+    {
+      "key": "NODE_ENV",
+      "value": "production"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "slug": "dashy",
+  "name": "Dashy",
+  "description": "Configurable homelab dashboard with status checks, themes and a built-in config editor.",
+  "category": "Dashboards",
+  "translations": {
+    "ru": {
+      "description": "Настраиваемый дашборд для домашнего сервера: проверки статуса, темы и редактор конфигурации."
+    }
+  },
+  "icon": "dashboard",
+  "upstream": "dashy",
+  "deployKind": "image",
+  "image": "lissy93/dashy:latest",
+  "defaultPort": 8080,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/app/user-data"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "NODE_ENV",
+      "value": "production"
+    }
+  ]
+}

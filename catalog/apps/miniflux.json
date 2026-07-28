@@ -1,0 +1,34 @@
+{
+  "slug": "miniflux",
+  "name": "Miniflux",
+  "description": "Minimalist, keyboard-driven feed reader that stays out of your way (compose stack with Postgres).",
+  "category": "Feeds",
+  "translations": {
+    "ru": {
+      "description": "Минималистичная читалка лент с управлением с клавиатуры (compose-стек с Postgres)."
+    }
+  },
+  "icon": "rss",
+  "upstream": "miniflux",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  db:\n    image: postgres:16-alpine\n    restart: unless-stopped\n    environment:\n      POSTGRES_USER: miniflux\n      POSTGRES_PASSWORD: ${DB_PASSWORD}\n      POSTGRES_DB: miniflux\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n    healthcheck:\n      test: [\"CMD\", \"pg_isready\", \"-U\", \"miniflux\"]\n      interval: 10s\n      retries: 10\n  miniflux:\n    image: miniflux/miniflux:latest\n    restart: unless-stopped\n    depends_on:\n      db:\n        condition: service_healthy\n    ports:\n      - \"8080:8080\"\n    environment:\n      DATABASE_URL: postgres://miniflux:${DB_PASSWORD}@db/miniflux?sslmode=disable\n      RUN_MIGRATIONS: \"1\"\n      CREATE_ADMIN: \"1\"\n      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}\n      ADMIN_PASSWORD: ${ADMIN_PASSWORD}\nvolumes:\n  pgdata:\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ADMIN_USERNAME",
+      "value": "admin"
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ]
+}

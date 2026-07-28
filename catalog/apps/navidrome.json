@@ -1,0 +1,30 @@
+{
+  "slug": "navidrome",
+  "name": "Navidrome",
+  "description": "Music streaming server for your own collection, compatible with Subsonic clients.",
+  "category": "Media",
+  "translations": {
+    "ru": {
+      "description": "Стриминг вашей музыкальной коллекции, совместимый с клиентами Subsonic."
+    }
+  },
+  "icon": "music",
+  "upstream": "navidrome-music-server",
+  "deployKind": "image",
+  "image": "deluan/navidrome:latest",
+  "defaultPort": 4533,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/data"
+    },
+    {
+      "mountPath": "/music"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "ND_LOGLEVEL",
+      "value": "info"
+    }
+  ]
+}

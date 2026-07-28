@@ -1,0 +1,27 @@
+{
+  "slug": "changedetection-io",
+  "name": "changedetection.io",
+  "description": "Watch any web page and get notified when the parts you care about change.",
+  "category": "Automation",
+  "translations": {
+    "ru": {
+      "description": "Следит за любой веб-страницей и уведомляет, когда меняется важная для вас часть."
+    }
+  },
+  "icon": "monitor",
+  "upstream": "changedetection.io",
+  "deployKind": "image",
+  "image": "ghcr.io/dgtlmoon/changedetection.io:latest",
+  "defaultPort": 5000,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/datastore"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "BASE_URL",
+      "required": true
+    }
+  ]
+}

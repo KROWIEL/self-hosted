@@ -1,0 +1,28 @@
+{
+  "slug": "code-server",
+  "name": "code-server",
+  "description": "VS Code running on your server, reachable from any browser.",
+  "category": "DevTools",
+  "translations": {
+    "ru": {
+      "description": "VS Code, запущенный на сервере и доступный из любого браузера."
+    }
+  },
+  "icon": "code",
+  "upstream": "code-server",
+  "deployKind": "image",
+  "image": "codercom/code-server:latest",
+  "defaultPort": 8080,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/home/coder"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ]
+}

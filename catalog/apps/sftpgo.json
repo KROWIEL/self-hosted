@@ -3,14 +3,23 @@
   "name": "SFTPGo",
   "description": "Fully featured SFTP / WebDAV / FTP server with a web admin UI.",
   "category": "Storage",
+  "translations": {
+    "ru": {
+      "description": "Полнофункциональный SFTP / WebDAV / FTP-сервер с веб-панелью администратора."
+    }
+  },
   "icon": "storage",
-  "minTier": "homelab",
+  "upstream": "sftpgo-community-edition",
   "deployKind": "image",
   "image": "drakkan/sftpgo:v2",
   "defaultPort": 8080,
   "recommendedVolumes": [
-    { "mountPath": "/srv/sftpgo" },
-    { "mountPath": "/var/lib/sftpgo" }
+    {
+      "mountPath": "/srv/sftpgo"
+    },
+    {
+      "mountPath": "/var/lib/sftpgo"
+    }
   ],
   "envDefaults": []
 }

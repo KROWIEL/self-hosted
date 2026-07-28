@@ -1,0 +1,32 @@
+{
+  "slug": "searxng",
+  "name": "SearXNG",
+  "description": "Privacy-respecting metasearch engine that aggregates results without profiling you.",
+  "category": "Search",
+  "translations": {
+    "ru": {
+      "description": "Метапоисковик, уважающий приватность: собирает результаты, не профилируя пользователя."
+    }
+  },
+  "icon": "search",
+  "upstream": "searxng",
+  "deployKind": "image",
+  "image": "searxng/searxng:latest",
+  "defaultPort": 8080,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/etc/searxng"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "SEARXNG_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SEARXNG_BASE_URL",
+      "required": true
+    }
+  ]
+}

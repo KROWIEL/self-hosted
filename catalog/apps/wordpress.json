@@ -1,0 +1,25 @@
+{
+  "slug": "wordpress",
+  "name": "WordPress",
+  "description": "The classic blogging and CMS platform (compose stack with MariaDB).",
+  "category": "CMS",
+  "translations": {
+    "ru": {
+      "description": "Классическая платформа для блогов и сайтов (compose-стек с MariaDB)."
+    }
+  },
+  "icon": "globe",
+  "upstream": "wordpress",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  db:\n    image: mariadb:11\n    restart: unless-stopped\n    environment:\n      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}\n      MARIADB_DATABASE: wordpress\n      MARIADB_USER: wordpress\n      MARIADB_PASSWORD: ${DB_PASSWORD}\n    volumes:\n      - dbdata:/var/lib/mysql\n  wordpress:\n    image: wordpress:6-apache\n    restart: unless-stopped\n    depends_on:\n      - db\n    ports:\n      - \"8080:80\"\n    environment:\n      WORDPRESS_DB_HOST: db\n      WORDPRESS_DB_NAME: wordpress\n      WORDPRESS_DB_USER: wordpress\n      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}\n    volumes:\n      - wordpress:/var/www/html\nvolumes:\n  dbdata:\n  wordpress:\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DB_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ]
+}

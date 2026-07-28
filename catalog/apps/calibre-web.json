@@ -1,0 +1,38 @@
+{
+  "slug": "calibre-web",
+  "name": "Calibre-Web",
+  "description": "Clean web library for browsing, reading and sending books from a Calibre database.",
+  "category": "Documents",
+  "translations": {
+    "ru": {
+      "description": "Веб-библиотека для просмотра, чтения и отправки книг из базы Calibre."
+    }
+  },
+  "icon": "doc",
+  "upstream": "calibre-web",
+  "deployKind": "image",
+  "image": "lscr.io/linuxserver/calibre-web:latest",
+  "defaultPort": 8083,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/config"
+    },
+    {
+      "mountPath": "/books"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "PUID",
+      "value": "1000"
+    },
+    {
+      "key": "PGID",
+      "value": "1000"
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    }
+  ]
+}

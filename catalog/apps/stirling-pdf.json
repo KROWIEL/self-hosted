@@ -1,0 +1,34 @@
+{
+  "slug": "stirling-pdf",
+  "name": "Stirling-PDF",
+  "description": "Web toolkit to split, merge, convert, OCR and sign PDF files locally.",
+  "category": "Documents",
+  "translations": {
+    "ru": {
+      "description": "Веб-набор инструментов для PDF: разделение, объединение, конвертация, OCR и подпись — локально."
+    }
+  },
+  "icon": "doc",
+  "upstream": "stirling-pdf",
+  "deployKind": "image",
+  "image": "stirlingtools/stirling-pdf:latest",
+  "defaultPort": 8080,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/configs"
+    },
+    {
+      "mountPath": "/usr/share/tessdata"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "DOCKER_ENABLE_SECURITY",
+      "value": "false"
+    },
+    {
+      "key": "LANGS",
+      "value": "en_GB"
+    }
+  ]
+}

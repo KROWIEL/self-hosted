@@ -1,0 +1,32 @@
+{
+  "slug": "open-webui",
+  "name": "Open WebUI",
+  "description": "Chat interface for local and remote LLMs, with users, history and RAG.",
+  "category": "AI",
+  "translations": {
+    "ru": {
+      "description": "Чат-интерфейс для локальных и удалённых LLM: пользователи, история и RAG."
+    }
+  },
+  "icon": "ai",
+  "upstream": "open-webui",
+  "deployKind": "image",
+  "image": "ghcr.io/open-webui/open-webui:main",
+  "defaultPort": 8080,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/app/backend/data"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "WEBUI_SECRET_KEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "OLLAMA_BASE_URL",
+      "value": "http://host.docker.internal:11434"
+    }
+  ]
+}

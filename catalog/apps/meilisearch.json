@@ -1,0 +1,32 @@
+{
+  "slug": "meilisearch",
+  "name": "Meilisearch",
+  "description": "Typo-tolerant full-text search engine with an HTTP API and instant results.",
+  "category": "Search",
+  "translations": {
+    "ru": {
+      "description": "Полнотекстовый поиск, устойчивый к опечаткам, с HTTP-API и мгновенной выдачей."
+    }
+  },
+  "icon": "search",
+  "upstream": "meilisearch",
+  "deployKind": "image",
+  "image": "getmeili/meilisearch:v1.51",
+  "defaultPort": 7700,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/meili_data"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "MEILI_MASTER_KEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MEILI_ENV",
+      "value": "production"
+    }
+  ]
+}

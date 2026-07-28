@@ -416,20 +416,38 @@ export const en = {
   // App catalog
   'catalog.title': 'App catalog',
   'catalog.subtitle':
-    'One-click apps you can install into a project. Free apps are always available; Home-Lab unlocks the full set.',
+    'One-click apps you can install into a project. The whole catalog is free on every plan.',
   'catalog.install': 'Install',
   'catalog.installing': 'Installing…',
-  'catalog.upgradeHint': 'Requires Home-Lab or higher',
   'catalog.pickProject': 'Project',
   'catalog.pickNode': 'Node',
   'catalog.serviceName': 'Service name',
   'catalog.envTitle': 'Environment',
   'catalog.envRequired': 'Required',
   'catalog.empty': 'No catalog apps yet. Run db:seed to load the built-in set.',
-  'catalog.tier.free': 'Free',
-  'catalog.tier.homelab': 'Home-Lab',
+  'catalog.searchPlaceholder': 'Search apps…',
+  'catalog.filter.all': 'All',
+  'catalog.noMatches': 'No apps match this filter.',
   'catalog.kind.image': 'Docker image',
   'catalog.kind.compose': 'Compose',
+  // Category headings. Unknown categories fall back to the raw manifest string.
+  'catalog.category.AI': 'AI',
+  'catalog.category.Analytics': 'Analytics',
+  'catalog.category.Apps': 'Apps',
+  'catalog.category.Automation': 'Automation',
+  'catalog.category.CMS': 'CMS',
+  'catalog.category.Dashboards': 'Dashboards',
+  'catalog.category.Databases': 'Databases',
+  'catalog.category.Demo': 'Demo',
+  'catalog.category.DevTools': 'DevTools',
+  'catalog.category.Documents': 'Documents',
+  'catalog.category.Feeds': 'Feeds',
+  'catalog.category.Media': 'Media',
+  'catalog.category.Monitoring': 'Monitoring',
+  'catalog.category.Productivity': 'Productivity',
+  'catalog.category.Search': 'Search',
+  'catalog.category.Security': 'Security',
+  'catalog.category.Storage': 'Storage',
   'catalog.installed': 'Installed — opening service…',
 
   // Deploy kinds (create service)
@@ -915,9 +933,9 @@ export const en = {
   'billing.feat.free.deploy.title': 'Git, image & Compose deploys',
   'billing.feat.free.deploy.desc':
     'Clone & build from Git (template, repo Dockerfile, or Nixpacks), run an existing image, or bring up a Docker Compose stack — with live build logs.',
-  'billing.feat.free.catalog.title': 'App catalog (starter set)',
+  'billing.feat.free.catalog.title': 'Full app catalog',
   'billing.feat.free.catalog.desc':
-    'One-click install of curated apps (Uptime Kuma, MinIO, Gitea, n8n, and more) with volumes and env presets.',
+    'One-click install of every curated app (Jellyfin, Vaultwarden, Paperless-ngx, Open WebUI, Gitea, and more) with volumes and env presets — no plan required.',
   'billing.feat.free.volumes.title': 'Persistent volumes',
   'billing.feat.free.volumes.desc':
     'Attach named volumes to services so data survives redeploys, with volume backups from the panel.',
@@ -936,13 +954,10 @@ export const en = {
   'billing.feat.free.node.title': '1 node included',
   'billing.feat.free.node.desc':
     'Run the whole platform on a single server — perfect for a personal project or a trial.',
-  // Home-Lab tier — Free core plus reverse tunnels, cron, full catalog.
+  // Home-Lab tier — Free core plus reverse tunnels and cron.
   'billing.feat.homelab.allFree.title': 'Everything in Free',
   'billing.feat.homelab.allFree.desc':
     'The complete free core, plus the home-lab additions below.',
-  'billing.feat.homelab.catalog.title': 'Full app catalog',
-  'billing.feat.homelab.catalog.desc':
-    'Unlock Home-Lab catalog apps (Vaultwarden, SFTPGo, Umami, and more) beyond the Free starter set.',
   'billing.feat.homelab.tunnels.title': 'Secure reverse tunnels',
   'billing.feat.homelab.cron.title': 'Per-service cron jobs',
   'billing.feat.homelab.limits.title': '3 nodes + 3 tunnels',
@@ -951,7 +966,7 @@ export const en = {
   // Pro tier — everything, unlimited, all modules.
   'billing.feat.pro.allHomelab.title': 'Everything in Free & Home-Lab',
   'billing.feat.pro.allHomelab.desc':
-    'Full catalog, reverse tunnels, per-service cron, plus every Pro add-on module below.',
+    'Reverse tunnels, per-service cron, plus every Pro add-on module below.',
   'billing.feat.pro.unlimited.title': 'Unlimited nodes & tunnels',
   'billing.feat.pro.unlimited.desc':
     'Scale across as many servers and expose as many services as you need — no caps.',

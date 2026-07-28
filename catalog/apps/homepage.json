@@ -1,0 +1,27 @@
+{
+  "slug": "homepage",
+  "name": "Homepage",
+  "description": "Fast, fully static start page with widgets for the services running on your box.",
+  "category": "Dashboards",
+  "translations": {
+    "ru": {
+      "description": "Быстрая статическая стартовая страница с виджетами для сервисов вашего сервера."
+    }
+  },
+  "icon": "dashboard",
+  "upstream": "homepage-by-gethomepage",
+  "deployKind": "image",
+  "image": "ghcr.io/gethomepage/homepage:latest",
+  "defaultPort": 3000,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/app/config"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "HOMEPAGE_ALLOWED_HOSTS",
+      "value": "*"
+    }
+  ]
+}

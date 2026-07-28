@@ -1,0 +1,34 @@
+{
+  "slug": "filebrowser",
+  "name": "File Browser",
+  "description": "Web file manager for a directory on the server: upload, preview, share and edit.",
+  "category": "Storage",
+  "translations": {
+    "ru": {
+      "description": "Веб-файловый менеджер для каталога на сервере: загрузка, просмотр, обмен и редактирование."
+    }
+  },
+  "icon": "storage",
+  "upstream": "filebrowser",
+  "deployKind": "image",
+  "image": "filebrowser/filebrowser:s6",
+  "defaultPort": 80,
+  "recommendedVolumes": [
+    {
+      "mountPath": "/srv"
+    },
+    {
+      "mountPath": "/database"
+    }
+  ],
+  "envDefaults": [
+    {
+      "key": "PUID",
+      "value": "1000"
+    },
+    {
+      "key": "PGID",
+      "value": "1000"
+    }
+  ]
+}

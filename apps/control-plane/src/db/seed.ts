@@ -32,7 +32,7 @@ async function seedCatalogApps(
       description?: string;
       category?: string;
       icon?: string;
-      minTier?: 'free' | 'homelab';
+      translations?: Record<string, { name?: string; description?: string }>;
       deployKind: 'image' | 'compose' | 'git';
       image?: string;
       composeYaml?: string;
@@ -53,7 +53,7 @@ async function seedCatalogApps(
       description: raw.description ?? null,
       category: raw.category ?? null,
       icon: raw.icon ?? null,
-      minTier: raw.minTier ?? 'free',
+      translations: raw.translations ?? {},
       deployKind: raw.deployKind,
       image: raw.image ?? null,
       composeYaml: raw.composeYaml ?? null,

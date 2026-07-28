@@ -16,8 +16,7 @@ import {
   useEntitlements,
 } from '@/components/entitlements';
 import { useBranding, safeLogoUrl } from '@/components/branding';
-
-type IconProps = { className?: string };
+import { Svg, type IconProps } from '@/components/icons';
 
 const Icon = {
   projects: (p: IconProps) => (
@@ -172,24 +171,6 @@ const Icon = {
     </Svg>
   ),
 };
-
-function Svg({ className = '', children }: IconProps & { children: ReactNode }) {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      {children}
-    </svg>
-  );
-}
 
 type NavItem = {
   href: string;

@@ -3,14 +3,30 @@
   "name": "Vaultwarden",
   "description": "Bitwarden-compatible password manager for home labs.",
   "category": "Security",
+  "translations": {
+    "ru": {
+      "description": "Менеджер паролей, совместимый с Bitwarden, для домашней лаборатории."
+    }
+  },
   "icon": "lock",
-  "minTier": "homelab",
+  "upstream": "vaultwarden",
   "deployKind": "image",
   "image": "vaultwarden/server:latest",
   "defaultPort": 80,
-  "recommendedVolumes": [{ "mountPath": "/data" }],
+  "recommendedVolumes": [
+    {
+      "mountPath": "/data"
+    }
+  ],
   "envDefaults": [
-    { "key": "SIGNUPS_ALLOWED", "value": "true" },
-    { "key": "ADMIN_TOKEN", "secret": true, "required": false }
+    {
+      "key": "SIGNUPS_ALLOWED",
+      "value": "true"
+    },
+    {
+      "key": "ADMIN_TOKEN",
+      "secret": true,
+      "required": false
+    }
   ]
 }

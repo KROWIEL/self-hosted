@@ -1,0 +1,29 @@
+{
+  "slug": "immich",
+  "name": "Immich",
+  "description": "Photo and video backup for your phone with search, faces and albums (compose stack with Postgres, Valkey and an ML worker).",
+  "category": "Media",
+  "translations": {
+    "ru": {
+      "description": "Резервное копирование фото и видео с телефона: поиск, лица и альбомы (compose-стек с Postgres, Valkey и ML-воркером)."
+    }
+  },
+  "icon": "photo",
+  "upstream": "immich",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  immich-server:\n    image: ghcr.io/immich-app/immich-server:release\n    restart: unless-stopped\n    depends_on:\n      - database\n      - redis\n    ports:\n      - \"2283:2283\"\n    environment:\n      DB_HOSTNAME: database\n      DB_USERNAME: immich\n      DB_PASSWORD: ${DB_PASSWORD}\n      DB_DATABASE_NAME: immich\n      REDIS_HOSTNAME: redis\n      TZ: ${TZ:-UTC}\n    volumes:\n      - upload:/data\n  immich-machine-learning:\n    image: ghcr.io/immich-app/immich-machine-learning:release\n    restart: unless-stopped\n    volumes:\n      - model-cache:/cache\n  redis:\n    image: docker.io/valkey/valkey:8-bookworm\n    restart: unless-stopped\n  database:\n    image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0\n    restart: unless-stopped\n    environment:\n      POSTGRES_USER: immich\n      POSTGRES_PASSWORD: ${DB_PASSWORD}\n      POSTGRES_DB: immich\n    volumes:\n      - pgdata:/var/lib/postgresql/data\nvolumes:\n  upload:\n  model-cache:\n  pgdata:\n",
+  "defaultPort": 2283,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    }
+  ]
+}
