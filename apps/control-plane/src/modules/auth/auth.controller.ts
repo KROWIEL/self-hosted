@@ -26,13 +26,18 @@ import {
   readCookie,
   setSessionCookies,
 } from '../../common/http/cookies';
+import {
+  THROTTLE_AUTH_LIMIT,
+  THROTTLE_REFRESH_LIMIT,
+  THROTTLE_TTL_MS,
+} from '../../common/http/throttle.config';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   // Brute-force sensitive: cap credential/2FA attempts tightly per client IP.
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: THROTTLE_AUTH_LIMIT, ttl: THROTTLE_TTL_MS } })
   @Post('login')
   async login(
     @Body() dto: LoginDto,
@@ -58,7 +63,9 @@ export class AuthController {
     return rest;
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({
+    default: { limit: THROTTLE_REFRESH_LIMIT, ttl: THROTTLE_TTL_MS },
+  })
   @Post('refresh')
   async refresh(
     @Req() req: ExpressRequest,
@@ -107,7 +114,7 @@ export class AuthController {
     return this.auth.changePassword(req.user.id, dto);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: THROTTLE_AUTH_LIMIT, ttl: THROTTLE_TTL_MS } })
   @UseGuards(JwtAuthGuard)
   @Post('2fa/enable')
   enable2fa(
@@ -117,7 +124,7 @@ export class AuthController {
     return this.auth.enable2fa(req.user.id, dto);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: THROTTLE_AUTH_LIMIT, ttl: THROTTLE_TTL_MS } })
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
   disable2fa(

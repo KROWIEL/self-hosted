@@ -3,6 +3,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { CsrfGuard } from './common/http/csrf.guard';
+import {
+  THROTTLE_LIMIT,
+  THROTTLE_TTL_MS,
+} from './common/http/throttle.config';
 import { DatabaseModule } from './db/database.module';
 import { CryptoModule } from './common/crypto/crypto.module';
 import { LicensingModule } from './common/licensing/licensing.module';
@@ -42,8 +46,8 @@ import { CertificatesModule } from './modules/certificates/certificates.module';
     // add tighter per-route limits via @Throttle (see AuthController).
     ThrottlerModule.forRoot([
       {
-        ttl: 60_000,
-        limit: 120,
+        ttl: THROTTLE_TTL_MS,
+        limit: THROTTLE_LIMIT,
       },
     ]),
     DatabaseModule,
