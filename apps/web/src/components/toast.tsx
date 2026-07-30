@@ -130,14 +130,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Kept at module scope so its identity is stable: callers list the toast API in
+// effect dependency arrays, where a fresh object every render means a loop.
+const NOOP_TOASTS: ToastApi = {
+  success: () => undefined,
+  error: () => undefined,
+  info: () => undefined,
+};
+
 /** Access the toast API. Safe no-op if used outside the provider. */
 export function useToast(): ToastApi {
-  const ctx = useContext(ToastContext);
-  if (ctx) return ctx;
-  // Fallback keeps callers crash-free even if the provider is missing.
-  return {
-    success: () => undefined,
-    error: () => undefined,
-    info: () => undefined,
-  };
+  return useContext(ToastContext) ?? NOOP_TOASTS;
 }

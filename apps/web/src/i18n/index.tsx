@@ -86,64 +86,78 @@ export function useI18n(): I18nContextValue {
  */
 const ROLE_VALUES = new Set(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER', 'NONE']);
 
+// Memoized: callers put these helpers in effect dependency arrays, and a fresh
+// identity on every render turns such an effect into a request loop.
 export function useErrorText() {
   const { t } = useI18n();
-  return (err: unknown, fallback?: TKey): string => {
-    const e =
-      err && typeof err === 'object'
-        ? (err as { code?: string; meta?: Record<string, unknown> })
-        : undefined;
-    const code = e?.code;
-    if (code) {
-      const key = `error.${code}` as TKey;
-      if (key in en) {
-        // Localize interpolation values that are role enums (e.g. VIEWER),
-        // leaving everything else as-is.
-        const vars: Vars = {};
-        for (const [k, v] of Object.entries(e?.meta ?? {})) {
-          const sv = String(v);
-          vars[k] = ROLE_VALUES.has(sv)
-            ? t(`members.role.${sv}` as TKey)
-            : sv;
+  return useCallback(
+    (err: unknown, fallback?: TKey): string => {
+      const e =
+        err && typeof err === 'object'
+          ? (err as { code?: string; meta?: Record<string, unknown> })
+          : undefined;
+      const code = e?.code;
+      if (code) {
+        const key = `error.${code}` as TKey;
+        if (key in en) {
+          // Localize interpolation values that are role enums (e.g. VIEWER),
+          // leaving everything else as-is.
+          const vars: Vars = {};
+          for (const [k, v] of Object.entries(e?.meta ?? {})) {
+            const sv = String(v);
+            vars[k] = ROLE_VALUES.has(sv)
+              ? t(`members.role.${sv}` as TKey)
+              : sv;
+          }
+          return t(key, vars);
         }
-        return t(key, vars);
       }
-    }
-    if (err instanceof Error && err.message) {
-      // Nest's generic 500 English string — never show raw to the user.
-      const m = err.message.trim().toLowerCase();
-      if (m === 'internal server error' || m === 'internalservererror') {
-        return t('error.common.internal');
+      if (err instanceof Error && err.message) {
+        // Nest's generic 500 English string — never show raw to the user.
+        const m = err.message.trim().toLowerCase();
+        if (m === 'internal server error' || m === 'internalservererror') {
+          return t('error.common.internal');
+        }
+        return err.message;
       }
-      return err.message;
-    }
-    return t(fallback ?? 'common.failed');
-  };
+      return t(fallback ?? 'common.failed');
+    },
+    [t],
+  );
 }
 
 /** Localizes a runtime status value (falls back to the raw value). */
 export function useStatusLabel() {
   const { t } = useI18n();
-  return (status: string) => {
-    const key = `status.${status}` as TKey;
-    return key in en ? t(key) : status;
-  };
+  return useCallback(
+    (status: string) => {
+      const key = `status.${status}` as TKey;
+      return key in en ? t(key) : status;
+    },
+    [t],
+  );
 }
 
 /** Localizes a runtime service type value (falls back to the raw value). */
 export function useTypeLabel() {
   const { t } = useI18n();
-  return (type: string) => {
-    const key = `type.${type}` as TKey;
-    return key in en ? t(key) : type;
-  };
+  return useCallback(
+    (type: string) => {
+      const key = `type.${type}` as TKey;
+      return key in en ? t(key) : type;
+    },
+    [t],
+  );
 }
 
 /** Localizes a catalog category name (falls back to the raw manifest value). */
 export function useCategoryLabel() {
   const { t } = useI18n();
-  return (category: string) => {
-    const key = `catalog.category.${category}` as TKey;
-    return key in en ? t(key) : category;
-  };
+  return useCallback(
+    (category: string) => {
+      const key = `catalog.category.${category}` as TKey;
+      return key in en ? t(key) : category;
+    },
+    [t],
+  );
 }
