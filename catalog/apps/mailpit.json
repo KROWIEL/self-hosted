@@ -1,0 +1,26 @@
+{
+  "slug": "mailpit",
+  "name": "Mailpit",
+  "description": "Email & SMTP testing tool with API for developers",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mailpit:\n    image: axllent/mailpit:latest\n    ports:\n      - '1025:1025'\n    volumes:\n      - 'mailpit-data:/data'\n      -\n        type: bind\n        source: ./htpasswd\n        target: /data/htpasswd\n        isDirectory: false\n        content: ''\n    environment:\n      - MP_MAX_MESSAGES=5000\n      - MP_DATABASE=/data/mailpit.db\n      - MP_SMTP_AUTH_ACCEPT_ANY=1\n      - MP_SMTP_AUTH_ALLOW_INSECURE=1\n      - MP_UI_AUTH_FILE=/data/htpasswd\n    healthcheck:\n      test:\n        - CMD\n        - /mailpit\n        - readyz\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8025,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "mailpit",
+      "email",
+      "testing",
+      "smtp"
+    ],
+    "links": {
+      "docs": "https://mailpit.axllent.org/docs/"
+    }
+  }
+}

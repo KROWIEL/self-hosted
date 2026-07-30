@@ -28,5 +28,18 @@
       "key": "OLLAMA_BASE_URL",
       "value": "http://host.docker.internal:11434"
     }
-  ]
+  ],
+  "meta": {
+    "about": "User-friendly AI Interface, supports Ollama, OpenAI API.",
+    "license": "BSD-3-Clause",
+    "tags": [
+      "Generative Artificial Intelligence (GenAI)"
+    ],
+    "stars": 146971,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://openwebui.com",
+      "source": "https://github.com/open-webui/open-webui"
+    }
+  }
 }

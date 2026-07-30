@@ -1,0 +1,42 @@
+{
+  "slug": "gotenberg",
+  "name": "Gotenberg",
+  "description": "Gotenberg is a Docker-powered stateless API for PDF files.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "gotenberg",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  gotenberg:\n    image: 'gotenberg/gotenberg:latest'\n    environment:\n      - 'GOTENBERG_API_BASIC_AUTH_USERNAME=${GOTENBERG_USER}'\n      - 'GOTENBERG_API_BASIC_AUTH_PASSWORD=${GOTENBERG_PASSWORD}'\n    command:\n      - gotenberg\n      - '--api-enable-basic-auth'\n      - '--api-disable-health-check-logging'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000/health'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "GOTENBERG_USER",
+      "value": "gotenberg"
+    },
+    {
+      "key": "GOTENBERG_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Developer-friendly API to interact with powerful tools like Chromium and LibreOffice for converting numerous document formats (HTML, Markdown, Word, Excel, etc.) into PDF files, and more.",
+    "license": "MIT",
+    "tags": [
+      "api",
+      "backend",
+      "pdf",
+      "tool"
+    ],
+    "stars": 12730,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "docs": "https://gotenberg.dev/docs/getting-started/introduction",
+      "website": "https://gotenberg.dev",
+      "source": "https://github.com/gotenberg/gotenberg"
+    }
+  }
+}

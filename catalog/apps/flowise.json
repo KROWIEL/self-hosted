@@ -1,0 +1,58 @@
+{
+  "slug": "flowise",
+  "name": "Flowise",
+  "description": "Flowise is an open source low-code tool for developers to build customized LLM orchestration flows & AI agents.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  flowise:\n    image: 'flowiseai/flowise:latest'\n    environment:\n      - 'DEBUG=${DEBUG:-false}'\n      - 'DISABLE_FLOWISE_TELEMETRY=${DISABLE_FLOWISE_TELEMETRY:-true}'\n      - 'PORT=${PORT:-3001}'\n      - DATABASE_PATH=/root/.flowise\n      - APIKEY_PATH=/root/.flowise\n      - SECRETKEY_PATH=/root/.flowise\n      - LOG_PATH=/root/.flowise/logs\n      - BLOB_STORAGE_PATH=/root/.flowise/storage\n      - 'FLOWISE_USERNAME=${FLOWISE_USER}'\n      - 'FLOWISE_PASSWORD=${FLOWISE_PASSWORD}'\n    volumes:\n      - 'flowise-data:/root/.flowise'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:3001 || exit 1'\n      interval: 5s\n      timeout: 5s\n      retries: 3\n",
+  "defaultPort": 3001,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "FLOWISE_USER",
+      "value": "flowise"
+    },
+    {
+      "key": "FLOWISE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "DEBUG",
+      "value": "false"
+    },
+    {
+      "key": "DISABLE_FLOWISE_TELEMETRY",
+      "value": "true"
+    },
+    {
+      "key": "PORT",
+      "value": "3001"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "lowcode",
+      "nocode",
+      "ai",
+      "llm",
+      "openai",
+      "anthropic",
+      "machine-learning",
+      "rag",
+      "agents",
+      "chatbot",
+      "api",
+      "team",
+      "bot",
+      "flows"
+    ],
+    "links": {
+      "docs": "https://docs.flowiseai.com/"
+    }
+  }
+}

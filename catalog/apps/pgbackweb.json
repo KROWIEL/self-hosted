@@ -1,0 +1,48 @@
+{
+  "slug": "pgbackweb",
+  "name": "Pgbackweb",
+  "description": "Effortless PostgreSQL backups with a user-friendly web interface!",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  pgbackweb:\n    image: 'eduardolat/pgbackweb:latest'\n    volumes:\n      - 'pgbackweb_backups:/backups'\n    environment:\n      - 'PBW_ENCRYPTION_KEY=${PGBACKWEB_PASSWORD}'\n      - 'PBW_POSTGRES_CONN_STRING=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pgbackweb-db}?sslmode=disable'\n      - 'TZ=${TIME_ZONE:-UTC}'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    exclude_from_hc: true\n  postgres:\n    image: 'postgres:17'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-pgbackweb-db}'\n    volumes:\n      - 'pgbackweb_postgres_data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U ${POSTGRES_USER} -d pgbackweb'\n      interval: 5s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 8085,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "PGBACKWEB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "pgbackweb-db"
+    },
+    {
+      "key": "TIME_ZONE",
+      "value": "UTC"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "backup",
+      "postgresql",
+      "web-interface"
+    ],
+    "links": {
+      "docs": "https://github.com/eduardolat/pgbackweb"
+    }
+  }
+}

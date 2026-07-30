@@ -1,0 +1,43 @@
+{
+  "slug": "joplin",
+  "name": "Joplin",
+  "description": "Self-hosted sync server for Joplin",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "joplin",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  postgres:\n    image: 'postgres:16'\n    volumes:\n      - 'joplin-postgresql-data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - POSTGRES_DB=joplin\n    healthcheck:\n      test:\n        - CMD\n        - pg_isready\n        - '-d'\n        - joplin\n      interval: 10s\n      timeout: 5s\n      retries: 5\n  joplin:\n    image: 'joplin/server:latest'\n    platform: linux/amd64\n    depends_on:\n      postgres:\n        condition: service_healthy\n    environment:\n      - 'APP_BASE_URL=${APP_URL}'\n      - DB_CLIENT=pg\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - POSTGRES_DATABASE=joplin\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - POSTGRES_PORT=5432\n      - POSTGRES_HOST=postgres\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/22300' || exit 1\"\n      interval: 5s\n      timeout: 20s\n      retries: 3\n",
+  "defaultPort": 22300,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Note taking application with markdown editor and encryption support for mobile and desktop platforms. Runs client-side and syncs through a self hosted Nextcloud instance or similar (alternative to Evernote).",
+    "license": "MIT",
+    "tags": [
+      "joplin"
+    ],
+    "stars": 55754,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://github.com/laurent22/joplin/blob/dev/packages/server/README.md",
+      "website": "https://joplinapp.org/",
+      "source": "https://github.com/laurent22/joplin"
+    }
+  }
+}

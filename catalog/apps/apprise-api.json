@@ -1,0 +1,24 @@
+{
+  "slug": "apprise-api",
+  "name": "Apprise Api",
+  "description": "Push Notifications API",
+  "category": "Automation",
+  "icon": "workflow",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  apprise-api:\n    image: 'linuxserver/apprise-api:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - TZ=UTC\n    volumes:\n      - '/apprise-api/config:/config'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:8000/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "api",
+      "apprise"
+    ],
+    "links": {
+      "docs": "https://docs.linuxserver.io/images/docker-apprise-api/"
+    }
+  }
+}

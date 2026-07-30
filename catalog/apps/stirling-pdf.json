@@ -30,5 +30,18 @@
       "key": "LANGS",
       "value": "en_GB"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Local hosted web application that allows you to perform various operations on PDF files, such as merging, splitting, file conversions and OCR.",
+    "license": "Apache-2.0",
+    "tags": [
+      "Document Management"
+    ],
+    "stars": 88162,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://github.com/Stirling-Tools/Stirling-PDF",
+      "source": "https://github.com/Stirling-Tools/Stirling-PDF"
+    }
+  }
 }

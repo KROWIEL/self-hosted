@@ -1328,6 +1328,23 @@ export interface CatalogApp {
   defaultPort: number | null;
   recommendedVolumes: { mountPath: string }[];
   envDefaults: CatalogEnvDefault[];
+  meta: CatalogAppMeta;
+}
+
+/** Baked into the manifest at build time; see packages/shared `CatalogAppMeta`. */
+export interface CatalogAppMeta {
+  about?: string;
+  license?: string;
+  tags?: string[];
+  stars?: number;
+  updatedAt?: string;
+  archived?: boolean;
+  links?: {
+    website?: string;
+    source?: string;
+    docs?: string;
+    demo?: string;
+  };
 }
 
 export const listCatalog = () => api<CatalogApp[]>('/catalog');

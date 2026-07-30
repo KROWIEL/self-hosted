@@ -1,0 +1,39 @@
+{
+  "slug": "unstructured",
+  "name": "Unstructured",
+  "description": "Unstructured provides a platform and tools to ingest and process unstructured documents for Retrieval Augmented Generation (RAG) and model fine-tuning.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  unstructured:\n    image: 'downloads.unstructured.io/unstructured-io/unstructured-api:latest'\n    environment:\n      - 'UNSTRUCTURED_API_KEY=${APIKEY}'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-qO-'\n        - 'http://0.0.0.0:8000/healthcheck'\n      interval: 5s\n      timeout: 30s\n      retries: 10\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APIKEY",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "workflow",
+      "orchestration",
+      "data-pipeline",
+      "python",
+      "data",
+      "machine-learning",
+      "data-science",
+      "nlp",
+      "unstructured",
+      "ocr",
+      "data-extraction"
+    ],
+    "links": {
+      "docs": "https://github.com/Unstructured-IO/unstructured-api"
+    }
+  }
+}

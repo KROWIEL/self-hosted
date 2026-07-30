@@ -1,0 +1,68 @@
+{
+  "slug": "sure",
+  "name": "Sure",
+  "description": "An all-in-one personal finance platform.",
+  "category": "Finance",
+  "icon": "wallet",
+  "upstream": "sure",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  web:\n    image: 'ghcr.io/we-promise/sure:0.6.7'\n    environment:\n      - APP_DOMAIN=${APP_URL}\n      - SECRET_KEY_BASE=${BASE_SECRET}\n      - 'POSTGRES_USER=${POSTGRESQL_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-sure}'\n      - 'REDIS_URL=redis://valkey:6379'\n      - DB_HOST=postgresql\n      - DB_PORT=5432\n      - SELF_HOSTED=true\n      - RAILS_FORCE_SSL=false\n      - RAILS_ASSUME_SSL=false\n      - 'ONBOARDING_STATE=${ONBOARDING_STATE:-open}'\n    depends_on:\n      postgresql:\n        condition: service_healthy\n      valkey:\n        condition: service_healthy\n    volumes:\n      - 'sure-app-storage:/rails/storage'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000'\n      interval: 15s\n      timeout: 20s\n      retries: 5\n  worker:\n    image: 'ghcr.io/we-promise/sure:0.6.7'\n    command: 'bundle exec sidekiq'\n    environment:\n      - APP_DOMAIN=${APP_URL}\n      - SECRET_KEY_BASE=${BASE_SECRET}\n      - 'POSTGRES_USER=${POSTGRESQL_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-sure}'\n      - 'REDIS_URL=redis://valkey:6379'\n      - DB_HOST=postgresql\n      - DB_PORT=5432\n      - SELF_HOSTED=true\n      - RAILS_FORCE_SSL=false\n      - RAILS_ASSUME_SSL=false\n      - 'ONBOARDING_STATE=${ONBOARDING_STATE:-open}'\n    volumes:\n      - 'sure-app-storage:/rails/storage'\n    depends_on:\n      postgresql:\n        condition: service_healthy\n      valkey:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000'\n      interval: 15s\n      timeout: 20s\n      retries: 5\n  postgresql:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'sure-postgresql-data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${POSTGRESQL_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-sure}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  valkey:\n    image: 'valkey/valkey:8-alpine'\n    command: 'valkey-server --appendonly yes'\n    volumes:\n      - 'sure-valkey:/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'valkey-cli ping | grep PONG'\n      interval: 5s\n      timeout: 5s\n      retries: 5\n      start_period: 3s\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "BASE_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_USER",
+      "value": "postgresql"
+    },
+    {
+      "key": "POSTGRESQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_DATABASE",
+      "value": "sure"
+    },
+    {
+      "key": "ONBOARDING_STATE",
+      "value": "open"
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Personal finance application for everyone (fork of Maybe).",
+    "license": "AGPL-3.0",
+    "tags": [
+      "budgeting",
+      "budget",
+      "money",
+      "expenses",
+      "income"
+    ],
+    "stars": 9172,
+    "updatedAt": "2026-07-26",
+    "links": {
+      "docs": "https://github.com/we-promise/sure",
+      "website": "https://github.com/we-promise/sure",
+      "source": "https://github.com/we-promise/sure"
+    }
+  }
+}

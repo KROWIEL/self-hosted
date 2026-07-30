@@ -1,0 +1,56 @@
+{
+  "slug": "heyform",
+  "name": "HeyForm",
+  "description": "Allows anyone to create engaging conversational forms for surveys, questionnaires, quizzes, and polls. No coding skills required.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "heyform",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  heyform:\n    image: 'heyform/community-edition:latest'\n    volumes:\n      - 'heyform-assets:/app/static/upload'\n    depends_on:\n      mongo:\n        condition: service_healthy\n      keydb:\n        condition: service_healthy\n    environment:\n      - 'APP_HOMEPAGE_URL=${APP_URL}'\n      - 'SESSION_KEY=${SESSION_SECRET}'\n      - 'FORM_ENCRYPTION_KEY=${FORM_SECRET}'\n      - 'MONGO_URI=mongodb://mongo:27017/heyform'\n      - REDIS_HOST=keydb\n      - REDIS_PORT=6379\n      - 'REDIS_PASSWORD=${KEYDB_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:9157 || exit 1'\n      interval: 5s\n      timeout: 5s\n      retries: 3\n  mongo:\n    image: 'percona/percona-server-mongodb:latest'\n    volumes:\n      - 'heyform-mongo-data:/data/db'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"echo 'ok' > /dev/null 2>&1\"\n      interval: 5s\n      timeout: 5s\n      retries: 10\n      start_period: 5s\n  keydb:\n    image: 'eqalpha/keydb:latest'\n    command: 'keydb-server --appendonly yes'\n    environment:\n      - 'KEYDB_PASSWORD=${KEYDB_PASSWORD}'\n    volumes:\n      - 'heyform-keydb-data:/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - keydb-cli\n        - '--pass'\n        - '${KEYDB_PASSWORD}'\n        - ping\n      interval: 5s\n      timeout: 5s\n      retries: 10\n      start_period: 5s\n",
+  "defaultPort": 9157,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "SESSION_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "FORM_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "KEYDB_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Form builder that allows anyone to create engaging conversational forms for surveys, questionnaires, quizzes, and polls.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "form",
+      "builder",
+      "forms",
+      "survey",
+      "quiz",
+      "open source",
+      "self-hosted",
+      "docker"
+    ],
+    "stars": 8904,
+    "updatedAt": "2026-07-23",
+    "links": {
+      "docs": "https://docs.heyform.net/open-source/self-hosting",
+      "website": "https://heyform.net",
+      "source": "https://github.com/heyform/heyform"
+    }
+  }
+}

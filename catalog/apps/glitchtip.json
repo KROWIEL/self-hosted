@@ -1,0 +1,78 @@
+{
+  "slug": "glitchtip",
+  "name": "GlitchTip",
+  "description": "GlitchTip is a error tracking system.",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "glitchtip",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  postgres:\n    image: 'postgres:16-alpine'\n    environment:\n      - 'POSTGRES_USER=${POSTGRESQL_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-glitchtip}'\n    volumes:\n      - 'glitchtip-postgres-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: redis:latest\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  web:\n    image: 'glitchtip/glitchtip:6.0'\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    environment:\n      - 'DATABASE_URL=postgres://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@postgres:5432/${POSTGRESQL_DATABASE:-glitchtip}'\n      - SECRET_KEY=${ENCRYPTION_SECRET}\n      - 'EMAIL_URL=${EMAIL_URL:-consolemail://}'\n      - 'GLITCHTIP_DOMAIN=${APP_URL}'\n      - 'DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-test@example.com}'\n      - 'CELERY_WORKER_AUTOSCALE=${CELERY_WORKER_AUTOSCALE:-1,3}'\n      - 'CELERY_WORKER_MAX_TASKS_PER_CHILD=${CELERY_WORKER_MAX_TASKS_PER_CHILD:-10000}'\n    volumes:\n      - 'uploads:/code/uploads'\n    healthcheck:\n      test:\n        - CMD\n        - echo\n        - ok\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  worker:\n    image: 'glitchtip/glitchtip:6.0'\n    command: ./bin/run-celery-with-beat.sh\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    environment:\n      - 'DATABASE_URL=postgres://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@postgres:5432/${POSTGRESQL_DATABASE:-glitchtip}'\n      - SECRET_KEY=${ENCRYPTION_SECRET}\n      - 'EMAIL_URL=${EMAIL_URL:-consolemail://}'\n      - 'GLITCHTIP_DOMAIN=${APP_URL}'\n      - 'DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-test@example.com}'\n      - 'CELERY_WORKER_AUTOSCALE=${CELERY_WORKER_AUTOSCALE:-1,3}'\n      - 'CELERY_WORKER_MAX_TASKS_PER_CHILD=${CELERY_WORKER_MAX_TASKS_PER_CHILD:-10000}'\n    volumes:\n      - 'uploads:/code/uploads'\n    healthcheck:\n      test:\n        - CMD\n        - echo\n        - ok\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  migrate:\n    image: 'glitchtip/glitchtip:6.0'\n    restart: 'no'\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    command: './manage.py migrate'\n    environment:\n      - 'DATABASE_URL=postgres://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@postgres:5432/${POSTGRESQL_DATABASE:-glitchtip}'\n      - SECRET_KEY=${ENCRYPTION_SECRET}\n      - 'EMAIL_URL=${EMAIL_URL:-consolemail://}'\n      - 'DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-test@example.com}'\n      - 'CELERY_WORKER_AUTOSCALE=${CELERY_WORKER_AUTOSCALE:-1,3}'\n      - 'CELERY_WORKER_MAX_TASKS_PER_CHILD=${CELERY_WORKER_MAX_TASKS_PER_CHILD:-10000}'\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRESQL_USER",
+      "value": "postgresql"
+    },
+    {
+      "key": "POSTGRESQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ENCRYPTION_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_DATABASE",
+      "value": "glitchtip"
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    },
+    {
+      "key": "EMAIL_URL",
+      "value": "consolemail://"
+    },
+    {
+      "key": "DEFAULT_FROM_EMAIL",
+      "value": "test@example.com"
+    },
+    {
+      "key": "CELERY_WORKER_AUTOSCALE",
+      "value": "1,3"
+    },
+    {
+      "key": "CELERY_WORKER_MAX_TASKS_PER_CHILD",
+      "value": "10000"
+    }
+  ],
+  "meta": {
+    "about": "Error tracking app to collect errors reported by your app.",
+    "license": "MIT",
+    "tags": [
+      "error",
+      "tracking",
+      "sentry"
+    ],
+    "stars": 161,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "docs": "https://glitchtip.com",
+      "website": "https://glitchtip.com",
+      "source": "https://gitlab.com/glitchtip/glitchtip"
+    }
+  }
+}

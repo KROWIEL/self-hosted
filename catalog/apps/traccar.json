@@ -1,0 +1,54 @@
+{
+  "slug": "traccar",
+  "name": "Traccar",
+  "description": "Traccar is a free and open source modern GPS tracking system.",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "traccar",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  traccar:\n    image: 'traccar/traccar:latest'\n    environment:\n      - 'CONFIG_USE_ENVIRONMENT_VARIABLES=${CONFIG_USE_ENVIRONMENT_VARIABLES:-true}'\n      - 'DATABASE_USER=${POSTGRES_USER}'\n      - 'DATABASE_PASSWORD=${POSTGRES_PASSWORD}'\n    volumes:\n      -\n        type: bind\n        source: ./srv/traccar/conf/traccar.xml\n        target: /opt/traccar/conf/traccar.xml\n        content: \"<?xml version='1.0' encoding='UTF-8'?>\\n<!DOCTYPE properties SYSTEM 'http://java.sun.com/dtd/properties.dtd'>\\n<properties>\\n    <entry key='config.default'>./conf/default.xml</entry>\\n    <entry key='database.driver'>org.postgresql.Driver</entry>\\n    <entry key='database.url'>jdbc:postgresql://postgres:5432/traccar</entry>\\n</properties>\\n\"\n    depends_on:\n      postgres:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--no-verbose'\n        - '--tries=1'\n        - '--spider'\n        - 'http://127.0.0.1:8082'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 15s\n  postgres:\n    image: 'postgres:16-alpine'\n    environment:\n      - POSTGRES_USER=${POSTGRES_USER}\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-traccar}'\n    volumes:\n      - 'traccar-postgresql-data:/var/lib/postgresql/data/'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8082,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CONFIG_USE_ENVIRONMENT_VARIABLES",
+      "value": "true"
+    },
+    {
+      "key": "POSTGRESQL_DATABASE",
+      "value": "traccar"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Java application to track GPS positions. Supports loads of tracking devices and protocols, has an Android and iOS App. Has a web interface to view your trips.",
+    "license": "Apache-2.0",
+    "tags": [
+      "traccar",
+      "gps",
+      "tracking",
+      "open",
+      "source"
+    ],
+    "links": {
+      "docs": "https://www.traccar.org/documentation/",
+      "website": "https://www.traccar.org/",
+      "source": "https://github.com/traccar",
+      "demo": "https://demo.traccar.org/"
+    }
+  }
+}

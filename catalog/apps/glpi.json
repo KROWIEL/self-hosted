@@ -1,0 +1,45 @@
+{
+  "slug": "glpi",
+  "name": "Glpi",
+  "description": "GLPI (Gestionnaire Libre de Parc Informatique) is a free, open-source IT Service Management (ITSM) platform used for IT asset management, helpdesk, and service desk operations.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  glpi:\n    image: 'glpi/glpi:11'\n    environment:\n      - GLPI_DB_HOST=glpi-db\n      - GLPI_DB_PORT=3306\n      - 'GLPI_DB_NAME=${MYSQL_DATABASE:-glpi-db}'\n      - 'GLPI_DB_USER=${MYSQL_USER}'\n      - 'GLPI_DB_PASSWORD=${MYSQL_PASSWORD}'\n    volumes:\n      - 'glpi-data:/var/glpi:rw'\n    depends_on:\n      glpi-db:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost/'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n  glpi-db:\n    image: 'mysql:8'\n    volumes:\n      - 'mysql-data:/var/lib/mysql'\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-glpi-db}'\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - 127.0.0.1\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "glpi-db"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "helpdesk",
+      "ticketing",
+      "support",
+      "open-source"
+    ],
+    "links": {
+      "docs": "https://help.glpi-project.org/documentation"
+    }
+  }
+}

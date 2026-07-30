@@ -1,0 +1,39 @@
+{
+  "slug": "soketi-app-manager",
+  "name": "Soketi App Manager",
+  "description": "Manage soketi websocket server and apps with ease.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  soketi-app-manager:\n    image: 'ghcr.io/rahulhaque/soketi-app-manager-filament-alpine:latest'\n    environment:\n      - AUTORUN_ENABLED=true\n      - 'AUTORUN_LARAVEL_MIGRATION=${AUTORUN_LARAVEL_MIGRATION:-true}'\n      - 'APP_DEBUG=${APP_DEBUG:-false}'\n      - APP_URL=${APP_URL}\n      - APP_KEY=$APP_KEY\n      - DB_CONNECTION=$DB_CONNECTION\n      - DB_HOST=$DB_HOST\n      - DB_PORT=$DB_PORT\n      - DB_DATABASE=$DB_DATABASE\n      - DB_USERNAME=$DB_USERNAME\n      - DB_PASSWORD=$DB_PASSWORD\n      - PUSHER_HOST=$PUSHER_HOST\n      - PUSHER_PORT=$PUSHER_PORT\n      - PUSHER_SCHEME=$PUSHER_SCHEME\n      - PUSHER_APP_CLUSTER=$PUSHER_APP_CLUSTER\n      - SOKETI_DB_REDIS_USERNAME=$SOKETI_DB_REDIS_USERNAME\n      - SOKETI_DB_REDIS_PASSWORD=$SOKETI_DB_REDIS_PASSWORD\n      - METRICS_HOST=$METRICS_HOST\n    healthcheck:\n      test:\n        - CMD\n        - php-fpm-healthcheck\n      start_period: 10s\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "AUTORUN_LARAVEL_MIGRATION",
+      "value": "true"
+    },
+    {
+      "key": "APP_DEBUG",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "soketi",
+      "websockets",
+      "app-manager",
+      "dashboard"
+    ],
+    "links": {
+      "docs": "https://github.com/rahulhaque/soketi-app-manager-filament"
+    }
+  }
+}

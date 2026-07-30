@@ -1,0 +1,29 @@
+{
+  "slug": "nexus-arm",
+  "name": "Nexus Arm",
+  "description": "Open source Universal Repository Manager (ARM version, community edition), default credentials: admin/admin123",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  nexus:\n    image: sonatypecommunity/nexus3:latest\n    environment:\n      - NEXUS_SECURITY_RANDOMPASSWORD=false\n      - 'INSTALL4J_ADD_VM_PARAMS=-Xms2703m -Xmx2703m -XX:MaxDirectMemorySize=2703m -Djava.util.prefs.userRoot=/nexus-data/javaprefs'\n    volumes:\n      - 'nexus_data:/nexus-data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:8081/service/rest/v1/status'\n      interval: 10s\n      timeout: 10s\n      retries: 3\n      start_period: 60s\n",
+  "defaultPort": 8081,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "repository",
+      "manager",
+      "open source",
+      "docker",
+      "docker",
+      "registry",
+      "container"
+    ],
+    "links": {
+      "docs": "https://help.sonatype.com/en/sonatype-nexus-repository.html"
+    }
+  }
+}

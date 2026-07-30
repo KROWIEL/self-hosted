@@ -49,5 +49,18 @@
       "secret": true,
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "An Instant App & API for your SQL Database. Directus wraps your new or existing SQL database with a realtime GraphQL+REST API for developers, and an intuitive admin app for non-technical users.",
+    "license": "BUSL-1.1",
+    "tags": [
+      "Database Management"
+    ],
+    "stars": 36911,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://directus.io/",
+      "source": "https://github.com/directus/directus"
+    }
+  }
 }

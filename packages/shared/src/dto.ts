@@ -86,6 +86,28 @@ export interface CatalogTranslation {
   description?: string;
 }
 
+/**
+ * Descriptive data for the details view, resolved from upstream catalogues when
+ * a manifest is built rather than fetched at render time — the control plane may
+ * have no outbound access, and a card should never wait on github.com.
+ */
+export interface CatalogAppMeta {
+  /** Longer explanation of what the app does; the card shows a one-liner. */
+  about?: string;
+  license?: string;
+  tags?: string[];
+  stars?: number;
+  /** ISO date of the last upstream commit. */
+  updatedAt?: string;
+  archived?: boolean;
+  links?: {
+    website?: string;
+    source?: string;
+    docs?: string;
+    demo?: string;
+  };
+}
+
 export interface CatalogApp {
   id: string;
   slug: string;
@@ -102,6 +124,7 @@ export interface CatalogApp {
   defaultPort: number | null;
   recommendedVolumes: CatalogVolumeHint[];
   envDefaults: CatalogEnvDefault[];
+  meta: CatalogAppMeta;
 }
 
 export interface InstallCatalogAppDto {

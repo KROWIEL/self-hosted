@@ -1,0 +1,29 @@
+{
+  "slug": "chroma",
+  "name": "Chroma",
+  "description": "Chroma is the open-source search and retrieval database for AI applications.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  chromadb:\n    image: 'chromadb/chroma:1.0.15'\n    volumes:\n      - 'chroma-data:/data'\n    environment:\n      - IS_PERSISTENT=TRUE\n      - PERSIST_DIRECTORY=/data\n    healthcheck:\n      test:\n        - CMD\n        - /bin/bash\n        - '-c'\n        - 'cat < /dev/null > /dev/tcp/localhost/8000'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "ai",
+      "vector-database",
+      "semantic-search",
+      "machine-learning",
+      "bm25",
+      "embeddings",
+      "llm"
+    ],
+    "links": {
+      "docs": "https://cookbook.chromadb.dev/"
+    }
+  }
+}

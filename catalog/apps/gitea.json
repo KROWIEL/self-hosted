@@ -27,5 +27,19 @@
       "key": "USER_GID",
       "value": "1000"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Git with a cup of tea! Painless self-hosted all-in-one software development service, including Git hosting, code review, team collaboration, package registry and CI/CD.",
+    "license": "MIT",
+    "tags": [
+      "Software Development - Project Management"
+    ],
+    "stars": 57058,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://gitea.com",
+      "source": "https://github.com/go-gitea/gitea",
+      "demo": "https://demo.gitea.com"
+    }
+  }
 }

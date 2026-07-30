@@ -1,0 +1,28 @@
+{
+  "slug": "organizr",
+  "name": "Organizr",
+  "description": "Homelab Services Organizer",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  organizr:\n    image: 'organizr/organizr:latest'\n    environment:\n      - 'branch=${branch:-v2-master}'\n    volumes:\n      - 'organizr-data:/config'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'curl -sf http://localhost:80 || exit 1'\n      interval: 10s\n      timeout: 1s\n      retries: 3\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "branch",
+      "value": "v2-master"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "tool"
+    ],
+    "links": {
+      "docs": "https://docs.organizr.app/"
+    }
+  }
+}

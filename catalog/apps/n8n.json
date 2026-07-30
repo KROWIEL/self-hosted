@@ -31,5 +31,18 @@
       "key": "N8N_PROTOCOL",
       "value": "https"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Free node based Workflow Automation Tool. Easily automate tasks across different services.",
+    "license": "Apache-2.0, Commons-Clause",
+    "tags": [
+      "Automation"
+    ],
+    "stars": 198265,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://n8n.io/",
+      "source": "https://github.com/n8n-io/n8n"
+    }
+  }
 }

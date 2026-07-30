@@ -1,0 +1,96 @@
+{
+  "slug": "seafile",
+  "name": "Seafile",
+  "description": "Open source cloud storage system for file sync, share and document collaboration",
+  "category": "Storage",
+  "icon": "storage",
+  "upstream": "seafile",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  seafile:\n    image: 'seafileltd/seafile-mc:12.0-latest'\n    volumes:\n      - 'seafile-data:/shared'\n    environment:\n      - 'SEAFILE_SERVER_HOSTNAME=${APP_URL}'\n      - DB_HOST=mariadb\n      - DB_PORT=3306\n      - 'DB_ROOT_PASSWD=${MYSQLROOT_PASSWORD}'\n      - 'DB_USER=${MYSQL_USER}'\n      - 'DB_PASSWORD=${MYSQL_PASSWORD}'\n      - 'SEAFILE_MYSQL_DB_CCNET_DB_NAME=${SEAFILE_MYSQL_DB_CCNET_DB_NAME:-ccnet_db}'\n      - 'SEAFILE_MYSQL_DB_SEAFILE_DB_NAME=${SEAFILE_MYSQL_DB_SEAFILE_DB_NAME:-seafile_db}'\n      - 'SEAFILE_MYSQL_DB_SEAHUB_DB_NAME=${SEAFILE_MYSQL_DB_SEAHUB_DB_NAME:-seahub_db}'\n      - 'TIME_ZONE=${TIME_ZONE:-UTC}'\n      - 'INIT_SEAFILE_ADMIN_EMAIL=${INIT_SEAFILE_ADMIN_EMAIL:-test@example.com}'\n      - 'INIT_SEAFILE_ADMIN_PASSWORD=${ADMIN_PASSWORD}'\n      - SEAFILE_SERVER_PROTOCOL=https\n      - 'SITE_ROOT=${SITE_ROOT:-/}'\n      - 'NON_ROOT=${NON_ROOT:-false}'\n      - 'JWT_PRIVATE_KEY=${JWT_PASSWORD}'\n      - 'SEAFILE_LOG_TO_STDOUT=${SEAFILE_LOG_TO_STDOUT:-true}'\n      - 'FILE_SERVER_ROOT=${APP_URL}/seafhttp'\n    depends_on:\n      mariadb:\n        condition: service_healthy\n      memcached:\n        condition: service_started\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:80/api2/ping'\n      interval: 10s\n      timeout: 20s\n      retries: 5\n  mariadb:\n    image: 'mariadb:11'\n    volumes:\n      - 'seafile_mariadb_data:/var/lib/mysql'\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${MYSQLROOT_PASSWORD}'\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-seafile-db}'\n    healthcheck:\n      test:\n        - CMD\n        - healthcheck.sh\n        - '--connect'\n        - '--innodb_initialized'\n      interval: 10s\n      timeout: 20s\n      retries: 5\n  memcached:\n    image: 'memcached:latest'\n    entrypoint: 'memcached -m 256'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'bash -c \"echo version | (exec 3<>/dev/tcp/localhost/11211; cat >&3; timeout 0.5 cat <&3; exec 3<&-)\"'\n      interval: 10s\n      timeout: 20s\n      retries: 5\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "MYSQLROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "JWT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SEAFILE_MYSQL_DB_CCNET_DB_NAME",
+      "value": "ccnet_db"
+    },
+    {
+      "key": "SEAFILE_MYSQL_DB_SEAFILE_DB_NAME",
+      "value": "seafile_db"
+    },
+    {
+      "key": "SEAFILE_MYSQL_DB_SEAHUB_DB_NAME",
+      "value": "seahub_db"
+    },
+    {
+      "key": "TIME_ZONE",
+      "value": "UTC"
+    },
+    {
+      "key": "INIT_SEAFILE_ADMIN_EMAIL",
+      "value": "test@example.com"
+    },
+    {
+      "key": "SITE_ROOT",
+      "value": "/"
+    },
+    {
+      "key": "NON_ROOT",
+      "value": "false"
+    },
+    {
+      "key": "SEAFILE_LOG_TO_STDOUT",
+      "value": "true"
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "seafile-db"
+    }
+  ],
+  "meta": {
+    "about": "File hosting and sharing solution primary for teams and organizations.",
+    "license": "GPL-2.0, GPL-3.0, AGPL-3.0, Apache-2.0",
+    "tags": [
+      "file-manager",
+      "file-sharing",
+      "storage"
+    ],
+    "stars": 15040,
+    "updatedAt": "2026-07-21",
+    "links": {
+      "docs": "https://manual.seafile.com",
+      "website": "https://www.seafile.com/en/home/",
+      "source": "https://github.com/haiwen/seafile"
+    }
+  }
+}

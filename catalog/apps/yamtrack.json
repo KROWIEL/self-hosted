@@ -1,0 +1,58 @@
+{
+  "slug": "yamtrack",
+  "name": "Yamtrack",
+  "description": "Yamtrack is a self hosted media tracker for movies, tv shows, anime, manga, video games and books.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "yamtrack",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  yamtrack:\n    image: ghcr.io/fuzzygrim/yamtrack:latest\n    environment:\n      - 'URLS=${APP_URL}'\n      - 'TZ=${TZ:-Europe/Berlin}'\n      - 'SECRET=${SECRET}'\n      - 'REGISTRATION=${REGISTRATION_ENABLED:-true}'\n      - 'REDIS_URL=redis://redis:6379'\n    volumes:\n      - 'yamtrack_data:/yamtrack/db'\n    depends_on:\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --quiet --tries=1 --spider http://127.0.0.1:8000/health/ || exit 1'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: 'redis:7-alpine'\n    volumes:\n      - 'yamtrack_redis_data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "Europe/Berlin"
+    },
+    {
+      "key": "REGISTRATION_ENABLED",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "about": "Media tracker for movies, tv shows, anime, manga, video games and books.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "self-hosted",
+      "automation",
+      "tracker",
+      "media",
+      "movies",
+      "shows",
+      "anime",
+      "manga",
+      "games",
+      "books",
+      "comics"
+    ],
+    "stars": 3164,
+    "updatedAt": "2026-07-26",
+    "links": {
+      "docs": "https://github.com/FuzzyGrim/Yamtrack/wiki",
+      "website": "https://github.com/FuzzyGrim/Yamtrack",
+      "source": "https://github.com/FuzzyGrim/Yamtrack",
+      "demo": "https://github.com/FuzzyGrim/Yamtrack?tab=readme-ov-file#demo"
+    }
+  }
+}

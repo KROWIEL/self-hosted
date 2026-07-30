@@ -1,0 +1,37 @@
+{
+  "slug": "typesense",
+  "name": "Typesense",
+  "description": "Cutting-edge, in-memory search engine for mere mortals. Knowledge of rocket science optional.",
+  "category": "Search",
+  "icon": "search",
+  "upstream": "typesense",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  typesense:\n    image: 'typesense/typesense:28.0'\n    environment:\n      - 'TYPESENSE_ENABLE_CORS=${TYPESENSE_ENABLE_CORS:-true}'\n      - TYPESENSE_DATA_DIR=/data\n      - 'TYPESENSE_API_KEY=${TYPESENSE_API_KEY:?}'\n    volumes:\n      - 'typesense_data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - bash\n        - '-c'\n        - 'exec 3<>/dev/tcp/localhost/8108 && printf ''GET /health HTTP/1.1\\r\\nConnection: close\\r\\n\\r\\n'' >&3 && head -n1 <&3 | grep ''200'' && exec 3>&-'\n      retries: 5\n      timeout: 7s\n",
+  "defaultPort": 8108,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "TYPESENSE_ENABLE_CORS",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "about": "Blazing fast, typo-tolerant open source search engine optimized for developer happiness and ease of use.",
+    "license": "GPL-3.0",
+    "tags": [
+      "search",
+      "search-engine",
+      "search-api",
+      "elasticsearch-alternative"
+    ],
+    "stars": 26367,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://typesense.org/docs",
+      "website": "https://typesense.org",
+      "source": "https://github.com/typesense/typesense"
+    }
+  }
+}

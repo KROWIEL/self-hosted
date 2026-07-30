@@ -24,5 +24,18 @@
       "secret": true,
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "VS Code in the browser, hosted on a remote server.",
+    "license": "MIT",
+    "tags": [
+      "Software Development - IDE & Tools"
+    ],
+    "stars": 78539,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "website": "https://github.com/coder/code-server",
+      "source": "https://github.com/coder/code-server"
+    }
+  }
 }

@@ -1,0 +1,59 @@
+{
+  "slug": "firefly",
+  "name": "Firefly",
+  "description": "A personal finances manager that can help you save money.",
+  "category": "Finance",
+  "icon": "wallet",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  firefly:\n    image: 'fireflyiii/core:latest'\n    environment:\n      - APP_KEY=${APPKEY}\n      - DB_HOST=mysql\n      - DB_PORT=3306\n      - DB_CONNECTION=mysql\n      - 'DB_DATABASE=${MYSQL_DATABASE:-firefly}'\n      - DB_USERNAME=${MYSQL_USER}\n      - DB_PASSWORD=${MYSQL_PASSWORD}\n      - STATIC_CRON_TOKEN=${CRONTOKEN}\n      - 'TRUSTED_PROXIES=*'\n    volumes:\n      - 'firefly-upload:/var/www/html/storage/upload'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8080'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    depends_on:\n      mysql:\n        condition: service_healthy\n  mysql:\n    image: 'mariadb:11'\n    environment:\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-firefly}'\n      - 'MYSQL_ROOT_PASSWORD=${MYSQLROOT_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - mariadb-admin\n        - ping\n        - '-h'\n        - 127.0.0.1\n        - '-uroot'\n        - '-p${MYSQLROOT_PASSWORD}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    volumes:\n      - 'firefly-mysql-data:/var/lib/mysql'\n  cron:\n    image: alpine:latest\n    entrypoint:\n      - /entrypoint.sh\n    volumes:\n      -\n        type: bind\n        source: ./entrypoint.sh\n        target: /entrypoint.sh\n        content: \"#!/bin/sh\\n# Substitute the environment variable into the cron command\\nCRON_COMMAND=\\\"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/${STATIC_CRON_TOKEN}\\\"\\n# Add the cron command to the crontab\\necho \\\"$CRON_COMMAND\\\" | crontab -\\n# Start the cron daemon in the foreground with logging to stdout\\ncrond -f -L /dev/stdout\"\n    environment:\n      - STATIC_CRON_TOKEN=${CRONTOKEN}\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'ls /entrypoint.sh || exit 1'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 40s\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APPKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CRONTOKEN",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQLROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "firefly"
+    },
+    {
+      "key": "STATIC_CRON_TOKEN",
+      "secret": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "finance",
+      "money",
+      "personal",
+      "manager"
+    ],
+    "links": {
+      "docs": "https://firefly-iii.org"
+    }
+  }
+}

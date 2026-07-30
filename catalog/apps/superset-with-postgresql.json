@@ -1,0 +1,56 @@
+{
+  "slug": "superset-with-postgresql",
+  "name": "Superset With Postgresql",
+  "description": "Modern data exploration and visualization platform (unofficial community docker image)",
+  "category": "Analytics",
+  "icon": "chart",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  superset:\n    image: 'amancevice/superset:6.0.0'\n    environment:\n      - 'SECRET_KEY=${SUPERSETSECRETKEY}'\n      - 'MAPBOX_API_KEY=${MAPBOX_API_KEY}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-superset-db}'\n      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'\n    volumes:\n      -\n        type: bind\n        source: ./superset/superset_config.py\n        target: /etc/superset/superset_config.py\n        content: \"\\\"\\\"\\\"\\nFor more configuration options, see:\\n- https://superset.apache.org/docs/configuration/configuring-superset\\n\\\"\\\"\\\"\\n\\nimport os\\n\\nSECRET_KEY = os.getenv(\\\"SECRET_KEY\\\")\\nMAPBOX_API_KEY = os.getenv(\\\"MAPBOX_API_KEY\\\", \\\"\\\")\\n\\nCACHE_CONFIG = {\\n  \\\"CACHE_TYPE\\\": \\\"RedisCache\\\",\\n  \\\"CACHE_DEFAULT_TIMEOUT\\\": 300,\\n  \\\"CACHE_KEY_PREFIX\\\": \\\"superset_\\\",\\n  \\\"CACHE_REDIS_HOST\\\": \\\"redis\\\",\\n  \\\"CACHE_REDIS_PORT\\\": 6379,\\n  \\\"CACHE_REDIS_DB\\\": 1,\\n  \\\"CACHE_REDIS_URL\\\": f\\\"redis://:{os.getenv('REDIS_PASSWORD')}@redis:6379/1\\\",\\n}\\n\\nFILTER_STATE_CACHE_CONFIG = {**CACHE_CONFIG, \\\"CACHE_KEY_PREFIX\\\": \\\"superset_filter_\\\"}\\nEXPLORE_FORM_DATA_CACHE_CONFIG = {**CACHE_CONFIG, \\\"CACHE_KEY_PREFIX\\\": \\\"superset_explore_form_\\\"}\\n\\nSQLALCHEMY_TRACK_MODIFICATIONS = True\\nSQLALCHEMY_DATABASE_URI = f\\\"postgresql+psycopg2://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@postgres:5432/{os.getenv('POSTGRES_DB')}\\\"\\n\\n# Uncomment if you want to load example data (using \\\"superset load_examples\\\") at the\\n# same location as your metadata postgresql instance. Otherwise, the default sqlite\\n# will be used, which will not persist in volume when restarting superset by default.\\n#SQLALCHEMY_EXAMPLES_URI = SQLALCHEMY_DATABASE_URI\"\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8088/health'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  postgres:\n    image: 'postgres:18'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-superset-db}'\n    volumes:\n      - 'superset_postgres_data:/var/lib/postgresql'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: 'redis:8'\n    volumes:\n      - 'superset_redis_data:/data'\n    command: 'redis-server --requirepass ${REDIS_PASSWORD}'\n    healthcheck:\n      test: 'redis-cli ping'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8088,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "SUPERSETSECRETKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MAPBOX_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "superset-db"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "analytics",
+      "bi",
+      "dashboard",
+      "database",
+      "sql",
+      "unofficial"
+    ],
+    "links": {
+      "docs": "https://github.com/amancevice/docker-superset"
+    }
+  }
+}

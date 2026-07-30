@@ -1,0 +1,23 @@
+{
+  "slug": "pgadmin",
+  "name": "Pgadmin",
+  "description": "pgAdmin is a web-based database management tool for administering your PostgreSQL databases through a user-friendly interface.",
+  "category": "Databases",
+  "icon": "database",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  pgadmin:\n    image: 'dpage/pgadmin4:latest'\n    environment:\n      - 'PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:?}'\n      - 'PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:?}'\n    volumes:\n      - 'pgadmin-data:/var/lib/pgadmin'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-qO-'\n        - 'http://localhost:80/login'\n      interval: 5s\n      timeout: 10s\n      retries: 5\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "database management"
+    ],
+    "links": {
+      "docs": "https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html"
+    }
+  }
+}

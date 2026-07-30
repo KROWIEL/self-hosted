@@ -18,5 +18,8 @@
       "mountPath": "/app/data"
     }
   ],
-  "envDefaults": []
+  "envDefaults": [],
+  "meta": {
+    "links": {}
+  }
 }

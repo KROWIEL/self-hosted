@@ -28,5 +28,19 @@
       "key": "VIKUNJA_SERVICE_PUBLICURL",
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "The to-do app to organize your life.",
+    "license": "AGPL-3.0, GPL-3.0",
+    "tags": [
+      "Task Management & To-do Lists"
+    ],
+    "stars": 4910,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://vikunja.io/",
+      "source": "https://github.com/go-vikunja/vikunja",
+      "demo": "https://try.vikunja.io/login"
+    }
+  }
 }

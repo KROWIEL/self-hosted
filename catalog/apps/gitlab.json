@@ -1,0 +1,108 @@
+{
+  "slug": "gitlab",
+  "name": "GitLab",
+  "description": "The all-in-one DevOps platform for seamless collaboration and continuous delivery.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "gitlab",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  gitlab:\n    image: 'gitlab/gitlab-ce:latest'\n    environment:\n      - 'TZ=${TZ:-UTC}'\n      - 'GITLAB_TIMEZONE=${GITLAB_TIMEZONE:-UTC}'\n      - GITLAB_ROOT_PASSWORD=${GITLAB_PASSWORD}\n      - EXTERNAL_URL=${APP_URL}\n      - GITLAB_HOST=${APP_URL}\n      - 'GITLAB_SMTP_ENABLE=${GITLAB_SMTP_ENABLE:-false}'\n      - GITLAB_SMTP_ADDRESS=$GITLAB_SMTP_ADDRESS\n      - 'GITLAB_SMTP_PORT=${GITLAB_SMTP_PORT:-587}'\n      - 'GITLAB_SMTP_USER_NAME=${GITLAB_SMTP_USER_NAME}'\n      - 'GITLAB_SMTP_PASSWORD=${GITLAB_SMTP_PASSWORD}'\n      - 'GITLAB_SMTP_DOMAIN=${GITLAB_SMTP_DOMAIN}'\n      - 'GITLAB_STARTTLS_AUTO=${GITLAB_STARTTLS_AUTO:-true}'\n      - 'GITLAB_SMTP_TLS=${GITLAB_SMTP_TLS:-false}'\n      - 'GITLAB_EMAIL_FROM=${GITLAB_EMAIL_FROM}'\n      - GITLAB_EMAIL_REPLY_TO=$GITLAB_EMAIL_REPLY_TO\n      - 'GITLAB_OMNIBUS_CONFIG=external_url \"${APP_URL}\"; nginx[\"listen_https\"] = false; nginx[\"listen_port\"] = 80; gitlab_rails[\"gitlab_shell_ssh_port\"] = 2222; gitlab_rails[\"smtp_enable\"] = ${GITLAB_SMTP_ENABLE}; gitlab_rails[\"smtp_address\"] = \"${GITLAB_SMTP_ADDRESS}\"; gitlab_rails[\"smtp_port\"] = ${GITLAB_SMTP_PORT}; gitlab_rails[\"smtp_user_name\"] = \"${GITLAB_SMTP_USER_NAME}\"; gitlab_rails[\"smtp_password\"] = \"${GITLAB_SMTP_PASSWORD}\"; gitlab_rails[\"smtp_domain\"] = \"${GITLAB_SMTP_DOMAIN}\"; gitlab_rails[\"smtp_authentication\"] = \"login\"; gitlab_rails[\"smtp_enable_starttls_auto\"] = ${GITLAB_STARTTLS_AUTO}; gitlab_rails[\"smtp_tls\"] = ${GITLAB_SMTP_TLS}; gitlab_rails[\"gitlab_email_from\"] = \"${GITLAB_EMAIL_FROM}\"; gitlab_rails[\"gitlab_email_reply_to\"] = \"${GITLAB_EMAIL_REPLY_TO}\";'\n    ports:\n      - '2222:22'\n    volumes:\n      - 'gitlab-config:/etc/gitlab'\n      - 'gitlab-logs:/var/log/gitlab'\n      - 'gitlab-data:/var/opt/gitlab'\n    shm_size: 256m\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "GITLAB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    },
+    {
+      "key": "GITLAB_TIMEZONE",
+      "value": "UTC"
+    },
+    {
+      "key": "GITLAB_SMTP_ENABLE",
+      "value": "false"
+    },
+    {
+      "key": "GITLAB_SMTP_PORT",
+      "value": "587"
+    },
+    {
+      "key": "GITLAB_SMTP_USER_NAME",
+      "value": ""
+    },
+    {
+      "key": "GITLAB_SMTP_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "GITLAB_SMTP_DOMAIN",
+      "value": ""
+    },
+    {
+      "key": "GITLAB_STARTTLS_AUTO",
+      "value": "true"
+    },
+    {
+      "key": "GITLAB_SMTP_TLS",
+      "value": "false"
+    },
+    {
+      "key": "GITLAB_EMAIL_FROM",
+      "value": ""
+    },
+    {
+      "key": "GITLAB_SMTP_ADDRESS",
+      "value": ""
+    },
+    {
+      "key": "GITLAB_EMAIL_REPLY_TO",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Self Hosted Git repository management, code reviews, issue tracking, activity feeds and wikis.",
+    "license": "MIT",
+    "tags": [
+      "gitlab",
+      "devops",
+      "continuousintegration",
+      "continuousdelivery",
+      "versioncontrol",
+      "collaboration",
+      "ci/cd",
+      "sourcecodemanagement",
+      "automation",
+      "codereview",
+      "agiledevelopment",
+      "projectmanagement",
+      "opensource",
+      "repositoryhosting",
+      "pipelineautomation",
+      "git",
+      "softwaredevelopment",
+      "issuetracking",
+      "teamcollaboration",
+      "deploymentautomation",
+      "securityintegration"
+    ],
+    "stars": 7163,
+    "updatedAt": "2026-07-28",
+    "links": {
+      "docs": "https://docs.gitlab.com/ee/install/docker.html",
+      "website": "https://about.gitlab.com",
+      "source": "https://gitlab.com/gitlab-org/gitlab-foss",
+      "demo": "https://gitlab.com/"
+    }
+  }
+}

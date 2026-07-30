@@ -18,5 +18,18 @@
       "mountPath": "/data"
     }
   ],
-  "envDefaults": []
+  "envDefaults": [],
+  "meta": {
+    "about": "Local-first personal finance tool based on zero-sum budgeting, supporting synchronization across devices, custom rules, manual transaction importing (from QIF, OFX, and QFX files), and optional automatic synchronization with many banks.",
+    "license": "MIT",
+    "tags": [
+      "Money, Budgeting & Management"
+    ],
+    "stars": 27778,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://actualbudget.org",
+      "source": "https://github.com/actualbudget/actual"
+    }
+  }
 }

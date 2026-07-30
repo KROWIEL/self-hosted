@@ -1,0 +1,40 @@
+{
+  "slug": "sonarr",
+  "name": "Sonarr",
+  "description": "Sonarr⁠ (formerly NZBdrone) is a PVR for usenet and bittorrent users. It can monitor multiple RSS feeds for new episodes of your favorite shows and will grab, sort and rename them. It can also be configured to automatically upgrade the quality of files already downloaded when a better quality format becomes available.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "sonarr",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  sonarr:\n    image: 'lscr.io/linuxserver/sonarr:latest'\n    environment:\n      - _APP_URL=${APP_URL}\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-America/Toronto}'\n    volumes:\n      - 'sonarr-config:/config'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:8989/ping'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8989,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "America/Toronto"
+    }
+  ],
+  "meta": {
+    "about": "Automatic TV Shows downloader and manager for Usenet and BitTorrent. It can grab, sort and rename new episodes and automatically upgrade the quality of files already downloaded when a better quality format becomes available.",
+    "license": "GPL-3.0",
+    "tags": [
+      "media",
+      "server",
+      "tv"
+    ],
+    "stars": 14811,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://hub.docker.com/r/linuxserver/sonarr",
+      "website": "https://sonarr.tv/",
+      "source": "https://github.com/Sonarr/Sonarr"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "slug": "mediawiki",
+  "name": "Mediawiki",
+  "description": "MediaWiki is a collaboration and documentation platform brought to you by a vibrant community.",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "mediawiki",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mediawiki:\n    image: 'mediawiki:latest'\n    environment:\n    volumes:\n      - 'mediawiki-images:/var/www/html/images'\n      - 'mediawiki-sqlite:/var/www/html/data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:80'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Wiki software package that powers Wikipedia and all other Wikimedia projects, serving hundreds of millions of users each month.",
+    "license": "GPL-2.0",
+    "tags": [
+      "wiki",
+      "collaboration",
+      "documentation"
+    ],
+    "links": {
+      "docs": "https://www.mediawiki.org",
+      "website": "https://www.mediawiki.org/wiki/MediaWiki",
+      "source": "https://phabricator.wikimedia.org/source/mediawiki/",
+      "demo": "https://en.wikipedia.org/wiki/Main_Page"
+    }
+  }
+}

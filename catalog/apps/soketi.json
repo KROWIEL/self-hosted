@@ -1,0 +1,53 @@
+{
+  "slug": "soketi",
+  "name": "Soketi",
+  "description": "Soketi is your simple, fast, and resilient open-source WebSockets server.",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  soketi:\n    image: 'quay.io/soketi/soketi:1.6-16-debian'\n    environment:\n      - 'SOKETI_DEBUG=${DEBUG:-0}'\n      - 'SOKETI_DEFAULT_APP_ID=${SOKETI_USER}'\n      - 'SOKETI_DEFAULT_APP_KEY=${SOKETIKEY}'\n      - 'SOKETI_DEFAULT_APP_SECRET=${SOKETISECRET}'\n      - 'SOKETI_PUSHER_SCHEME=${SOKETI_PUSHER_SCHEME:-https}'\n      - 'SOKETI_DEFAULT_APP_ENABLE_CLIENT_MESSAGES=${DEFAULT_APP_ENABLE_CLIENT_MESSAGES}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/6001' || exit 1\"\n      interval: 5s\n      timeout: 20s\n      retries: 3\n",
+  "defaultPort": 6001,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "SOKETI_USER",
+      "value": "soketi"
+    },
+    {
+      "key": "SOKETIKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SOKETISECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "DEBUG",
+      "value": "0"
+    },
+    {
+      "key": "SOKETI_PUSHER_SCHEME",
+      "value": "https"
+    },
+    {
+      "key": "DEFAULT_APP_ENABLE_CLIENT_MESSAGES",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "websockets",
+      "open",
+      "source",
+      "messaging"
+    ],
+    "links": {
+      "docs": "https://docs.soketi.app"
+    }
+  }
+}

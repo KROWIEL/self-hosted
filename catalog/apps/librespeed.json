@@ -1,0 +1,24 @@
+{
+  "slug": "librespeed",
+  "name": "Librespeed",
+  "description": "Self-hosted lightweight Speed Test.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  librespeed:\n    container_name: librespeed\n    image: 'ghcr.io/librespeed/speedtest:latest'\n    environment:\n      - MODE=standalone\n      - TELEMETRY=false\n      - DISTANCE=km\n      - WEBPORT=82\n    healthcheck:\n      test: 'curl 127.0.0.1:82 || exit 1'\n      timeout: 1s\n      interval: 1m0s\n      retries: 1\n",
+  "defaultPort": 82,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "speedtest",
+      "internet-speed"
+    ],
+    "links": {
+      "docs": "https://github.com/librespeed/speedtest"
+    }
+  }
+}

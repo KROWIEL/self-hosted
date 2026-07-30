@@ -1,0 +1,79 @@
+{
+  "slug": "rybbit",
+  "name": "Rybbit",
+  "description": "Open-source, privacy-first web analytics.",
+  "category": "Analytics",
+  "icon": "chart",
+  "upstream": "rybbit",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  rybbit:\n    image: 'ghcr.io/rybbit-io/rybbit-client:v2.2.3'\n    environment:\n      - NODE_ENV=production\n      - 'NEXT_PUBLIC_BACKEND_URL=${APP_URL}'\n      - 'NEXT_PUBLIC_DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}'\n    depends_on:\n      - rybbit_backend\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'nc -z 127.0.0.1 3002'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 10s\n  rybbit_backend:\n    image: 'ghcr.io/rybbit-io/rybbit-backend:v2.2.3'\n    environment:\n      - NODE_ENV=production\n      - TRUST_PROXY=true\n      - 'BASE_URL=${APP_URL}'\n      - 'CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'BETTER_AUTH_SECRET=${BACKEND_SECRET}'\n      - 'DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}'\n      - 'DISABLE_TELEMETRY=${DISABLE_TELEMETRY:-true}'\n      - 'CLICKHOUSE_HOST=http://rybbit_clickhouse:8123'\n      - 'CLICKHOUSE_USER=${CLICKHOUSE_USER:-default}'\n      - 'CLICKHOUSE_DB=${CLICKHOUSE_DB:-analytics}'\n      - POSTGRES_HOST=rybbit_postgres\n      - POSTGRES_PORT=5432\n      - 'POSTGRES_DB=${POSTGRES_DB:-analytics}'\n      - 'POSTGRES_USER=${POSTGRES_USER:-frog}'\n    depends_on:\n      rybbit_clickhouse:\n        condition: service_healthy\n      rybbit_postgres:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--no-verbose'\n        - '--tries=1'\n        - '--spider'\n        - 'http://127.0.0.1:3001/api/health'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 10s\n  rybbit_postgres:\n    image: 'postgres:17.4'\n    environment:\n      - 'POSTGRES_DB=${POSTGRES_DB:-analytics}'\n      - 'POSTGRES_USER=${POSTGRES_USER:-frog}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n    volumes:\n      - 'postgres_data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n  rybbit_clickhouse:\n    image: 'clickhouse/clickhouse-server:25.4.2'\n    environment:\n      - 'CLICKHOUSE_DB=${CLICKHOUSE_DB:-analytics}'\n      - 'CLICKHOUSE_USER=${CLICKHOUSE_USER:-default}'\n      - 'CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--no-verbose'\n        - '--tries=1'\n        - '--spider'\n        - 'http://localhost:8123/ping'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 10s\n    volumes:\n      - 'clickhouse_data:/var/lib/clickhouse'\n      -\n        type: bind\n        source: ./clickhouse_config/enable_json.xml\n        target: /etc/clickhouse-server/config.d/enable_json.xml\n        content: \"<clickhouse>\\n    <settings>\\n        <enable_json_type>1</enable_json_type>\\n    </settings>\\n</clickhouse>\\n\"\n      -\n        type: bind\n        source: ./clickhouse_config/logging_rules.xml\n        target: /etc/clickhouse-server/config.d/logging_rules.xml\n        content: \"<clickhouse>\\n    <logger>\\n        <level>warning</level>\\n        <console>true</console>\\n    </logger>\\n    <query_thread_log remove=\\\"remove\\\"/>\\n    <query_log remove=\\\"remove\\\"/>\\n    <text_log remove=\\\"remove\\\"/>\\n    <trace_log remove=\\\"remove\\\"/>\\n    <metric_log remove=\\\"remove\\\"/>\\n    <asynchronous_metric_log remove=\\\"remove\\\"/>\\n    <session_log remove=\\\"remove\\\"/>\\n    <part_log remove=\\\"remove\\\"/>\\n    <latency_log remove=\\\"remove\\\"/>\\n    <processors_profile_log remove=\\\"remove\\\"/>\\n</clickhouse>\"\n      -\n        type: bind\n        source: ./clickhouse_config/network.xml\n        target: /etc/clickhouse-server/config.d/network.xml\n        content: \"<clickhouse>\\n    <listen_host>0.0.0.0</listen_host>\\n</clickhouse>\\n\"\n      -\n        type: bind\n        source: ./clickhouse_config/user_logging.xml\n        target: /etc/clickhouse-server/config.d/user_logging.xml\n        content: \"<clickhouse>\\n    <profiles>\\n        <default>\\n            <log_queries>0</log_queries>\\n            <log_query_threads>0</log_query_threads>\\n            <log_processors_profiles>0</log_processors_profiles>\\n        </default>\\n    </profiles>\\n</clickhouse>\\n\"\n",
+  "defaultPort": 3002,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "CLICKHOUSE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "BACKEND_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "DISABLE_SIGNUP",
+      "value": "false"
+    },
+    {
+      "key": "DISABLE_TELEMETRY",
+      "value": "true"
+    },
+    {
+      "key": "CLICKHOUSE_USER",
+      "value": "default"
+    },
+    {
+      "key": "CLICKHOUSE_DB",
+      "value": "analytics"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "analytics"
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "frog"
+    }
+  ],
+  "meta": {
+    "about": "Web and products analytics that is easy to setup and more intuitive (alternative to Google Analytics).",
+    "license": "AGPL-3.0",
+    "tags": [
+      "analytics",
+      "web",
+      "privacy",
+      "self-hosted",
+      "clickhouse",
+      "postgres"
+    ],
+    "stars": 12530,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://rybbit.io/docs",
+      "website": "https://rybbit.com/",
+      "source": "https://github.com/rybbit-io/rybbit",
+      "demo": "https://demo.rybbit.com/1"
+    }
+  }
+}

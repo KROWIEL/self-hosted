@@ -1,0 +1,69 @@
+{
+  "slug": "keycloak",
+  "name": "Keycloak",
+  "description": "Keycloak is an open-source Identity and Access Management tool.",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  keycloak:\n    image: 'quay.io/keycloak/keycloak:26.1'\n    command:\n      - start\n    environment:\n      - 'TZ=${TIMEZONE:-UTC}'\n      - 'KC_BOOTSTRAP_ADMIN_USERNAME=${ADMIN_USER}'\n      - 'KC_BOOTSTRAP_ADMIN_PASSWORD=${ADMIN_PASSWORD}'\n      - 'KC_HOSTNAME=${APP_URL}'\n      - 'KC_HTTP_ENABLED=${KC_HTTP_ENABLED:-true}'\n      - 'KC_HEALTH_ENABLED=${KC_HEALTH_ENABLED:-true}'\n      - 'KC_PROXY_HEADERS=${KC_PROXY_HEADERS:-xforwarded}'\n    volumes:\n      - 'keycloak-data:/opt/keycloak/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost:9000\\r\\nConnection: close\\r\\n\\r\\n' >&3;cat <&3 | grep -q '\\\"status\\\": \\\"UP\\\"' && exit 0 || exit 1\"\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ADMIN_USER",
+      "value": "admin"
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TIMEZONE",
+      "value": "UTC"
+    },
+    {
+      "key": "KC_HTTP_ENABLED",
+      "value": "true"
+    },
+    {
+      "key": "KC_HEALTH_ENABLED",
+      "value": "true"
+    },
+    {
+      "key": "KC_PROXY_HEADERS",
+      "value": "xforwarded"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "keycloak",
+      "identity",
+      "access",
+      "management",
+      "iam",
+      "authentication",
+      "authorization",
+      "security",
+      "oauth2",
+      "openid-connect",
+      "sso",
+      "single-sign-on",
+      "saml",
+      "rbac",
+      "ldap",
+      "jwt",
+      "social-login"
+    ],
+    "links": {
+      "docs": "https://www.keycloak.org"
+    }
+  }
+}

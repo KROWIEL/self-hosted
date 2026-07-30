@@ -23,5 +23,18 @@
       "key": "TZ",
       "value": "UTC"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Browser-based flow editor that helps you wiring hardware devices, APIs and online services to create IoT solutions.",
+    "license": "Apache-2.0",
+    "tags": [
+      "Internet of Things (IoT)"
+    ],
+    "stars": 23451,
+    "updatedAt": "2026-07-13",
+    "links": {
+      "website": "https://nodered.org/",
+      "source": "https://github.com/node-red/node-red"
+    }
+  }
 }

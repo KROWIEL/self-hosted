@@ -1,0 +1,141 @@
+{
+  "slug": "chatwoot",
+  "name": "Chatwoot",
+  "description": "Delightful customer relationships at scale.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "chatwoot",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  chatwoot:\n    image: 'chatwoot/chatwoot:latest'\n    depends_on:\n      - postgres\n      - redis\n    environment:\n      - SECRET_KEY_BASE=${CHATWOOT_PASSWORD}\n      - 'FRONTEND_URL=${APP_URL}'\n      - 'DEFAULT_LOCALE=${CHATWOOT_DEFAULT_LOCALE}'\n      - 'FORCE_SSL=${FORCE_SSL:-false}'\n      - 'ENABLE_ACCOUNT_SIGNUP=${ENABLE_ACCOUNT_SIGNUP:-false}'\n      - 'REDIS_URL=redis://default@redis:6379'\n      - REDIS_PASSWORD=${REDIS_PASSWORD}\n      - 'REDIS_OPENSSL_VERIFY_MODE=${REDIS_OPENSSL_VERIFY_MODE:-none}'\n      - 'POSTGRES_DATABASE=${POSTGRES_DB:-chatwoot}'\n      - 'POSTGRES_HOST=${POSTGRES_HOST:-postgres}'\n      - POSTGRES_USERNAME=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - 'RAILS_MAX_THREADS=${RAILS_MAX_THREADS:-5}'\n      - 'NODE_ENV=${NODE_ENV:-production}'\n      - 'RAILS_ENV=${RAILS_ENV:-production}'\n      - 'INSTALLATION_ENV=${INSTALLATION_ENV:-docker}'\n      - 'MAILER_SENDER_EMAIL=${CHATWOOT_MAILER_SENDER_EMAIL}'\n      - 'SMTP_ADDRESS=${CHATWOOT_SMTP_ADDRESS}'\n      - 'SMTP_AUTHENTICATION=${CHATWOOT_SMTP_AUTHENTICATION}'\n      - 'SMTP_DOMAIN=${CHATWOOT_SMTP_DOMAIN}'\n      - 'SMTP_ENABLE_STARTTLS_AUTO=${CHATWOOT_SMTP_ENABLE_STARTTLS_AUTO}'\n      - 'SMTP_PORT=${CHATWOOT_SMTP_PORT}'\n      - 'SMTP_USERNAME=${CHATWOOT_SMTP_USERNAME}'\n      - 'SMTP_PASSWORD=${CHATWOOT_SMTP_PASSWORD}'\n      - 'ACTIVE_STORAGE_SERVICE=${ACTIVE_STORAGE_SERVICE:-local}'\n      - 'SAFE_FETCH_ALLOW_PRIVATE_NETWORK=${SAFE_FETCH_ALLOW_PRIVATE_NETWORK:-false}'\n    entrypoint: docker/entrypoints/rails.sh\n    command: 'sh -c \"bundle exec rails db:chatwoot_prepare && bundle exec rails s -p 3000 -b 0.0.0.0\"'\n    volumes:\n      - 'rails-data:/app/storage'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--spider'\n        - '-q'\n        - 'http://127.0.0.1:3000'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  sidekiq:\n    image: 'chatwoot/chatwoot:latest'\n    depends_on:\n      - postgres\n      - redis\n    environment:\n      - SECRET_KEY_BASE=${CHATWOOT_PASSWORD}\n      - 'FRONTEND_URL=${APP_URL}'\n      - 'DEFAULT_LOCALE=${CHATWOOT_DEFAULT_LOCALE}'\n      - 'FORCE_SSL=${FORCE_SSL:-false}'\n      - 'ENABLE_ACCOUNT_SIGNUP=${ENABLE_ACCOUNT_SIGNUP:-false}'\n      - 'REDIS_URL=redis://default@redis:6379'\n      - REDIS_PASSWORD=${REDIS_PASSWORD}\n      - 'REDIS_OPENSSL_VERIFY_MODE=${REDIS_OPENSSL_VERIFY_MODE:-none}'\n      - 'POSTGRES_DATABASE=${POSTGRES_DB:-chatwoot}'\n      - 'POSTGRES_HOST=${POSTGRES_HOST:-postgres}'\n      - POSTGRES_USERNAME=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - 'RAILS_MAX_THREADS=${RAILS_MAX_THREADS:-5}'\n      - 'NODE_ENV=${NODE_ENV:-production}'\n      - 'RAILS_ENV=${RAILS_ENV:-production}'\n      - 'INSTALLATION_ENV=${INSTALLATION_ENV:-docker}'\n      - 'MAILER_SENDER_EMAIL=${CHATWOOT_MAILER_SENDER_EMAIL}'\n      - 'SMTP_ADDRESS=${CHATWOOT_SMTP_ADDRESS}'\n      - 'SMTP_AUTHENTICATION=${CHATWOOT_SMTP_AUTHENTICATION}'\n      - 'SMTP_DOMAIN=${CHATWOOT_SMTP_DOMAIN}'\n      - 'SMTP_ENABLE_STARTTLS_AUTO=${CHATWOOT_SMTP_ENABLE_STARTTLS_AUTO}'\n      - 'SMTP_PORT=${CHATWOOT_SMTP_PORT}'\n      - 'SMTP_USERNAME=${CHATWOOT_SMTP_USERNAME}'\n      - 'SMTP_PASSWORD=${CHATWOOT_SMTP_PASSWORD}'\n      - 'ACTIVE_STORAGE_SERVICE=${ACTIVE_STORAGE_SERVICE:-local}'\n    command:\n      - bundle\n      - exec\n      - sidekiq\n      - '-C'\n      - config/sidekiq.yml\n    volumes:\n      - 'rails-data:/app/storage'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bundle exec rails runner 'puts Sidekiq.redis(&:info)' > /dev/null 2>&1\"\n      interval: 30s\n      timeout: 10s\n      retries: 3\n  postgres:\n    image: 'pgvector/pgvector:pg12'\n    restart: always\n    volumes:\n      - 'postgres-data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_DB=${POSTGRES_DB:-chatwoot}'\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U ${POSTGRES_USER} -d chatwoot -h 127.0.0.1'\n      interval: 30s\n      timeout: 10s\n      retries: 5\n  redis:\n    image: 'redis:alpine'\n    restart: always\n    command:\n      - sh\n      - '-c'\n      - 'redis-server --requirepass \"${REDIS_PASSWORD}\"'\n    volumes:\n      - 'redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - '-a'\n        - ${REDIS_PASSWORD}\n        - PING\n      interval: 30s\n      timeout: 10s\n      retries: 5\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "CHATWOOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CHATWOOT_DEFAULT_LOCALE",
+      "value": ""
+    },
+    {
+      "key": "FORCE_SSL",
+      "value": "false"
+    },
+    {
+      "key": "ENABLE_ACCOUNT_SIGNUP",
+      "value": "false"
+    },
+    {
+      "key": "REDIS_OPENSSL_VERIFY_MODE",
+      "value": "none"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "chatwoot"
+    },
+    {
+      "key": "POSTGRES_HOST",
+      "value": "postgres"
+    },
+    {
+      "key": "RAILS_MAX_THREADS",
+      "value": "5"
+    },
+    {
+      "key": "NODE_ENV",
+      "value": "production"
+    },
+    {
+      "key": "RAILS_ENV",
+      "value": "production"
+    },
+    {
+      "key": "INSTALLATION_ENV",
+      "value": "docker"
+    },
+    {
+      "key": "CHATWOOT_MAILER_SENDER_EMAIL",
+      "value": ""
+    },
+    {
+      "key": "CHATWOOT_SMTP_ADDRESS",
+      "value": ""
+    },
+    {
+      "key": "CHATWOOT_SMTP_AUTHENTICATION",
+      "value": ""
+    },
+    {
+      "key": "CHATWOOT_SMTP_DOMAIN",
+      "value": ""
+    },
+    {
+      "key": "CHATWOOT_SMTP_ENABLE_STARTTLS_AUTO",
+      "value": ""
+    },
+    {
+      "key": "CHATWOOT_SMTP_PORT",
+      "value": ""
+    },
+    {
+      "key": "CHATWOOT_SMTP_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "CHATWOOT_SMTP_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "ACTIVE_STORAGE_SERVICE",
+      "value": "local"
+    },
+    {
+      "key": "SAFE_FETCH_ALLOW_PRIVATE_NETWORK",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "about": "Customer communication platform (alternative to Intercom and Zendesk).",
+    "license": "⊘ Proprietary",
+    "tags": [
+      "chatwoot",
+      "chat",
+      "api",
+      "open",
+      "source",
+      "rails",
+      "redis",
+      "postgresql",
+      "sidekiq"
+    ],
+    "stars": 34812,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://www.chatwoot.com/docs/self-hosted/",
+      "website": "https://www.chatwoot.com",
+      "source": "https://github.com/chatwoot/chatwoot"
+    }
+  }
+}

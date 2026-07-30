@@ -1,0 +1,68 @@
+{
+  "slug": "codimd",
+  "name": "Codimd",
+  "description": "Realtime collaborative markdown notes on all platforms",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  codimd:\n    image: 'nabo.codimd.dev/hackmdio/hackmd:latest'\n    environment:\n      - 'CMD_DOMAIN=${APP_URL}'\n      - 'CMD_PROTOCOL_USESSL=${CMD_PROTOCOL_USESSL:-true}'\n      - 'CMD_SESSION_SECRET=${SESSIONSECRET}'\n      - 'CMD_USECDN=${CMD_USECDN:-false}'\n      - 'CMD_DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-codimd-db}'\n      - 'CMD_EMAIL=${CMD_EMAIL:-true}'\n      - 'CMD_ALLOW_EMAIL_REGISTER=${CMD_ALLOW_EMAIL_REGISTER:-true}'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'curl -f http://localhost:3000/ || exit 1'\n      interval: 5s\n      timeout: 20s\n      retries: 5\n    volumes:\n      - 'uploads_data:/home/hackmd/app/public/uploads'\n  postgres:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'codimd_postgres_data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-codimd-db}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "SESSIONSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CMD_PROTOCOL_USESSL",
+      "value": "true"
+    },
+    {
+      "key": "CMD_USECDN",
+      "value": "false"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "codimd-db"
+    },
+    {
+      "key": "CMD_EMAIL",
+      "value": "true"
+    },
+    {
+      "key": "CMD_ALLOW_EMAIL_REGISTER",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "markdown",
+      "md",
+      "editor",
+      "opensource",
+      "collaborative",
+      "realtime-collaboration",
+      "notes"
+    ],
+    "links": {
+      "docs": "https://hackmd.io/c/codimd-documentation"
+    }
+  }
+}

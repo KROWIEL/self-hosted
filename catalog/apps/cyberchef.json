@@ -1,0 +1,35 @@
+{
+  "slug": "cyberchef",
+  "name": "CyberChef",
+  "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression and data analysis",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "cyberchef",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  cyberchef:\n    image: 'ghcr.io/gchq/cyberchef:latest'\n    platform: linux/amd64\n    environment:\n    volumes:\n      - 'cyberchef-data:/app/data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:80'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Perform all manner of operations within a web browser such as AES, DES and Blowfish encryption and decryption, creating hexdumps, calculating hashes, and much more.",
+    "license": "Apache-2.0",
+    "tags": [
+      "encryption",
+      "encoding",
+      "compression",
+      "data analysis",
+      "tools",
+      "development"
+    ],
+    "stars": 35453,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "docs": "https://github.com/gchq/CyberChef",
+      "website": "https://github.com/gchq/CyberChef",
+      "source": "https://github.com/gchq/CyberChef",
+      "demo": "https://gchq.github.io/CyberChef"
+    }
+  }
+}

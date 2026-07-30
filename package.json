@@ -20,8 +20,10 @@
     "db:generate": "npm run db:generate --workspace @selfhosted/control-plane",
     "db:migrate": "npm run db:migrate --workspace @selfhosted/control-plane",
     "catalog:validate": "node tools/catalog/validate.mjs",
+    "catalog:import": "node tools/catalog/import-coolify.mjs",
     "catalog:check-images": "node tools/catalog/check-images.mjs",
-    "catalog:sync": "node tools/catalog/sync.mjs"
+    "catalog:sync": "node tools/catalog/sync.mjs",
+    "catalog:enrich": "node tools/catalog/enrich.mjs"
   },
   "devDependencies": {
     "drizzle-kit": "^0.24.2",

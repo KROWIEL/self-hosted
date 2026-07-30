@@ -1,0 +1,67 @@
+{
+  "slug": "espocrm",
+  "name": "EspoCRM",
+  "description": "EspoCRM is a free and open-source CRM platform.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "espocrm",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  espocrm:\n    image: 'espocrm/espocrm:10'\n    container_name: espocrm\n    environment:\n      - 'ESPOCRM_ADMIN_USERNAME=${ESPOCRM_ADMIN_USERNAME:-admin}'\n      - 'ESPOCRM_ADMIN_PASSWORD=${ADMIN_PASSWORD}'\n      - ESPOCRM_DATABASE_PLATFORM=Mysql\n      - ESPOCRM_DATABASE_HOST=espocrm-db\n      - 'ESPOCRM_DATABASE_NAME=${MARIADB_DATABASE:-espocrm}'\n      - 'ESPOCRM_DATABASE_USER=${MARIADB_USER}'\n      - 'ESPOCRM_DATABASE_PASSWORD=${MARIADB_PASSWORD}'\n      - 'ESPOCRM_SITE_URL=${APP_URL}'\n    volumes:\n      - 'espocrm-data:/var/www/html/data'\n      - 'espocrm-custom:/var/www/html/custom'\n      - 'espocrm-custom-client:/var/www/html/client/custom'\n    restart: unless-stopped\n    depends_on:\n      espocrm-db:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - bin/command\n        - app-check\n      start_period: 20s\n      interval: 60s\n      timeout: 20s\n      retries: 3\n  espocrm-daemon:\n    image: 'espocrm/espocrm:10'\n    container_name: espocrm-daemon\n    volumes_from:\n      - espocrm\n    restart: unless-stopped\n    entrypoint: docker-daemon.sh\n    depends_on:\n      espocrm:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - bin/command\n        - app-check\n      start_period: 20s\n      interval: 180s\n      timeout: 20s\n      retries: 3\n  espocrm-websocket:\n    image: 'espocrm/espocrm:10'\n    container_name: espocrm-websocket\n    environment:\n      - ESPOCRM_CONFIG_USE_WEB_SOCKET=true\n      - ESPOCRM_CONFIG_WEB_SOCKET_URL=${APP_URL}\n      - 'ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBSCRIBER_DSN=tcp://*:7777'\n      - 'ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBMISSION_DSN=tcp://espocrm-websocket:7777'\n    volumes_from:\n      - espocrm\n    restart: unless-stopped\n    entrypoint: docker-websocket.sh\n    depends_on:\n      espocrm:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - bin/command\n        - app-check\n      start_period: 20s\n      interval: 180s\n      timeout: 20s\n      retries: 3\n  espocrm-db:\n    image: 'mariadb:12.3'\n    container_name: espocrm-db\n    environment:\n      - 'MARIADB_DATABASE=${MARIADB_DATABASE:-espocrm}'\n      - 'MARIADB_USER=${MARIADB_USER}'\n      - 'MARIADB_PASSWORD=${MARIADB_PASSWORD}'\n      - 'MARIADB_ROOT_PASSWORD=${ROOT_PASSWORD}'\n    volumes:\n      - 'espocrm-db:/var/lib/mysql'\n    restart: unless-stopped\n    healthcheck:\n      test:\n        - CMD\n        - healthcheck.sh\n        - '--connect'\n        - '--innodb_initialized'\n      interval: 20s\n      start_period: 10s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MARIADB_USER",
+      "value": "mariadb"
+    },
+    {
+      "key": "MARIADB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ESPOCRM_ADMIN_USERNAME",
+      "value": "admin"
+    },
+    {
+      "key": "MARIADB_DATABASE",
+      "value": "espocrm"
+    }
+  ],
+  "meta": {
+    "about": "CRM with a frontend designed as a single page application, and a REST API.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "crm",
+      "self-hosted",
+      "open-source",
+      "workflow",
+      "automation",
+      "project management"
+    ],
+    "stars": 3172,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "docs": "https://docs.espocrm.com",
+      "website": "https://www.espocrm.com/",
+      "source": "https://github.com/espocrm/espocrm",
+      "demo": "https://demo.espocrm.com/"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "slug": "seaweedfs",
+  "name": "SeaweedFS",
+  "description": "SeaweedFS is a simple and highly scalable distributed file system. Compatible with S3, with an admin web interface.",
+  "category": "Storage",
+  "icon": "storage",
+  "upstream": "seaweedfs",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  seaweedfs-master:\n    image: 'chrislusf/seaweedfs:4.13'\n    environment:\n      - 'AWS_ACCESS_KEY_ID=${S3_USER}'\n      - 'AWS_SECRET_ACCESS_KEY=${S3_PASSWORD}'\n    volumes:\n      - 'seaweedfs-s3-data:/data'\n      -\n        type: bind\n        source: ./base-config.json\n        target: /base-config.json\n        content: \"{\\n  \\\"identities\\\": [\\n    {\\n      \\\"name\\\": \\\"anonymous\\\",\\n      \\\"actions\\\": [\\n        \\\"Read\\\"\\n      ]\\n    },\\n    {\\n      \\\"name\\\": \\\"admin\\\",\\n      \\\"credentials\\\": [\\n        {\\n          \\\"accessKey\\\": \\\"env:AWS_ACCESS_KEY_ID\\\",\\n          \\\"secretKey\\\": \\\"env:AWS_SECRET_ACCESS_KEY\\\"\\n        }\\n      ],\\n      \\\"actions\\\": [\\n        \\\"Admin\\\",\\n        \\\"Read\\\",\\n        \\\"ReadAcp\\\",\\n        \\\"List\\\",\\n        \\\"Tagging\\\",\\n        \\\"Write\\\",\\n        \\\"WriteAcp\\\"\\n      ]\\n    }\\n  ]\\n}\\n\"\n    entrypoint: \"sh -c '\\\\\\nsed \\\"s/env:AWS_ACCESS_KEY_ID/$AWS_ACCESS_KEY_ID/g\\\" /base-config.json > /base1-config.json; \\\\\\nsed \\\"s/env:AWS_SECRET_ACCESS_KEY/$AWS_SECRET_ACCESS_KEY/g\\\" /base1-config.json > /config.json; \\\\\\nweed server -dir=/data -master.port=9333 -s3 -s3.port=8333 -s3.config=/config.json\\\\\\n'\\n\"\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --spider -q http://0.0.0.0:8333; [ $$? -le 8 ]'\n      interval: 10s\n      timeout: 5s\n      retries: 10\n  seaweedfs-admin:\n    image: 'chrislusf/seaweedfs:4.13'\n    environment:\n      - 'SEAWEED_USER_ADMIN=${ADMIN_USER}'\n      - 'SEAWEED_PASSWORD_ADMIN=${ADMIN_PASSWORD}'\n    command:\n      - admin\n      - '-master=seaweedfs-master:9333'\n      - '-adminUser=${SEAWEED_USER_ADMIN}'\n      - '-adminPassword=${SEAWEED_PASSWORD_ADMIN}'\n      - '-port=23646'\n      - '-dataDir=/data'\n    volumes:\n      - 'seaweedfs-admin-data:/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --spider -q http://0.0.0.0:23646; [ $$? -le 8 ]'\n      interval: 10s\n      timeout: 5s\n      retries: 10\n    depends_on:\n      seaweedfs-master:\n        condition: service_healthy\n",
+  "defaultPort": 8333,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "S3_USER",
+      "value": "s3"
+    },
+    {
+      "key": "S3_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ADMIN_USER",
+      "value": "admin"
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SEAWEED_USER_ADMIN",
+      "value": ""
+    },
+    {
+      "key": "SEAWEED_PASSWORD_ADMIN",
+      "secret": true
+    }
+  ],
+  "meta": {
+    "about": "SeaweedFS is an open source distributed file system supporting WebDAV, S3 API, FUSE mount, HDFS, etc, optimized for lots of small files, and easy to add capacity.",
+    "license": "Apache-2.0",
+    "tags": [
+      "object",
+      "storage",
+      "server",
+      "s3",
+      "api"
+    ],
+    "stars": 33742,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://github.com/seaweedfs/seaweedfs",
+      "website": "https://github.com/seaweedfs/seaweedfs",
+      "source": "https://github.com/seaweedfs/seaweedfs"
+    }
+  }
+}

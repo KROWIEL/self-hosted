@@ -23,5 +23,18 @@
       "key": "OLLAMA_HOST",
       "value": "0.0.0.0:11434"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Get up and running with Llama 3.3, DeepSeek-R1, Phi-4, Gemma 3, and other large language models.",
+    "license": "MIT",
+    "tags": [
+      "Generative Artificial Intelligence (GenAI)"
+    ],
+    "stars": 177027,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://ollama.com/",
+      "source": "https://github.com/ollama/ollama"
+    }
+  }
 }

@@ -1,0 +1,52 @@
+{
+  "slug": "hermes-agent-with-webui",
+  "name": "Hermes Agent With Webui",
+  "description": "Hermes Agent — autonomous AI agent with persistent memory, scheduling, and a self-hosted web chat UI.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  hermes-agent:\n    image: 'nousresearch/hermes-agent@sha256:2f1f2f1725e5dc9a61cf6a2dea5aca52a776ec4d022cb29679e6aa3ff303e77a'\n    command: 'gateway run'\n    environment:\n      - HERMES_HOME=/home/hermes/.hermes\n      - HERMES_UID=1000\n      - HERMES_GID=1000\n      - 'OPENROUTER_API_KEY=${OPENROUTER_API_KEY}'\n      - 'ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}'\n      - 'OPENAI_API_KEY=${OPENAI_API_KEY}'\n      - 'GOOGLE_API_KEY=${GOOGLE_API_KEY}'\n    volumes:\n      - 'hermes-home:/home/hermes/.hermes'\n      - 'hermes-agent-src:/opt/hermes'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'test -d /home/hermes/.hermes || exit 1'\n      interval: 10s\n      timeout: 5s\n      retries: 5\n  hermes-webui:\n    image: 'ghcr.io/nesquena/hermes-webui:0.51.92'\n    depends_on:\n      - hermes-agent\n    environment:\n      - HERMES_WEBUI_HOST=0.0.0.0\n      - HERMES_WEBUI_PORT=8787\n      - HERMES_WEBUI_STATE_DIR=/home/hermeswebui/.hermes/webui\n      - WANTED_UID=1000\n      - WANTED_GID=1000\n      - 'HERMES_WEBUI_PASSWORD=${HERMESWEBUI_PASSWORD}'\n    volumes:\n      - 'hermes-home:/home/hermeswebui/.hermes'\n      - 'hermes-agent-src:/home/hermeswebui/.hermes/hermes-agent:ro'\n      - 'hermes-workspace:/workspace'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8787/health'\n      interval: 30s\n      timeout: 5s\n      retries: 3\n",
+  "defaultPort": 8787,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "HERMESWEBUI_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "OPENROUTER_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "ANTHROPIC_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "OPENAI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "GOOGLE_API_KEY",
+      "secret": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "ai",
+      "agent",
+      "llm",
+      "chatbot",
+      "hermes",
+      "openrouter",
+      "anthropic",
+      "openai"
+    ],
+    "links": {
+      "docs": "https://github.com/nesquena/hermes-webui"
+    }
+  }
+}

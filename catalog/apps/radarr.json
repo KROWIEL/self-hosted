@@ -1,0 +1,40 @@
+{
+  "slug": "radarr",
+  "name": "Radarr",
+  "description": "Radarr⁠ - A fork of Sonarr to work with movies à la Couchpotato.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "radarr",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  radarr:\n    image: 'lscr.io/linuxserver/radarr:latest'\n    environment:\n      - _APP_URL=${APP_URL}\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-America/Toronto}'\n    volumes:\n      - 'radarr-config:/config'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:7878/ping'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 7878,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "America/Toronto"
+    }
+  ],
+  "meta": {
+    "about": "Automatically download movies via Usenet and BitTorrent (fork of Sonarr).",
+    "license": "GPL-3.0",
+    "tags": [
+      "media",
+      "server",
+      "movies"
+    ],
+    "stars": 14063,
+    "updatedAt": "2026-07-26",
+    "links": {
+      "docs": "https://hub.docker.com/r/linuxserver/radarr",
+      "website": "https://radarr.video/",
+      "source": "https://github.com/Radarr/Radarr"
+    }
+  }
+}

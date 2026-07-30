@@ -1,0 +1,44 @@
+{
+  "slug": "plex",
+  "name": "Plex",
+  "description": "Plex organizes video, music and photos from personal media libraries and streams them to smart TVs, streaming boxes and mobile devices.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "plex",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  plex:\n    image: 'lscr.io/linuxserver/plex:latest'\n    environment:\n      - _APP_URL=${APP_URL}\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-America/Toronto}'\n      - 'PLEX_CLAIM=${PLEX_CLAIM}'\n    volumes:\n      - 'plex-config:/config'\n      - 'plex-tv:/tv'\n      - 'plex-movies:/movies'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:32400/identity'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 32400,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "America/Toronto"
+    },
+    {
+      "key": "PLEX_CLAIM",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Centralized home media playback system with a powerful central server.",
+    "license": "⊘ Proprietary",
+    "tags": [
+      "media",
+      "server",
+      "movies",
+      "tv",
+      "music"
+    ],
+    "links": {
+      "docs": "https://docs.linuxserver.io/images/docker-plex/",
+      "website": "https://www.plex.tv/",
+      "source": "https://www.plex.tv/"
+    }
+  }
+}

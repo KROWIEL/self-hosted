@@ -1,0 +1,33 @@
+{
+  "slug": "drizzle-gateway",
+  "name": "Drizzle Gateway",
+  "description": "Free self-hosted Drizzle Studio on steroids",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  drizzle-gateway:\n    image: 'ghcr.io/drizzle-team/gateway:latest'\n    environment:\n      - STORE_PATH=/app\n      - MASTERPASS=${DRIZZLE_PASSWORD}\n    volumes:\n      - 'drizzle-gateway-data:/app'\n",
+  "defaultPort": 4983,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DRIZZLE_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "drizzle",
+      "gateway",
+      "self-hosted",
+      "open-source",
+      "low-code"
+    ],
+    "links": {
+      "docs": "https://gateway.drizzle.team/"
+    }
+  }
+}

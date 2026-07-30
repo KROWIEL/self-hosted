@@ -1,0 +1,33 @@
+{
+  "slug": "triliumnext",
+  "name": "Triliumnext",
+  "description": "Build your personal knowledge base with TriliumNext Notes.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  triliumnext:\n    image: 'ghcr.io/triliumnext/trilium:stable'\n    platform: linux/amd64\n    environment:\n      - 'TZ=${TZ:-Europe/Berlin}'\n    volumes:\n      - 'triliumnext_data:/home/node/trilium-data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --quiet --tries=1 --spider http://127.0.0.1:8080/api/health-check || exit 1'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "TZ",
+      "value": "Europe/Berlin"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "self-hosted",
+      "notes",
+      "todo",
+      "organize",
+      "markdown",
+      "wiki"
+    ],
+    "links": {
+      "docs": "https://github.com/TriliumNext/Trilium"
+    }
+  }
+}

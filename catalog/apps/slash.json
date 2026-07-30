@@ -1,0 +1,35 @@
+{
+  "slug": "slash",
+  "name": "Slash",
+  "description": "An open source, self-hosted links shortener and sharing platform.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "slash",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  slash:\n    image: yourselfhosted/slash:latest\n    environment:\n    volumes:\n      - 'slash-data:/var/opt/slash'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:5231'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 5231,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "An open source, self-hosted bookmarks and link sharing platform.",
+    "license": "GPL-3.0",
+    "tags": [
+      "links",
+      "shortener",
+      "sharing",
+      "url",
+      "short",
+      "link",
+      "sharing"
+    ],
+    "stars": 3167,
+    "updatedAt": "2025-12-22",
+    "links": {
+      "docs": "https://github.com/yourselfhosted/slash",
+      "website": "https://github.com/yourselfhosted/slash",
+      "source": "https://github.com/yourselfhosted/slash"
+    }
+  }
+}

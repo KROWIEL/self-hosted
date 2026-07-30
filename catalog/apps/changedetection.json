@@ -1,0 +1,86 @@
+{
+  "slug": "changedetection",
+  "name": "Changedetection",
+  "description": "Website change detection monitor and notifications.",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  changedetection:\n    image: ghcr.io/dgtlmoon/changedetection.io:latest\n    volumes:\n      - 'changedetection-data:/datastore'\n    environment:\n      - 'BASE_URL=${APP_URL}'\n      - 'PUID=${PUID:-1000}'\n      - 'PGID=${PGID:-1000}'\n      - 'PLAYWRIGHT_DRIVER_URL=${PLAYWRIGHT_DRIVER_URL:-ws://browser-sockpuppet-chrome:3000}'\n      - 'HIDE_REFERER=${HIDE_REFERER:-true}'\n      - 'FETCH_WORKERS=${FETCH_WORKERS:-10}'\n      - 'MINIMUM_SECONDS_RECHECK_TIME=${MINIMUM_SECONDS_RECHECK_TIME:-3}'\n      - 'DISABLE_VERSION_CHECK=${DISABLE_VERSION_CHECK:-true}'\n      - 'SCREENSHOT_MAX_HEIGHT=${SCREENSHOT_MAX_HEIGHT:-16000}'\n      - 'TZ=${TZ:-UTC}'\n      - 'LOGGER_LEVEL=${LOGGER_LEVEL:-DEBUG}'\n    healthcheck:\n      test:\n        - CMD\n        - echo\n        - ok\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    depends_on:\n      browser-sockpuppet-chrome:\n        condition: service_started\n  browser-sockpuppet-chrome:\n    hostname: browser-sockpuppet-chrome\n    image: 'dgtlmoon/sockpuppetbrowser:latest'\n    cap_add:\n      - SYS_ADMIN\n    environment:\n      - 'SCREEN_WIDTH=${SCREEN_WIDTH:-1920}'\n      - 'SCREEN_HEIGHT=${SCREEN_HEIGHT:-1024}'\n      - 'SCREEN_DEPTH=${SCREEN_DEPTH:-16}'\n      - 'MAX_CONCURRENT_CHROME_PROCESSES=${MAX_CONCURRENT_CHROME_PROCESSES:-10}'\n    healthcheck:\n      test:\n        - CMD\n        - echo\n        - ok\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 5000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "PUID",
+      "value": "1000"
+    },
+    {
+      "key": "PGID",
+      "value": "1000"
+    },
+    {
+      "key": "PLAYWRIGHT_DRIVER_URL",
+      "value": "ws://browser-sockpuppet-chrome:3000"
+    },
+    {
+      "key": "HIDE_REFERER",
+      "value": "true"
+    },
+    {
+      "key": "FETCH_WORKERS",
+      "value": "10"
+    },
+    {
+      "key": "MINIMUM_SECONDS_RECHECK_TIME",
+      "value": "3"
+    },
+    {
+      "key": "DISABLE_VERSION_CHECK",
+      "value": "true"
+    },
+    {
+      "key": "SCREENSHOT_MAX_HEIGHT",
+      "value": "16000"
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    },
+    {
+      "key": "LOGGER_LEVEL",
+      "value": "DEBUG"
+    },
+    {
+      "key": "SCREEN_WIDTH",
+      "value": "1920"
+    },
+    {
+      "key": "SCREEN_HEIGHT",
+      "value": "1024"
+    },
+    {
+      "key": "SCREEN_DEPTH",
+      "value": "16"
+    },
+    {
+      "key": "MAX_CONCURRENT_CHROME_PROCESSES",
+      "value": "10"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "web",
+      "alert",
+      "monitor"
+    ],
+    "links": {
+      "docs": "https://github.com/dgtlmoon/changedetection.io/"
+    }
+  }
+}

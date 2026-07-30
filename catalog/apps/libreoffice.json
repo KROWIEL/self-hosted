@@ -1,0 +1,40 @@
+{
+  "slug": "libreoffice",
+  "name": "Libreoffice",
+  "description": "LibreOffice is a free and powerful office suite.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  libreoffice:\n    image: 'lscr.io/linuxserver/libreoffice:latest'\n    environment:\n      - 'PUID=${PUID:-1000}'\n      - 'PGID=${PGID:-1000}'\n      - 'TZ=${TZ:-Etc/UTC}'\n    volumes:\n      - 'libreoffice-config:/config'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://localhost:3000'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "PUID",
+      "value": "1000"
+    },
+    {
+      "key": "PGID",
+      "value": "1000"
+    },
+    {
+      "key": "TZ",
+      "value": "Etc/UTC"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "office",
+      "document",
+      "spreadsheet",
+      "presentation",
+      "open-source"
+    ],
+    "links": {
+      "docs": "https://docs.linuxserver.io/images/docker-libreoffice/"
+    }
+  }
+}

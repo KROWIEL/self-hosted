@@ -1,0 +1,83 @@
+{
+  "slug": "reactive-resume",
+  "name": "Reactive Resume",
+  "description": "A one-of-a-kind resume builder that keeps your privacy in mind.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "reactive-resume",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  reactive-resume:\n    image: 'amruthpillai/reactive-resume:v4.3.7'\n    environment:\n      - PUBLIC_URL=${APP_URL}\n      - 'STORAGE_URL=${APP_URL}/default'\n      - 'DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}'\n      - ACCESS_TOKEN_SECRET=${ACCESSTOKEN}\n      - REFRESH_TOKEN_SECRET=${REFRESHTOKEN}\n      - CHROME_TOKEN=${CHROMETOKEN}\n      - 'CHROME_URL=ws://chrome:3000/chrome'\n      - 'REDIS_URL=redis://redis:6379'\n      - STORAGE_ENDPOINT=minio\n      - STORAGE_PORT=9000\n      - STORAGE_REGION=us-east-1\n      - STORAGE_BUCKET=default\n      - STORAGE_ACCESS_KEY=${MINIO_USER}\n      - STORAGE_SECRET_KEY=${MINIO_PASSWORD}\n      - STORAGE_USE_SSL=false\n      - 'DISABLE_SIGNUPS=${SERVICE_DISABLE_SIGNUPS:-false}'\n      - 'DISABLE_EMAIL_AUTH=${SERVICE_DISABLE_EMAIL_AUTH:-false}'\n    depends_on:\n      - postgres\n      - minio\n      - chrome\n    healthcheck:\n      test:\n        - CMD\n        - node\n        - '-e'\n        - \"require('http').get('http://127.0.0.1:3000', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\"\n      interval: 10s\n      timeout: 3s\n      retries: 5\n      start_period: 10s\n  postgres:\n    image: 'postgres:16-alpine'\n    environment:\n      - 'POSTGRES_DB=${POSTGRES_DB:-postgres}'\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n    volumes:\n      - 'postgres-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  minio:\n    image: 'ghcr.io/coollabsio/minio:RELEASE.2025-10-15T17-29-55Z'\n    command: 'server /data --console-address \":9001\"'\n    environment:\n      - MINIO_SERVER_URL=$MINIO_SERVER_URL\n      - MINIO_BROWSER_REDIRECT_URL=$MINIO_BROWSER_REDIRECT_URL\n      - MINIO_ROOT_USER=${MINIO_USER}\n      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}\n    volumes:\n      - 'minio-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - mc\n        - ready\n        - local\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  chrome:\n    image: 'ghcr.io/browserless/chrome:latest'\n    platform: linux/amd64\n    environment:\n      - HEALTH=true\n      - TIMEOUT=10000\n      - CONCURRENT=10\n      - TOKEN=${CHROMETOKEN}\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000/'\n      interval: 10s\n      timeout: 3s\n      retries: 5\n  redis:\n    image: 'redis:7-alpine'\n    command: redis-server\n    volumes:\n      - 'redis_data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ACCESSTOKEN",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "REFRESHTOKEN",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CHROMETOKEN",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MINIO_USER",
+      "value": "minio"
+    },
+    {
+      "key": "MINIO_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "postgres"
+    },
+    {
+      "key": "SERVICE_DISABLE_SIGNUPS",
+      "value": "false"
+    },
+    {
+      "key": "SERVICE_DISABLE_EMAIL_AUTH",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "about": "One-of-a-kind resume builder that keeps your privacy in mind. Completely secure, customizable, portable, open-source and free forever.",
+    "license": "MIT",
+    "tags": [
+      "reactive-resume",
+      "resume-builder",
+      "open-source",
+      "2fa"
+    ],
+    "stars": 39842,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://rxresu.me/",
+      "website": "https://rxresu.me/",
+      "source": "https://github.com/AmruthPillai/Reactive-Resume",
+      "demo": "https://rxresu.me/"
+    }
+  }
+}

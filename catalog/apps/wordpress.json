@@ -21,5 +21,18 @@
       "secret": true,
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "World's most-used blogging and CMS engine.",
+    "license": "GPL-2.0",
+    "tags": [
+      "Content Management Systems (CMS)"
+    ],
+    "stars": 21292,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://wordpress.org/",
+      "source": "https://github.com/WordPress/WordPress"
+    }
+  }
 }

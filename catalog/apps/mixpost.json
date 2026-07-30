@@ -1,0 +1,60 @@
+{
+  "slug": "mixpost",
+  "name": "Mixpost",
+  "description": "Mixpost is a robust and versatile social media management software, designed to streamline social media operations and enhance content marketing strategies.",
+  "category": "Analytics",
+  "icon": "chart",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mixpost:\n    image: 'inovector/mixpost:latest'\n    environment:\n      - APP_NAME=Mixpost\n      - 'APP_KEY=${MIXPOST_SECRET}'\n      - APP_DEBUG=false\n      - 'APP_DOMAIN=${APP_URL}'\n      - 'APP_URL=${APP_URL}'\n      - 'DB_DATABASE=${MYSQL_DATABASE:-mixpost_db}'\n      - 'DB_USERNAME=${MYSQL_USER}'\n      - 'DB_PASSWORD=${MYSQL_PASSWORD}'\n      - 'SSL_EMAIL=${SSL_EMAIL:-user@example.com}'\n    volumes:\n      - 'mixpost-storage:/var/www/html/storage/app'\n      - 'mixpost-logs:/var/www/html/storage/logs'\n    depends_on:\n      - mysql\n      - redis\n  mysql:\n    image: 'mysql/mysql-server:8.0'\n    environment:\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-mixpost_db}'\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n      - 'MYSQL_ROOT_PASSWORD=${MYSQLROOT_PASSWORD}'\n    volumes:\n      - 'mixpost-mysql:/var/lib/mysql'\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - 127.0.0.1\n        - '-uroot'\n        - '-p${MYSQLROOT_PASSWORD}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: 'redis:alpine'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - '--raw'\n        - incr\n        - ping\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "MIXPOST_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQLROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "mixpost_db"
+    },
+    {
+      "key": "SSL_EMAIL",
+      "value": "user@example.com"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "social media",
+      "marketing",
+      "content",
+      "management",
+      "automation",
+      "self-hosted"
+    ],
+    "links": {
+      "docs": "https://docs.mixpost.app/lite"
+    }
+  }
+}

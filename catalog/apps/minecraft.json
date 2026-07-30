@@ -1,0 +1,145 @@
+{
+  "slug": "minecraft",
+  "name": "Minecraft",
+  "description": "Minecraft Server that will automatically download selected version at startup.",
+  "category": "Games",
+  "icon": "game",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mc:\n    image: itzg/minecraft-server:latest\n    ports:\n      - '${PORT}:25565'\n    environment:\n      - EULA=true\n      - 'VERSION=${MINECRAFT_VERSION:-latest}'\n      - 'TYPE=${MINECRAFT_TYPE:-VANILLA}'\n      - 'SERVER_NAME=${MINECRAFT_SERVER_NAME:-Minecraft Server}'\n      - 'MOTD=${MINECRAFT_MOTD:-Minecraft Server powered by §aCoolify§r}'\n      - 'DIFFICULTY=${MINECRAFT_DIFFICULTY:-normal}'\n      - 'MAX_PLAYERS=${MINECRAFT_MAX_PLAYERS:-10}'\n      - 'MAX_WORLD_SIZE=${MINECRAFT_MAX_WORLD_SIZE:-10000}'\n      - 'VIEW_DISTANCE=${MINECRAFT_VIEW_DISTANCE:-10}'\n      - 'MAX_BUILD_HEIGHT=${MINECRAFT_MAX_BUILD_HEIGHT:-256}'\n      - 'MAX_TICK_TIME=${MINECRAFT_MAX_TICK_TIME:-60000}'\n      - 'ALLOW_NETHER=${MINECRAFT_ALLOW_NETHER:-true}'\n      - 'ANNOUNCE_PLAYER_ACHIEVEMENTS=${MINECRAFT_ANNOUNCE_PLAYER_ACHIEVEMENTS:-true}'\n      - 'GENERATE_STRUCTURES=${MINECRAFT_GENERATE_STRUCTURES:-true}'\n      - 'PVP=${MINECRAFT_PVP:-true}'\n      - 'MODE=${MINECRAFT_GAME_MODE:-survival}'\n      - 'FORCE_GAMEMODE=${MINECRAFT_FORCE_GAMEMODE:-false}'\n      - 'HARDCORE=${MINECRAFT_HARDCORE:-false}'\n      - 'ENABLE_COMMAND_BLOCK=${MINECRAFT_ENABLE_COMMAND_BLOCK:-false}'\n      - 'SPAWN_ANIMALS=${MINECRAFT_SPAWN_ANIMALS:-true}'\n      - 'SPAWN_MONSTERS=${MINECRAFT_SPAWN_MONSTERS:-true}'\n      - 'SPAWN_NPCS=${MINECRAFT_SPAWN_NPCS:-true}'\n      - 'SNOOPER_ENABLED=${MINECRAFT_SNOOPER_ENABLED:-false}'\n      - 'ONLINE_MODE=${MINECRAFT_ONLINE_MODE:-true}'\n      - 'PLAYER_IDLE_TIMEOUT=${MINECRAFT_PLAYER_IDLE_TIMEOUT:-0}'\n      - 'INIT_MEMORY=${MINECRAFT_INIT_MEMORY:-256M}'\n      - 'MAX_MEMORY=${MINECRAFT_MAX_MEMORY:-1G}'\n      - 'GUI=${MINECRAFT_GUI:-false}'\n      - 'ENABLE_AUTOPAUSE=${MINECRAFT_ENABLE_AUTOPAUSE:-false}'\n      - 'RCON_PASSWORD=${RCON_PASSWORD}'\n      - 'PORT=${PORT:-25565}'\n    volumes:\n      - './minecraft-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - /usr/local/bin/mc-monitor\n        - status\n        - '--host'\n        - localhost\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 25565,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "RCON_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "PORT",
+      "value": ""
+    },
+    {
+      "key": "MINECRAFT_VERSION",
+      "value": "latest"
+    },
+    {
+      "key": "MINECRAFT_TYPE",
+      "value": "VANILLA"
+    },
+    {
+      "key": "MINECRAFT_SERVER_NAME",
+      "value": "Minecraft Server"
+    },
+    {
+      "key": "MINECRAFT_MOTD",
+      "value": "Minecraft Server powered by §aCoolify§r"
+    },
+    {
+      "key": "MINECRAFT_DIFFICULTY",
+      "value": "normal"
+    },
+    {
+      "key": "MINECRAFT_MAX_PLAYERS",
+      "value": "10"
+    },
+    {
+      "key": "MINECRAFT_MAX_WORLD_SIZE",
+      "value": "10000"
+    },
+    {
+      "key": "MINECRAFT_VIEW_DISTANCE",
+      "value": "10"
+    },
+    {
+      "key": "MINECRAFT_MAX_BUILD_HEIGHT",
+      "value": "256"
+    },
+    {
+      "key": "MINECRAFT_MAX_TICK_TIME",
+      "value": "60000"
+    },
+    {
+      "key": "MINECRAFT_ALLOW_NETHER",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_ANNOUNCE_PLAYER_ACHIEVEMENTS",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_GENERATE_STRUCTURES",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_PVP",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_GAME_MODE",
+      "value": "survival"
+    },
+    {
+      "key": "MINECRAFT_FORCE_GAMEMODE",
+      "value": "false"
+    },
+    {
+      "key": "MINECRAFT_HARDCORE",
+      "value": "false"
+    },
+    {
+      "key": "MINECRAFT_ENABLE_COMMAND_BLOCK",
+      "value": "false"
+    },
+    {
+      "key": "MINECRAFT_SPAWN_ANIMALS",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_SPAWN_MONSTERS",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_SPAWN_NPCS",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_SNOOPER_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "MINECRAFT_ONLINE_MODE",
+      "value": "true"
+    },
+    {
+      "key": "MINECRAFT_PLAYER_IDLE_TIMEOUT",
+      "value": "0"
+    },
+    {
+      "key": "MINECRAFT_INIT_MEMORY",
+      "value": "256M"
+    },
+    {
+      "key": "MINECRAFT_MAX_MEMORY",
+      "value": "1G"
+    },
+    {
+      "key": "MINECRAFT_GUI",
+      "value": "false"
+    },
+    {
+      "key": "MINECRAFT_ENABLE_AUTOPAUSE",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "minecraft"
+    ],
+    "links": {
+      "docs": "https://github.com/itzg/docker-minecraft-server"
+    }
+  }
+}

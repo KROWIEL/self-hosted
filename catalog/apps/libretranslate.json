@@ -1,0 +1,37 @@
+{
+  "slug": "libretranslate",
+  "name": "Libretranslate",
+  "description": "Free and open-source machine translation API, entirely self-hosted.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  libretranslate:\n    image: 'libretranslate/libretranslate:latest'\n    environment:\n      - 'LT_SSL=${LT_SSL:-true}'\n      - 'LT_UPDATE_MODELS=${LT_UPDATE_MODELS:-true}'\n      - 'LT_LOAD_ONLY=${LT_LOAD_ONLY:-en,es,fr,de,ja}'\n    volumes:\n      - 'libretranslate-api-keys:/app/db'\n      - 'libretranslate-models:/home/libretranslate/.local'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - './venv/bin/python scripts/healthcheck.py'\n",
+  "defaultPort": 5000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "LT_SSL",
+      "value": "true"
+    },
+    {
+      "key": "LT_UPDATE_MODELS",
+      "value": "true"
+    },
+    {
+      "key": "LT_LOAD_ONLY",
+      "value": "en,es,fr,de,ja"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "translate",
+      "api"
+    ],
+    "links": {
+      "docs": "https://libretranslate.com/docs/"
+    }
+  }
+}

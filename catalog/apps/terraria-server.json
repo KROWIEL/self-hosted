@@ -1,0 +1,60 @@
+{
+  "slug": "terraria-server",
+  "name": "Terraria Server",
+  "description": "Docker multi-arch Image for Terraria Server.",
+  "category": "Games",
+  "icon": "game",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  terraria-server:\n    image: 'hexlo/terraria-server-docker:1.4.4.9'\n    stdin_open: true\n    tty: true\n    ports:\n      - '7777:7777'\n    volumes:\n      - 'terraria-server:/root/.local/share/Terraria/Worlds'\n    environment:\n      - 'WORLD=${WORLD:-/root/.local/share/Terraria/Worlds/world1.wld}'\n      - 'AUTOCREATE=${AUTOCREATE:-2}'\n      - 'WORLDNAME=${WORLDNAME:-world1}'\n      - 'DIFFICULTY=${DIFFICULTY:-1}'\n      - 'MAXPLAYERS=${MAXPLAYERS:-8}'\n      - 'PASSWORD=${PASSWORD:-mypassword}'\n      - 'MOTD=${MOTD:-Welcome to the server!}'\n      - 'LANGUAGE=${LANGUAGE:-en/US}'\n      - 'SECURE=${SECURE:-1}'\n",
+  "defaultPort": 7777,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "WORLD",
+      "value": "/root/.local/share/Terraria/Worlds/world1.wld"
+    },
+    {
+      "key": "AUTOCREATE",
+      "value": "2"
+    },
+    {
+      "key": "WORLDNAME",
+      "value": "world1"
+    },
+    {
+      "key": "DIFFICULTY",
+      "value": "1"
+    },
+    {
+      "key": "MAXPLAYERS",
+      "value": "8"
+    },
+    {
+      "key": "PASSWORD",
+      "value": "mypassword"
+    },
+    {
+      "key": "MOTD",
+      "value": "Welcome to the server!"
+    },
+    {
+      "key": "LANGUAGE",
+      "value": "en/US"
+    },
+    {
+      "key": "SECURE",
+      "value": "1"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "terraria"
+    ],
+    "links": {
+      "docs": "https://github.com/hexlo/terraria-server-docker"
+    }
+  }
+}

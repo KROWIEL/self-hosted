@@ -1,0 +1,287 @@
+{
+  "slug": "postiz",
+  "name": "Postiz",
+  "description": "Open source social media scheduling tool.",
+  "category": "Analytics",
+  "icon": "chart",
+  "upstream": "postiz",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  postiz:\n    image: 'ghcr.io/gitroomhq/postiz-app:v2.10.1'\n    environment:\n      - 'MAIN_URL=${APP_URL}'\n      - 'FRONTEND_URL=${APP_URL}'\n      - 'NEXT_PUBLIC_BACKEND_URL=${APP_URL}/api'\n      - 'JWT_SECRET=${JWTSECRET}'\n      - 'DATABASE_URL=postgresql://postgres:${POSTGRESQL_PASSWORD}@postgres:5432/${POSTGRESQL_DATABASE:-postiz-db}'\n      - 'REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379'\n      - 'BACKEND_INTERNAL_URL=http://localhost:3000'\n      - 'CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}'\n      - 'CLOUDFLARE_ACCESS_KEY=${CLOUDFLARE_ACCESS_KEY}'\n      - 'CLOUDFLARE_SECRET_ACCESS_KEY=${CLOUDFLARE_SECRET_ACCESS_KEY}'\n      - 'CLOUDFLARE_BUCKETNAME=${CLOUDFLARE_BUCKETNAME}'\n      - 'CLOUDFLARE_BUCKET_URL=${CLOUDFLARE_BUCKET_URL}'\n      - 'CLOUDFLARE_REGION=${CLOUDFLARE_REGION}'\n      - 'STORAGE_PROVIDER=${STORAGE_PROVIDER:-local}'\n      - 'UPLOAD_DIRECTORY=${UPLOAD_DIRECTORY:-/uploads}'\n      - 'NEXT_PUBLIC_UPLOAD_DIRECTORY=${NEXT_PUBLIC_UPLOAD_DIRECTORY:-/uploads}'\n      - 'NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY=${NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY}'\n      - 'RESEND_API_KEY=${RESEND_API_KEY}'\n      - 'EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS}'\n      - 'EMAIL_FROM_NAME=${EMAIL_FROM_NAME}'\n      - 'EMAIL_PROVIDER=${EMAIL_PROVIDER}'\n      - 'X_API_KEY=${SERVICE_X_API}'\n      - 'X_API_SECRET=${SERVICE_X_SECRET}'\n      - 'LINKEDIN_CLIENT_ID=${SERVICE_LINKEDIN_ID}'\n      - 'LINKEDIN_CLIENT_SECRET=${SERVICE_LINKEDIN_SECRET}'\n      - 'REDDIT_CLIENT_ID=${SERVICE_REDDIT_API}'\n      - 'REDDIT_CLIENT_SECRET=${SERVICE_REDDIT_SECRET}'\n      - 'GITHUB_CLIENT_ID=${SERVICE_GITHUB_ID}'\n      - 'GITHUB_CLIENT_SECRET=${SERVICE_GITHUB_SECRET}'\n      - 'THREADS_APP_ID=${SERVICE_THREADS_ID}'\n      - 'THREADS_APP_SECRET=${SERVICE_THREADS_SECRET}'\n      - 'FACEBOOK_APP_ID=${SERVICE_FACEBOOK_ID}'\n      - 'FACEBOOK_APP_SECRET=${SERVICE_FACEBOOK_SECRET}'\n      - 'YOUTUBE_CLIENT_ID=${SERVICE_YOUTUBE_ID}'\n      - 'YOUTUBE_CLIENT_SECRET=${SERVICE_YOUTUBE_SECRET}'\n      - 'TIKTOK_CLIENT_ID=${SERVICE_TIKTOK_ID}'\n      - 'TIKTOK_CLIENT_SECRET=${SERVICE_TIKTOK_SECRET}'\n      - 'PINTEREST_CLIENT_ID=${SERVICE_PINTEREST_ID}'\n      - 'PINTEREST_CLIENT_SECRET=${SERVICE_PINTEREST_SECRET}'\n      - 'DRIBBBLE_CLIENT_ID=${SERVICE_DRIBBLE_ID}'\n      - 'DRIBBBLE_CLIENT_SECRET=${SERVICE_DRIBBLE_SECRET}'\n      - 'DISCORD_CLIENT_ID=${SERVICE_DISCORD_ID}'\n      - 'DISCORD_CLIENT_SECRET=${SERVICE_DISCORD_SECRET}'\n      - 'DISCORD_BOT_TOKEN_ID=${SERVICE_DISCORD_TOKEN}'\n      - 'SLACK_ID=${SERVICE_SLACK_ID}'\n      - 'SLACK_SECRET=${SERVICE_SLACK_SECRET}'\n      - 'SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}'\n      - 'MASTODON_CLIENT_ID=${SERVICE_MASTODON_ID}'\n      - 'MASTODON_CLIENT_SECRET=${SERVICE_MASTODON_SECRET}'\n      - 'INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}'\n      - 'INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}'\n      - 'BEEHIIVE_API_KEY=${SERVICE_BEEHIIVE_KEY}'\n      - 'BEEHIIVE_PUBLICATION_ID=${SERVICE_BEEHIIVE_PUBID}'\n      - 'OPENAI_API_KEY=${SERVICE_OPENAI_KEY}'\n      - 'NEXT_PUBLIC_DISCORD_SUPPORT=${NEXT_PUBLIC_DISCORD_SUPPORT}'\n      - 'NEXT_PUBLIC_POLOTNO=${NEXT_PUBLIC_POLOTNO}'\n      - IS_GENERAL=true\n      - 'NX_ADD_PLUGINS=${NX_ADD_PLUGINS:-false}'\n      - 'NOT_SECURED=${NOT_SECURED:-false}'\n      - 'FEE_AMOUNT=${FEE_AMOUNT:-0.05}'\n      - 'STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}'\n      - 'STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}'\n      - 'STRIPE_SIGNING_KEY=${STRIPE_SIGNING_KEY}'\n      - 'STRIPE_SIGNING_KEY_CONNECT=${STRIPE_SIGNING_KEY_CONNECT}'\n    volumes:\n      - 'postiz_config:/config/'\n      - 'postiz_uploads:/uploads/'\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:5000/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  postgres:\n    image: 'postgres:14.5'\n    volumes:\n      - 'postiz_postgresql_data:/var/lib/postgresql/data'\n    environment:\n      - POSTGRES_USER=postgres\n      - 'POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-postiz-db}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB:-postiz-db}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: 'redis:7.2'\n    environment:\n      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'\n    command: 'redis-server --requirepass ${REDIS_PASSWORD}'\n    volumes:\n      - 'postiz_redis_data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - '-a'\n        - '${REDIS_PASSWORD}'\n        - ping\n      interval: 5s\n      timeout: 10s\n      retries: 20\n",
+  "defaultPort": 5000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "JWTSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_DATABASE",
+      "value": "postiz-db"
+    },
+    {
+      "key": "CLOUDFLARE_ACCOUNT_ID",
+      "value": ""
+    },
+    {
+      "key": "CLOUDFLARE_ACCESS_KEY",
+      "secret": true
+    },
+    {
+      "key": "CLOUDFLARE_SECRET_ACCESS_KEY",
+      "secret": true
+    },
+    {
+      "key": "CLOUDFLARE_BUCKETNAME",
+      "value": ""
+    },
+    {
+      "key": "CLOUDFLARE_BUCKET_URL",
+      "value": ""
+    },
+    {
+      "key": "CLOUDFLARE_REGION",
+      "value": ""
+    },
+    {
+      "key": "STORAGE_PROVIDER",
+      "value": "local"
+    },
+    {
+      "key": "UPLOAD_DIRECTORY",
+      "value": "/uploads"
+    },
+    {
+      "key": "NEXT_PUBLIC_UPLOAD_DIRECTORY",
+      "value": "/uploads"
+    },
+    {
+      "key": "NEXT_PUBLIC_UPLOAD_STATIC_DIRECTORY",
+      "value": ""
+    },
+    {
+      "key": "RESEND_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "EMAIL_FROM_ADDRESS",
+      "value": ""
+    },
+    {
+      "key": "EMAIL_FROM_NAME",
+      "value": ""
+    },
+    {
+      "key": "EMAIL_PROVIDER",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_X_API",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_X_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_LINKEDIN_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_LINKEDIN_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_REDDIT_API",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_REDDIT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_GITHUB_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_GITHUB_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_THREADS_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_THREADS_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_FACEBOOK_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_FACEBOOK_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_YOUTUBE_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_YOUTUBE_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_TIKTOK_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_TIKTOK_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_PINTEREST_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_PINTEREST_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_DRIBBLE_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_DRIBBLE_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_DISCORD_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_DISCORD_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_DISCORD_TOKEN",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_SLACK_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_SLACK_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SLACK_SIGNING_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_MASTODON_ID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_MASTODON_SECRET",
+      "secret": true
+    },
+    {
+      "key": "INSTAGRAM_APP_ID",
+      "value": ""
+    },
+    {
+      "key": "INSTAGRAM_APP_SECRET",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_BEEHIIVE_KEY",
+      "secret": true
+    },
+    {
+      "key": "SERVICE_BEEHIIVE_PUBID",
+      "value": ""
+    },
+    {
+      "key": "SERVICE_OPENAI_KEY",
+      "secret": true
+    },
+    {
+      "key": "NEXT_PUBLIC_DISCORD_SUPPORT",
+      "value": ""
+    },
+    {
+      "key": "NEXT_PUBLIC_POLOTNO",
+      "value": ""
+    },
+    {
+      "key": "NX_ADD_PLUGINS",
+      "value": "false"
+    },
+    {
+      "key": "NOT_SECURED",
+      "value": "false"
+    },
+    {
+      "key": "FEE_AMOUNT",
+      "value": "0.05"
+    },
+    {
+      "key": "STRIPE_PUBLISHABLE_KEY",
+      "secret": true
+    },
+    {
+      "key": "STRIPE_SECRET_KEY",
+      "secret": true
+    },
+    {
+      "key": "STRIPE_SIGNING_KEY",
+      "secret": true
+    },
+    {
+      "key": "STRIPE_SIGNING_KEY_CONNECT",
+      "secret": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "postiz-db"
+    }
+  ],
+  "meta": {
+    "about": "Schedule posts, track the performance of your content, and manage all your social media accounts in one place (Alternative to Buffer, Hootsuite, Sprout Social).",
+    "license": "AGPL-3.0",
+    "tags": [
+      "post everywhere",
+      "social media",
+      "planning"
+    ],
+    "stars": 33842,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://docs.postiz.com",
+      "website": "https://postiz.com",
+      "source": "https://github.com/gitroomhq/postiz-app"
+    }
+  }
+}

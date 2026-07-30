@@ -21,5 +21,19 @@
       "secret": true,
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "Simple, fast, privacy-focused alternative to Google Analytics.",
+    "license": "MIT",
+    "tags": [
+      "Analytics"
+    ],
+    "stars": 37914,
+    "updatedAt": "2026-06-24",
+    "links": {
+      "website": "https://umami.is/",
+      "source": "https://github.com/umami-software/umami",
+      "demo": "https://cloud.umami.is/share/LGazGOecbDtaIwDr"
+    }
+  }
 }

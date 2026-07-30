@@ -1,0 +1,43 @@
+{
+  "slug": "faraday",
+  "name": "Faraday",
+  "description": "Faraday is a powerful, open-source, web-based vulnerability management tool.",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  postgresql:\n    image: 'postgres:latest'\n    volumes:\n      - 'faraday-db:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'POSTGRES_USER=${POSTGRESQL_USER}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-faraday}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}'\n      interval: 15s\n      timeout: 10s\n      retries: 15\n  redis:\n    image: 'redis:alpine'\n    command: '--save 60 1 --loglevel warning'\n    volumes:\n      - 'redis:/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'redis-cli ping | grep PONG'\n      interval: 15s\n      timeout: 10s\n      retries: 15\n  faraday:\n    image: 'faradaysec/faraday:latest'\n    entrypoint: /entrypoint.sh\n    environment:\n      - 'AUTHENTIK_POSTGRESQL__PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'PGSQL_USER=${POSTGRESQL_USER}'\n      - 'PGSQL_PASSWD=${POSTGRESQL_PASSWORD}'\n      - 'PGSQL_DBNAME=${POSTGRES_DB}'\n      - PGSQL_HOST=postgresql\n      - REDIS_SERVER=redis\n    volumes:\n      - 'faraday:/home/faraday/.faraday:rw'\n    depends_on:\n      postgresql:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - nc\n        - '-z'\n        - localhost\n        - '5985'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 5985,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRESQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_USER",
+      "value": "postgresql"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "faraday"
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "vulnerability",
+      "management",
+      "tool"
+    ],
+    "links": {
+      "docs": "https://faradaysec.com/"
+    }
+  }
+}

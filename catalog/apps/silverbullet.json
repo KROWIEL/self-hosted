@@ -1,0 +1,42 @@
+{
+  "slug": "silverbullet",
+  "name": "SilverBullet",
+  "description": "SilverBullet is a tool to develop, organize, and structure your personal knowledge and to make it universally accessible across all your devices.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "silverbullet",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  silverbullet:\n    image: 'ghcr.io/silverbulletmd/silverbullet:v2'\n    environment:\n      - 'SB_USER=${SILVERBULLET_USER}:${SILVERBULLET_PASSWORD}'\n    volumes:\n      - 'silverbullet-space:/space'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--spider'\n        - '--quiet'\n        - 'http://127.0.0.1:3000'\n      interval: 2s\n      timeout: 10s\n      retries: 5\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "SILVERBULLET_USER",
+      "value": "silverbullet"
+    },
+    {
+      "key": "SILVERBULLET_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Note-taking application optimized for people with a hacker mindset.",
+    "license": "MIT",
+    "tags": [
+      "note-taking",
+      "markdown",
+      "pkm"
+    ],
+    "stars": 5713,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "docs": "https://v2.silverbullet.md/Install/Configuration",
+      "website": "https://silverbullet.md/",
+      "source": "https://github.com/silverbulletmd/silverbullet",
+      "demo": "https://play.silverbullet.md/"
+    }
+  }
+}

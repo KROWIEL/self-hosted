@@ -1,0 +1,91 @@
+{
+  "slug": "pocket-id",
+  "name": "Pocket Id",
+  "description": "A simple and secure OIDC provider with passkey authentication",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  pocket-id:\n    image: 'ghcr.io/pocket-id/pocket-id:v1.13'\n    environment:\n      - 'APP_URL=${APP_URL}'\n      - 'TRUST_PROXY=${TRUST_PROXY:-true}'\n      - 'MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY}'\n      - 'SMTP_HOST=${SMTP_HOST}'\n      - 'SMTP_PORT=${SMTP_PORT:-587}'\n      - 'SMTP_FROM=${SMTP_FROM}'\n      - 'SMTP_USER=${SMTP_USER}'\n      - 'SMTP_PASSWORD=${SMTP_PASSWORD}'\n      - 'SMTP_TLS=${SMTP_TLS:-starttls}'\n      - 'SMTP_SKIP_CERT_VERIFY=${SMTP_SKIP_CERT_VERIFY:-false}'\n      - 'EMAIL_LOGIN_NOTIFICATION_ENABLED=${EMAIL_LOGIN_NOTIFICATION_ENABLED:-false}'\n      - 'EMAIL_ONE_TIME_ACCESS_AS_ADMIN_ENABLED=${EMAIL_ONE_TIME_ACCESS_AS_ADMIN_ENABLED:-false}'\n      - 'EMAIL_API_KEY_EXPIRATION_ENABLED=${EMAIL_API_KEY_EXPIRATION_ENABLED:-false}'\n      - 'PUID=${PUID:-1000}'\n      - 'PGID=${PGID:-1000}'\n    volumes:\n      - 'pocket-id-data:/app/data'\n    healthcheck:\n      test:\n        - CMD\n        - /app/pocket-id\n        - healthcheck\n      interval: 30s\n      timeout: 5s\n      retries: 3\n      start_period: 10s\n",
+  "defaultPort": 1411,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TRUST_PROXY",
+      "value": "true"
+    },
+    {
+      "key": "MAXMIND_LICENSE_KEY",
+      "secret": true
+    },
+    {
+      "key": "SMTP_HOST",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PORT",
+      "value": "587"
+    },
+    {
+      "key": "SMTP_FROM",
+      "value": ""
+    },
+    {
+      "key": "SMTP_USER",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "SMTP_TLS",
+      "value": "starttls"
+    },
+    {
+      "key": "SMTP_SKIP_CERT_VERIFY",
+      "value": "false"
+    },
+    {
+      "key": "EMAIL_LOGIN_NOTIFICATION_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "EMAIL_ONE_TIME_ACCESS_AS_ADMIN_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "EMAIL_API_KEY_EXPIRATION_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "PUID",
+      "value": "1000"
+    },
+    {
+      "key": "PGID",
+      "value": "1000"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "identity",
+      "oidc",
+      "oauth",
+      "passkey",
+      "webauthn",
+      "authentication",
+      "sso",
+      "openid"
+    ],
+    "links": {
+      "docs": "https://pocket-id.org/docs/setup/installation"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "slug": "easyappointments",
+  "name": "Easyappointments",
+  "description": "Schedule Anything. Let's start with easy! Get the best free online appointment scheduler on your server, today.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  easyappointments:\n    image: 'alextselegidis/easyappointments:latest'\n    environment:\n      - 'BASE_URL=${APP_URL}'\n      - DB_HOST=mysql\n      - DB_NAME=easyappointments\n      - DB_USERNAME=root\n      - 'DB_PASSWORD=${EASYAPPOINTMENTS_PASSWORD}'\n    depends_on:\n      - mysql\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1'\n      interval: 2s\n      timeout: 10s\n      retries: 30\n  mysql:\n    image: 'mysql:8'\n    volumes:\n      - 'easyappointments-mysql-data:/var/lib/mysql'\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${EASYAPPOINTMENTS_PASSWORD}'\n      - MYSQL_DATABASE=easyappointments\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - 127.0.0.1\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "EASYAPPOINTMENTS_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "calendar",
+      "scheduling",
+      "database"
+    ],
+    "links": {
+      "docs": "https://easyappointments.org/"
+    }
+  }
+}

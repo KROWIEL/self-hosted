@@ -34,5 +34,20 @@
       "key": "NEXTCLOUD_TRUSTED_DOMAINS",
       "value": "localhost"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Access and share your files, calendars, contacts, mail and [more](https://apps.nextcloud.com/) from any device, on your terms.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "File Transfer & Synchronization",
+      "Groupware"
+    ],
+    "stars": 36276,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://nextcloud.com/",
+      "source": "https://github.com/nextcloud/server",
+      "demo": "https://try.nextcloud.com/"
+    }
+  }
 }

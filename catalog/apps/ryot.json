@@ -1,0 +1,59 @@
+{
+  "slug": "ryot",
+  "name": "ryot",
+  "description": "Roll your own tracker! Ryot is a self-hosted platform for tracking various aspects of life such as media consumption, fitness activities, and more.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "ryot",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  ryot:\n    image: 'ignisda/ryot:v10.3.0'\n    environment:\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}'\n      - 'SERVER_ADMIN_ACCESS_TOKEN=${RYOT_PASSWORD}'\n      - 'TZ=${TZ:-Europe/Amsterdam}'\n    depends_on:\n      postgresql:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8000/health'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  postgresql:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'ryot_postgresql_data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-ryot-db}'\n      - 'TZ=${TZ:-Europe/Amsterdam}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "RYOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    },
+    {
+      "key": "TZ",
+      "value": "Europe/Amsterdam"
+    }
+  ],
+  "meta": {
+    "about": "Track various facets of your life - media, fitness, etc.",
+    "license": "GPL-3.0",
+    "tags": [
+      "rss",
+      "reader",
+      "self-hosted",
+      "automation",
+      "tracker",
+      "media",
+      "fitness"
+    ],
+    "stars": 3489,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "docs": "https://github.com/ignisda/ryot",
+      "website": "https://github.com/ignisda/ryot",
+      "source": "https://github.com/ignisda/ryot",
+      "demo": "https://github.com/IgnisDa/ryot?tab=readme-ov-file#-demo"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "slug": "embystat",
+  "name": "Embystat",
+  "description": "EmbyStat is a web analytics tool, designed to provide insight into website traffic and user behavior.",
+  "category": "Analytics",
+  "icon": "chart",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  embystat:\n    image: 'lscr.io/linuxserver/embystat:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - TZ=Europe/Madrid\n    volumes:\n      - 'embystat-config:/config'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:6555'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 6555,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "analytics",
+      "insights",
+      "statistics",
+      "web",
+      "traffic"
+    ],
+    "links": {
+      "docs": "https://github.com/mregni/EmbyStat"
+    }
+  }
+}

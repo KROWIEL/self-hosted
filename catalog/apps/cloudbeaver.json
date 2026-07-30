@@ -1,0 +1,37 @@
+{
+  "slug": "cloudbeaver",
+  "name": "CloudBeaver",
+  "description": "CloudBeaver is a lightweight web application designed for comprehensive data management.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "cloudbeaver",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  cloudbeaver:\n    image: 'dbeaver/cloudbeaver:24'\n    volumes:\n      - 'cloudbeaver-data:/opt/cloudbeaver/workspace'\n    environment:\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:8978/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8978,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Manage databases, supports PostgreSQL, MySQL, SQLite and more. A web/hosted version of DBeaver.",
+    "license": "Apache-2.0",
+    "tags": [
+      "dbeaver",
+      "data management",
+      "data",
+      "database",
+      "mysql",
+      "postgres",
+      "sqlite",
+      "sql",
+      "mongodb"
+    ],
+    "stars": 5047,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://dbeaver.com/docs/cloudbeaver/",
+      "website": "https://dbeaver.com/",
+      "source": "https://github.com/dbeaver/cloudbeaver"
+    }
+  }
+}

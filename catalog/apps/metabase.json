@@ -23,5 +23,18 @@
       "key": "MB_DB_FILE",
       "value": "/metabase-data/metabase.db"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Easy way for everyone in your company to ask questions and learn from data.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "Analytics"
+    ],
+    "stars": 48391,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://metabase.com/",
+      "source": "https://github.com/metabase/metabase"
+    }
+  }
 }

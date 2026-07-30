@@ -1,0 +1,45 @@
+{
+  "slug": "forgejo",
+  "name": "Forgejo",
+  "description": "Forgejo is a self-hosted lightweight software forge. Easy to install and low maintenance, it just does the job.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "forgejo",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  forgejo:\n    image: 'codeberg.org/forgejo/forgejo:8'\n    environment:\n      - 'FORGEJO__server__ROOT_URL=${APP_URL}'\n      - 'FORGEJO__migrations__ALLOWED_DOMAINS=${FORGEJO__migrations__ALLOWED_DOMAINS}'\n      - 'FORGEJO__migrations__ALLOW_LOCALNETWORKS=${FORGEJO__migrations__ALLOW_LOCALNETWORKS-false}'\n      - USER_UID=1000\n      - USER_GID=1000\n    ports:\n      - '22222:22'\n    volumes:\n      - 'forgejo-data:/data'\n      - 'forgejo-timezone:/etc/timezone:ro'\n      - 'forgejo-localtime:/etc/localtime:ro'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "FORGEJO__migrations__ALLOWED_DOMAINS",
+      "value": ""
+    },
+    {
+      "key": "FORGEJO__migrations__ALLOW_LOCALNETWORKS",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "about": "A lightweight software forge focused on scaling, federation, and privacy (fork of Gitea).",
+    "license": "MIT",
+    "tags": [
+      "version control",
+      "collaboration",
+      "code",
+      "hosting",
+      "lightweight"
+    ],
+    "links": {
+      "docs": "https://forgejo.org/docs",
+      "website": "https://forgejo.org",
+      "source": "https://codeberg.org/forgejo/forgejo/",
+      "demo": "https://next.forgejo.org"
+    }
+  }
+}

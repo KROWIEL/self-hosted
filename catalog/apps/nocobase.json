@@ -1,0 +1,45 @@
+{
+  "slug": "nocobase",
+  "name": "Nocobase",
+  "description": "NocoBase is the most extensible AI-powered no-code/low-code platform.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  nocobase:\n    image: 'nocobase/nocobase:1.9.33'\n    environment:\n      - 'APP_KEY=${APPKEY}'\n      - DB_DIALECT=postgres\n      - DB_HOST=postgres\n      - DB_PORT=5432\n      - 'DB_DATABASE=${POSTGRES_DB:-nocobase-db}'\n      - DB_USER=${POSTGRES_USER}\n      - DB_PASSWORD=${POSTGRES_PASSWORD}\n    volumes:\n      - 'nocobase-storage:/app/nocobase/storage'\n    depends_on:\n      postgres:\n        condition: service_healthy\n  postgres:\n    image: 'postgres:17-alpine'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-nocobase-db}'\n    volumes:\n      - 'postgres-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 13000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APPKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "nocobase-db"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "nocode",
+      "lowcode",
+      "database",
+      "builder"
+    ],
+    "links": {
+      "docs": "https://docs.nocobase.com/"
+    }
+  }
+}

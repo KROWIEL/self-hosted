@@ -1,0 +1,96 @@
+{
+  "slug": "strapi",
+  "name": "Strapi",
+  "description": "Open-source headless CMS to build powerful APIs with built-in content management.",
+  "category": "Backend",
+  "icon": "database",
+  "upstream": "strapi",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  strapi:\n    image: 'elestio/strapi-production:v5.33.4'\n    entrypoint: /bin/sh\n    command:\n      - '-c'\n      - \"cat > /opt/app/src/admin/vite.config.js << 'EOFVITE'\\nconst { mergeConfig } = require('vite');\\nmodule.exports = (config) => {\\n  return mergeConfig(config, {\\n    resolve: {\\n      alias: {\\n        '@': '/src',\\n      },\\n    },\\n    server: {\\n      allowedHosts: ['${APP_URL}']\\n    }\\n  });\\n};\\nEOFVITE\\nexec npm run develop\\n\"\n    environment:\n      - DATABASE_CLIENT=postgres\n      - DATABASE_HOST=postgresql\n      - DATABASE_PORT=5432\n      - 'DATABASE_NAME=${POSTGRESQL_DATABASE:-strapi}'\n      - DATABASE_USERNAME=${POSTGRESQL_USER}\n      - DATABASE_PASSWORD=${POSTGRESQL_PASSWORD}\n      - JWT_SECRET=${SECRET}\n      - ADMIN_JWT_SECRET=${SECRET}\n      - APP_KEYS=${KEY}\n      - 'STRAPI_TELEMETRY_DISABLED=${STRAPI_TELEMETRY_DISABLED:-true}'\n      - 'STRAPI_LICENSE=${STRAPI_LICENSE}'\n      - 'NODE_ENV=${NODE_ENV:-development}'\n      - 'BROWSER=${BROWSER:-true}'\n      - 'STRAPI_PLUGIN_I18N_INIT_LOCALE_CODE=${STRAPI_PLUGIN_I18N_INIT_LOCALE_CODE:-en}'\n      - 'STRAPI_ENFORCE_SOURCEMAPS=${STRAPI_ENFORCE_SOURCEMAPS:-false}'\n      - 'FAST_REFRESH=${FAST_REFRESH:-true}'\n    volumes:\n      - 'strapi-config:/opt/app/config'\n      - 'strapi-src:/opt/app/src'\n      - 'strapi-uploads:/opt/app/public/uploads'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:1337/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    depends_on:\n      postgresql:\n        condition: service_healthy\n  postgresql:\n    image: 'elestio/postgres:latest'\n    environment:\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-strapi}'\n      - POSTGRES_USER=${POSTGRESQL_USER}\n      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}\n      - PGDATA=/var/lib/postgresql/data\n    volumes:\n      - 'strapi-postgresql-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 1337,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_USER",
+      "value": "postgresql"
+    },
+    {
+      "key": "POSTGRESQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "KEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_DATABASE",
+      "value": "strapi"
+    },
+    {
+      "key": "STRAPI_TELEMETRY_DISABLED",
+      "value": "true"
+    },
+    {
+      "key": "STRAPI_LICENSE",
+      "value": ""
+    },
+    {
+      "key": "NODE_ENV",
+      "value": "development"
+    },
+    {
+      "key": "BROWSER",
+      "value": "true"
+    },
+    {
+      "key": "STRAPI_PLUGIN_I18N_INIT_LOCALE_CODE",
+      "value": "en"
+    },
+    {
+      "key": "STRAPI_ENFORCE_SOURCEMAPS",
+      "value": "false"
+    },
+    {
+      "key": "FAST_REFRESH",
+      "value": "true"
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "The most advanced open-source Content Management Framework (headless-CMS) to build powerful API with no effort.",
+    "license": "MIT",
+    "tags": [
+      "cms",
+      "headless",
+      "mysql",
+      "api"
+    ],
+    "stars": 72731,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "docs": "https://docs.strapi.io/",
+      "website": "https://strapi.io/",
+      "source": "https://github.com/strapi/strapi"
+    }
+  }
+}

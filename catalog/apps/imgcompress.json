@@ -1,0 +1,41 @@
+{
+  "slug": "imgcompress",
+  "name": "ImgCompress",
+  "description": "Offline image compression, conversion, and AI background removal for Docker homelabs.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "imgcompress",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  imgcompress:\n    image: 'karimz1/imgcompress:0.6.0'\n    environment:\n      - 'DISABLE_LOGO=${DISABLE_LOGO:-false}'\n      - 'DISABLE_STORAGE_MANAGEMENT=${DISABLE_STORAGE_MANAGEMENT:-false}'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:5000'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 5000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DISABLE_LOGO",
+      "value": "false"
+    },
+    {
+      "key": "DISABLE_STORAGE_MANAGEMENT",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "about": "Image processing tool that runs entirely in Docker. Compress, convert, resize, batch-process images, and remove backgrounds using local AI without cloud dependencies.",
+    "license": "GPL-3.0",
+    "tags": [
+      "compress",
+      "photo",
+      "server",
+      "metadata"
+    ],
+    "stars": 262,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "docs": "https://imgcompress.karimzouine.com",
+      "website": "https://imgcompress.karimzouine.com",
+      "source": "https://github.com/karimz1/imgcompress"
+    }
+  }
+}

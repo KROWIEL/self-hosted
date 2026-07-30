@@ -1,0 +1,34 @@
+{
+  "slug": "rivet-engine",
+  "name": "Rivet Engine",
+  "description": "Build and scale stateful workloads with long-lived processes",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  rivet-engine:\n    image: 'rivetdev/engine:2.2.0'\n    environment:\n      - RIVET__FILE_SYSTEM__PATH=/data\n      - 'RIVET__AUTH__ADMIN_TOKEN=${TOKEN}'\n    volumes:\n      - 'rivet-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:6420/health'\n      interval: 2s\n      timeout: 10s\n      retries: 10\n      start_period: 30s\n",
+  "defaultPort": 6420,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "TOKEN",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "stateful",
+      "actors",
+      "realtime",
+      "backend",
+      "serverless",
+      "postgresql"
+    ],
+    "links": {
+      "docs": "https://www.rivet.dev/docs"
+    }
+  }
+}

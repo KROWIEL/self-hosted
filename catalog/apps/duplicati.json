@@ -1,0 +1,39 @@
+{
+  "slug": "duplicati",
+  "name": "Duplicati",
+  "description": "Duplicati is a backup solution, allowing you to make scheduled backups with encryption.",
+  "category": "Storage",
+  "icon": "storage",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  duplicati:\n    image: 'lscr.io/linuxserver/duplicati:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-Europe/London}'\n      - 'SETTINGS_ENCRYPTION_KEY=${ENCRYPT_PASSWORD}'\n      - 'DUPLICATI__WEBSERVICE_PASSWORD=${WEB_PASSWORD}'\n    volumes:\n      - 'duplicati-config:/config'\n      - 'duplicati-backups:/backups'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8200'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8200,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ENCRYPT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "WEB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "Europe/London"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "backup",
+      "encryption"
+    ],
+    "links": {
+      "docs": "https://duplicati.readthedocs.io"
+    }
+  }
+}

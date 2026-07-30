@@ -1,0 +1,26 @@
+{
+  "slug": "mage-ai",
+  "name": "Mage Ai",
+  "description": "Build, run, and manage data pipelines for integrating and transforming data.",
+  "category": "Automation",
+  "icon": "workflow",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mage-ai:\n    image: 'mageai/mageai:0.9.78'\n    command: 'mage start default_project'\n    environment:\n      - PROJECT_NAME=default_project\n      - USER_CODE_PATH=/home/src/default_project\n      - ENV=production\n    volumes:\n      - 'mageai_data:/home/src/'\n    restart: unless-stopped\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-s'\n        - '-f'\n        - '-o'\n        - /dev/null\n        - 'http://127.0.0.1:6789'\n      interval: 30s\n      timeout: 10s\n      retries: 5\n",
+  "defaultPort": 6789,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "data",
+      "dbt",
+      "etl",
+      "pipelines"
+    ],
+    "links": {
+      "docs": "https://docs.mage.ai"
+    }
+  }
+}

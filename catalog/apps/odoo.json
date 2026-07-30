@@ -1,0 +1,48 @@
+{
+  "slug": "odoo",
+  "name": "Odoo",
+  "description": "Odoo is a suite of open-source business apps that cover all your company needs.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "odoo",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  odoo:\n    image: 'odoo:18'\n    environment:\n      - HOST=postgresql\n      - USER=${POSTGRES_USER}\n      - PASSWORD=${POSTGRES_PASSWORD}\n    volumes:\n      - 'odoo-web-data:/var/lib/odoo'\n      - 'odoo-extra-addons:/mnt/extra-addons'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8069'\n      interval: 2s\n      timeout: 10s\n      retries: 30\n  postgresql:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'postgresql-data:/var/lib/postgresql/data'\n    environment:\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - POSTGRES_DB=postgres\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d postgres'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8069,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Free open source ERP system.",
+    "license": "LGPL-3.0",
+    "tags": [
+      "business",
+      "apps",
+      "crm",
+      "ecommerce",
+      "accounting",
+      "inventory",
+      "point of sale",
+      "project management",
+      "open-source"
+    ],
+    "stars": 53298,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://www.odoo.com/",
+      "website": "https://www.odoo.com",
+      "source": "https://github.com/odoo/odoo",
+      "demo": "https://demo.odoo.com/"
+    }
+  }
+}

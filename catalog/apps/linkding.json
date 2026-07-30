@@ -1,0 +1,41 @@
+{
+  "slug": "linkding",
+  "name": "linkding",
+  "description": "A self-hosted bookmark manager designed to be minimal, fast, and easy to set up.",
+  "category": "Feeds",
+  "icon": "rss",
+  "upstream": "linkding",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  linkding:\n    image: 'sissbruecker/linkding:latest'\n    volumes:\n      - 'linkding_data:/etc/linkding/data'\n    environment:\n      - 'LD_SUPERUSER_NAME=${LINKDING_USER}'\n      - 'LD_SUPERUSER_PASSWORD=${LINKDING_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/9090' || exit 1\"\n      interval: 5s\n      timeout: 5s\n",
+  "defaultPort": 9090,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "LINKDING_USER",
+      "value": "linkding"
+    },
+    {
+      "key": "LINKDING_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Minimal bookmark management with a fast and clean UI. Simple installation through Docker and can run on your Raspberry Pi.",
+    "license": "MIT",
+    "tags": [
+      "rss",
+      "feed"
+    ],
+    "stars": 10953,
+    "updatedAt": "2026-06-21",
+    "links": {
+      "docs": "https://linkding.link/",
+      "website": "https://linkding.link/",
+      "source": "https://github.com/sissbruecker/linkding",
+      "demo": "https://demo.linkding.link/login/"
+    }
+  }
+}

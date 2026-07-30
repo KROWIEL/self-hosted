@@ -6,7 +6,9 @@
   "description": "Validates catalog/apps manifests and tracks them against awesome-selfhosted-data.",
   "scripts": {
     "validate": "node validate.mjs",
+    "import": "node import-coolify.mjs",
     "check-images": "node check-images.mjs",
-    "sync": "node sync.mjs"
+    "sync": "node sync.mjs",
+    "enrich": "node enrich.mjs"
   }
 }

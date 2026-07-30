@@ -1,0 +1,45 @@
+{
+  "slug": "redis-insight",
+  "name": "Redis Insight",
+  "description": "Redis Insight lets you do both GUI- and CLI-based interactions in a fully-featured desktop GUI client.",
+  "category": "Databases",
+  "icon": "database",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  redisinsight:\n    image: 'redis/redisinsight:2.70'\n    environment:\n      - RI_APP_HOST=0.0.0.0\n      - RI_APP_PORT=5540\n      - 'RI_ENCRYPTION_KEY=${RI_ENCRYPTION_KEY}'\n      - 'RI_LOG_LEVEL=${RI_LOG_LEVEL:-info}'\n      - 'RI_FILES_LOGGER=${RI_FILES_LOGGER:-true}'\n      - 'RI_STDOUT_LOGGER=${RI_STDOUT_LOGGER:-true}'\n    volumes:\n      - 'redis_insight_data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--spider'\n        - 'http://0.0.0.0:5540/api/health'\n      interval: 10s\n      retries: 3\n      timeout: 10s\n      start_period: 10s\n",
+  "defaultPort": 5540,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "RI_ENCRYPTION_KEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "RI_LOG_LEVEL",
+      "value": "info"
+    },
+    {
+      "key": "RI_FILES_LOGGER",
+      "value": "true"
+    },
+    {
+      "key": "RI_STDOUT_LOGGER",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "redis",
+      "gui",
+      "database",
+      "monitoring",
+      "analytics"
+    ],
+    "links": {
+      "docs": "https://redis.io/docs/latest/operate/redisinsight/"
+    }
+  }
+}

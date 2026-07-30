@@ -1,0 +1,54 @@
+{
+  "slug": "rocketchat",
+  "name": "Rocketchat",
+  "description": "Self-hosted, secure and highly customizable open-source communication platform for organizations with sophisticated security and privacy concerns.",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  rocketchat:\n    image: 'registry.rocket.chat/rocketchat/rocket.chat:8.0.1'\n    environment:\n      - 'MONGO_URL=mongodb://${MONGODB_ADVERTISED_HOSTNAME:-mongodb}:${MONGODB_INITIAL_PRIMARY_PORT_NUMBER:-27017}/${MONGODB_DATABASE:-rocketchat}?replicaSet=${MONGODB_REPLICA_SET_NAME:-rs0}'\n      - 'MONGO_OPLOG_URL=mongodb://${MONGODB_ADVERTISED_HOSTNAME:-mongodb}:${MONGODB_INITIAL_PRIMARY_PORT_NUMBER:-27017}/local?replicaSet=${MONGODB_REPLICA_SET_NAME:-rs0}'\n      - ROOT_URL=${APP_URL}\n      - DEPLOY_METHOD=docker\n      - REG_TOKEN=$REG_TOKEN\n      - 'MAIL_URL=${MAIL_URL:-test@example.com}'\n    depends_on:\n      mongodb:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - node\n        - '--eval'\n        - \"const http = require('http'); const options = { host: '0.0.0.0', port: 3000, timeout: 2000, path: '/health' }; const healthCheck = http.request(options, (res) => { console.log('HEALTHCHECK STATUS:', res.statusCode); if (res.statusCode == 200) { process.exit(0); } else { process.exit(1); } }); healthCheck.on('error', function (err) { console.error('ERROR'); process.exit(1); }); healthCheck.end();\"\n      interval: 2s\n      timeout: 10s\n      retries: 15\n  mongodb:\n    image: 'mongo:7'\n    volumes:\n      - 'mongodb_data:/data/db'\n    command: \"sh -c \\\"\\n  mongod --replSet ${MONGODB_REPLICA_SET_NAME:-rs0} --bind_ip_all &\\n  sleep 5 &&\\n  mongosh --eval 'rs.initiate({_id:\\\\\\\"${MONGODB_REPLICA_SET_NAME:-rs0}\\\\\\\", members:[{_id:0, host:\\\\\\\"mongodb:27017\\\\\\\"}]})' ||\\n  true &&\\n  wait\\n\\\"\\n\"\n    healthcheck:\n      test:\n        - CMD\n        - mongosh\n        - '--quiet'\n        - '--eval'\n        - \"db.adminCommand('ping')\"\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "MONGODB_ADVERTISED_HOSTNAME",
+      "value": "mongodb"
+    },
+    {
+      "key": "MONGODB_INITIAL_PRIMARY_PORT_NUMBER",
+      "value": "27017"
+    },
+    {
+      "key": "MONGODB_DATABASE",
+      "value": "rocketchat"
+    },
+    {
+      "key": "MONGODB_REPLICA_SET_NAME",
+      "value": "rs0"
+    },
+    {
+      "key": "MAIL_URL",
+      "value": "test@example.com"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "rocketchat",
+      "chat",
+      "communication",
+      "privacy",
+      "mongodb",
+      "open",
+      "source"
+    ],
+    "links": {
+      "docs": "https://github.com/RocketChat/Rocket.Chat"
+    }
+  }
+}

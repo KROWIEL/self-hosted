@@ -1,0 +1,52 @@
+{
+  "slug": "cloudreve",
+  "name": "Cloudreve",
+  "description": "A self-hosted file management and sharing system.",
+  "category": "Storage",
+  "icon": "storage",
+  "upstream": "cloudreve",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  cloudreve:\n    image: 'cloudreve/cloudreve:4.10.1'\n    environment:\n      - CR_CONF_Database.Type=postgres\n      - CR_CONF_Database.Host=postgres\n      - 'CR_CONF_Database.User=${POSTGRES_USER}'\n      - 'CR_CONF_Database.Password=${POSTGRES_PASSWORD}'\n      - 'CR_CONF_Database.Name=${POSTGRES_DB:-cloudreve-db}'\n      - CR_CONF_Database.Port=5432\n      - 'CR_CONF_Redis.Server=redis:6379'\n      - 'CR_CONF_Redis.Password=${REDIS_PASSWORD}'\n    volumes:\n      - 'cloudreve-data:/cloudreve/data'\n    healthcheck:\n      test:\n        - CMD\n        - nc\n        - '-z'\n        - localhost\n        - '5212'\n      interval: 20s\n      timeout: 10s\n      retries: 3\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n  postgres:\n    image: 'postgres:18-alpine'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-cloudreve-db}'\n    volumes:\n      - 'postgres-data:/var/lib/postgresql'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 10s\n      timeout: 5s\n      retries: 5\n  redis:\n    image: 'redis:7-alpine'\n    command: 'redis-server --requirepass ${REDIS_PASSWORD}'\n    volumes:\n      - 'redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - '-a'\n        - '${REDIS_PASSWORD}'\n        - ping\n      interval: 10s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 5212,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "cloudreve-db"
+    }
+  ],
+  "meta": {
+    "about": "File management and sharing system, supports multiple storage providers.",
+    "license": "GPL-3.0",
+    "tags": [
+      "file sharing",
+      "cloud storage",
+      "self-hosted",
+      "open-source"
+    ],
+    "stars": 28428,
+    "updatedAt": "2026-07-15",
+    "links": {
+      "docs": "https://docs.cloudreve.org/",
+      "website": "https://cloudreve.org/",
+      "source": "https://github.com/cloudreve/cloudreve",
+      "demo": "https://demo.cloudreve.org"
+    }
+  }
+}

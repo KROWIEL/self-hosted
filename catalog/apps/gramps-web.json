@@ -1,0 +1,41 @@
+{
+  "slug": "gramps-web",
+  "name": "Gramps Web",
+  "description": "Open Source Online Genealogy System.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "gramps-web",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  grampsweb:\n    image: 'ghcr.io/gramps-project/grampsweb:25.9.0'\n    environment:\n      - 'GRAMPSWEB_TREE=${GRAMPSWEB_TREE:-Gramps Web}'\n      - 'GRAMPSWEB_CELERY_CONFIG__broker_url=redis://grampsweb_redis:6379/0'\n      - 'GRAMPSWEB_CELERY_CONFIG__result_backend=redis://grampsweb_redis:6379/0'\n      - 'GRAMPSWEB_RATELIMIT_STORAGE_URI=redis://grampsweb_redis:6379/1'\n      - 'GUNICORN_NUM_WORKERS=${GUNICORN_NUM_WORKERS:-2}'\n    depends_on:\n      - grampsweb_redis\n    volumes:\n      - 'gramps_users:/app/users'\n      - 'gramps_index:/app/indexdir'\n      - 'gramps_thumb_cache:/app/thumbnail_cache'\n      - 'gramps_cache:/app/cache'\n      - 'gramps_secret:/app/secret'\n      - 'gramps_db:/root/.gramps/grampsdb'\n      - 'gramps_media:/app/media'\n      - 'gramps_tmp:/tmp'\n    healthcheck:\n      test: 'wget -O - http://localhost:5000 > /dev/null 2>&1'\n      interval: 5s\n      timeout: 10s\n      retries: 3\n  grampsweb_celery:\n    image: 'ghcr.io/gramps-project/grampsweb:25.9.0'\n    environment:\n      - 'GRAMPSWEB_TREE=${GRAMPSWEB_TREE:-Gramps Web}'\n      - 'GRAMPSWEB_CELERY_CONFIG__broker_url=redis://grampsweb_redis:6379/0'\n      - 'GRAMPSWEB_CELERY_CONFIG__result_backend=redis://grampsweb_redis:6379/0'\n      - 'GRAMPSWEB_RATELIMIT_STORAGE_URI=redis://grampsweb_redis:6379/1'\n    depends_on:\n      - grampsweb_redis\n    volumes:\n      - 'gramps_users:/app/users'\n      - 'gramps_index:/app/indexdir'\n      - 'gramps_thumb_cache:/app/thumbnail_cache'\n      - 'gramps_cache:/app/cache'\n      - 'gramps_secret:/app/secret'\n      - 'gramps_db:/root/.gramps/grampsdb'\n      - 'gramps_media:/app/media'\n      - 'gramps_tmp:/tmp'\n    command: 'celery -A gramps_webapi.celery worker --loglevel=INFO --concurrency=2'\n    healthcheck:\n      test: 'SECRET_KEY=\"$(cat secret/secret)\" celery -A gramps_webapi.celery status || exit 1'\n      interval: 5s\n      timeout: 10s\n      retries: 3\n  grampsweb_redis:\n    image: 'docker.io/library/redis:7.2.4-alpine'\n    healthcheck:\n      test: 'redis-cli ping | grep PONG'\n      interval: 5s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 5000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "GRAMPSWEB_TREE",
+      "value": "Gramps Web"
+    },
+    {
+      "key": "GUNICORN_NUM_WORKERS",
+      "value": "2"
+    }
+  ],
+  "meta": {
+    "about": "Web app for collaborative genealogy, based on and interoperable with Gramps, the open source genealogy desktop application.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "family",
+      "genealogy",
+      "personal"
+    ],
+    "stars": 214,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://www.grampsweb.org/install_setup/setup/",
+      "website": "https://www.grampsweb.org/",
+      "source": "https://github.com/gramps-project/gramps-web-api",
+      "demo": "https://gramps-project.github.io/gramps-web-api/"
+    }
+  }
+}

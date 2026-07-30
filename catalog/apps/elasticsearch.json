@@ -1,0 +1,40 @@
+{
+  "slug": "elasticsearch",
+  "name": "ElasticSearch",
+  "description": "Elasticsearch is free and Open Source, Distributed, RESTful Search Engine.",
+  "category": "Search",
+  "icon": "search",
+  "upstream": "elasticsearch",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  elasticsearch:\n    image: 'docker.elastic.co/elasticsearch/elasticsearch-wolfi:8.19.0'\n    environment:\n      - 'ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}'\n      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'\n      - discovery.type=single-node\n      - bootstrap.memory_lock=true\n      - xpack.security.http.ssl.enabled=false\n    volumes:\n      - 'elasticsearch-data:/usr/share/elasticsearch/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'curl --user elastic:${ELASTICSEARCH_PASSWORD} --silent --fail http://localhost:9200/_cluster/health'\n      interval: 10s\n      timeout: 10s\n      retries: 24\n",
+  "defaultPort": 9200,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ELASTICSEARCH_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Distributed, RESTful search and analytics engine.",
+    "license": "SSPL-1.0",
+    "tags": [
+      "search",
+      "engine",
+      "fulltext",
+      "full",
+      "text",
+      "elasticsearch"
+    ],
+    "stars": 77616,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://www.elastic.co/products/elasticsearch",
+      "website": "https://www.elastic.co/elasticsearch/",
+      "source": "https://github.com/elastic/elasticsearch"
+    }
+  }
+}

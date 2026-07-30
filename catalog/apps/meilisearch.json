@@ -28,5 +28,18 @@
       "key": "MEILI_ENV",
       "value": "production"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Ultra relevant, instant and typo-tolerant full-text search API.",
+    "license": "MIT",
+    "tags": [
+      "Search Engines"
+    ],
+    "stars": 58753,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "website": "https://www.meilisearch.com",
+      "source": "https://github.com/meilisearch/MeiliSearch"
+    }
+  }
 }

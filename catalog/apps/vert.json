@@ -1,0 +1,33 @@
+{
+  "slug": "vert",
+  "name": "Vert",
+  "description": "The next-generation file converter. Open source, fully local and free forever.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  vert:\n    image: 'ghcr.io/vert-sh/vert:latest'\n    environment:\n      - 'PUB_VERT_URL=${APP_URL}'\n      - 'PUB_HOSTNAME=${APP_URL}'\n      - PUB_PORT=80\n      - PUB_ENV=production\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "converter",
+      "file",
+      "documents",
+      "files",
+      "ffmpeg",
+      "wasm"
+    ],
+    "links": {
+      "docs": "https://github.com/VERT-sh/VERT"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "slug": "vvveb",
+  "name": "Vvveb",
+  "description": "Powerful and easy to use cms to build websites, blogs or ecommerce stores.",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  vvveb:\n    image: 'vvveb/vvvebcms:latest'\n    volumes:\n      - 'vvveb-data:/var/www/html'\n    environment:\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1'\n      interval: 2s\n      timeout: 10s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "cms",
+      "blog",
+      "content",
+      "management",
+      "ecommerce",
+      "page-builder",
+      "nocode",
+      "mysql",
+      "sqlite",
+      "pgsql"
+    ],
+    "links": {
+      "docs": "https://docs.vvveb.com"
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "slug": "infisical",
+  "name": "Infisical",
+  "description": "Infisical is the open source secret management platform that developers use to centralize their application configuration and secrets like API keys and database credentials.",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  backend:\n    image: 'infisical/infisical:v0.154.6'\n    environment:\n      - 'SITE_URL=${APP_URL}'\n      - 'NODE_ENV=${NODE_ENV:-production}'\n      - 'ENCRYPTION_KEY=${ENCRYPTIONKEY}'\n      - 'AUTH_SECRET=${AUTHSECRET}'\n      - 'SMTP_HOST=${SMTP_HOST}'\n      - 'SMTP_USERNAME=${SMTP_USERNAME}'\n      - 'SMTP_PASSWORD=${SMTP_PASSWORD}'\n      - 'SMTP_PORT=${SMTP_PORT}'\n      - 'SMTP_FROM_ADDRESS=${SMTP_FROM_ADDRESS}'\n      - 'SMTP_FROM_NAME=${SMTP_FROM_NAME}'\n      - 'INF_APP_CONNECTION_GITHUB_APP_CLIENT_ID=${INF_APP_CONNECTION_GITHUB_APP_CLIENT_ID}'\n      - 'INF_APP_CONNECTION_GITHUB_APP_CLIENT_SECRET=${INF_APP_CONNECTION_GITHUB_APP_CLIENT_SECRET}'\n      - 'INF_APP_CONNECTION_GITHUB_APP_SLUG=${INF_APP_CONNECTION_GITHUB_APP_SLUG}'\n      - 'INF_APP_CONNECTION_GITHUB_APP_ID=${INF_APP_CONNECTION_GITHUB_APP_ID}'\n      - 'INF_APP_CONNECTION_GITHUB_APP_PRIVATE_KEY=${INF_APP_CONNECTION_GITHUB_APP_PRIVATE_KEY}'\n      - 'DB_CONNECTION_URI=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}'\n      - 'REDIS_URL=redis://redis:6379'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/api/status || exit 1'\n    depends_on:\n      redis:\n        condition: service_healthy\n      db:\n        condition: service_healthy\n  redis:\n    image: 'redis:7'\n    volumes:\n      - 'redis-data:/data'\n    environment:\n      - 'ALLOW_EMPTY_PASSWORD=${ALLOW_EMPTY_PASSWORD:-yes}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'redis-cli -h localhost -p 6379 ping'\n      interval: 5s\n      timeout: 5s\n      retries: 3\n  db:\n    image: 'postgres:14-alpine'\n    volumes:\n      - 'pg_data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-infisical}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -h localhost -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 10s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "ENCRYPTIONKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "AUTHSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "NODE_ENV",
+      "value": "production"
+    },
+    {
+      "key": "SMTP_HOST",
+      "value": ""
+    },
+    {
+      "key": "SMTP_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "SMTP_PORT",
+      "value": ""
+    },
+    {
+      "key": "SMTP_FROM_ADDRESS",
+      "value": ""
+    },
+    {
+      "key": "SMTP_FROM_NAME",
+      "value": ""
+    },
+    {
+      "key": "INF_APP_CONNECTION_GITHUB_APP_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "INF_APP_CONNECTION_GITHUB_APP_CLIENT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "INF_APP_CONNECTION_GITHUB_APP_SLUG",
+      "value": ""
+    },
+    {
+      "key": "INF_APP_CONNECTION_GITHUB_APP_ID",
+      "value": ""
+    },
+    {
+      "key": "INF_APP_CONNECTION_GITHUB_APP_PRIVATE_KEY",
+      "secret": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    },
+    {
+      "key": "ALLOW_EMPTY_PASSWORD",
+      "value": "yes"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "security",
+      "environment",
+      "secrets",
+      "infisical",
+      "database",
+      "configuration",
+      "secret",
+      "api",
+      "keys",
+      "auth",
+      "encryption"
+    ],
+    "links": {
+      "docs": "https://infisical.com/docs/documentation/getting-started/introduction"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "slug": "statusnook",
+  "name": "Statusnook",
+  "description": "Effortlessly deploy a status page and start monitoring endpoints in minutes",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  statusnook:\n    environment:\n    volumes:\n      - 'statusnook-data:/app/statusnook-data'\n    image: goksan/statusnook:latest\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:8000'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "go",
+      "html",
+      "monitoring",
+      "sqlite",
+      "self",
+      "hosted",
+      "status",
+      "page",
+      "htmx",
+      "smtp",
+      "slack"
+    ],
+    "links": {
+      "docs": "https://statusnook.com"
+    }
+  }
+}

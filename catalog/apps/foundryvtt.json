@@ -1,0 +1,96 @@
+{
+  "slug": "foundryvtt",
+  "name": "Foundryvtt",
+  "description": "Foundry Virtual Tabletop is a self-hosted & modern roleplaying platform",
+  "category": "Games",
+  "icon": "game",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  foundryvtt:\n    image: 'felddy/foundryvtt:release'\n    expose:\n      - 30000\n    environment:\n      - 'FOUNDRY_USERNAME=${FOUNDRY_USERNAME}'\n      - 'FOUNDRY_PASSWORD=${FOUNDRY_PASSWORD}'\n      - 'FOUNDRY_RELEASE_URL=${FOUNDRY_RELEASE_URL}'\n      - 'FOUNDRY_LICENSE_KEY=${FOUNDRY_LICENSE_KEY}'\n      - 'FOUNDRY_ADMIN_KEY=${FOUNDRY_ADMIN:-atropos}'\n      - 'FOUNDRY_HOSTNAME=${FOUNDRY_HOSTNAME}'\n      - 'FOUNDRY_ROUTE_PREFIX=${FOUNDRY_ROUTE_PREFIX}'\n      - 'FOUNDRY_PROXY_PORT=${FOUNDRY_PROXY_PORT:-80}'\n      - 'FOUNDRY_PROXY_SSL=${FOUNDRY_PROXY_SSL:-true}'\n      - 'FOUNDRY_AWS_CONFIG=${FOUNDRY_AWS_CONFIG}'\n      - 'FOUNDRY_LANGUAGE=${FOUNDRY_LANGUAGE:-en.core}'\n      - 'FOUNDRY_CSS_THEME=${FOUNDRY_CSS_THEME:-foundry}'\n      - 'FOUNDRY_MINIFY_STATIC_FILES=${FOUNDRY_MINIFY_STATIC_FILES:-true}'\n      - 'FOUNDRY_WORLD=${FOUNDRY_WORLD}'\n      - 'FOUNDRY_TELEMETRY=${FOUNDRY_TELEMETRY:-false}'\n      - 'TIMEZONE=${TIMEZONE:-UTC}'\n      - CONTAINER_CACHE=/data/container_cache\n    volumes:\n      -\n        type: bind\n        source: '${FOUNDRY_DATA:-/data/foundryvtt}'\n        target: /data\n        is_directory: true\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:30000'\n      timeout: 5s\n      interval: 30s\n      retries: 3\n",
+  "defaultPort": 30000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "FOUNDRY_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "FOUNDRY_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "FOUNDRY_RELEASE_URL",
+      "value": ""
+    },
+    {
+      "key": "FOUNDRY_LICENSE_KEY",
+      "secret": true
+    },
+    {
+      "key": "FOUNDRY_ADMIN",
+      "value": "atropos"
+    },
+    {
+      "key": "FOUNDRY_HOSTNAME",
+      "value": ""
+    },
+    {
+      "key": "FOUNDRY_ROUTE_PREFIX",
+      "value": ""
+    },
+    {
+      "key": "FOUNDRY_PROXY_PORT",
+      "value": "80"
+    },
+    {
+      "key": "FOUNDRY_PROXY_SSL",
+      "value": "true"
+    },
+    {
+      "key": "FOUNDRY_AWS_CONFIG",
+      "value": ""
+    },
+    {
+      "key": "FOUNDRY_LANGUAGE",
+      "value": "en.core"
+    },
+    {
+      "key": "FOUNDRY_CSS_THEME",
+      "value": "foundry"
+    },
+    {
+      "key": "FOUNDRY_MINIFY_STATIC_FILES",
+      "value": "true"
+    },
+    {
+      "key": "FOUNDRY_WORLD",
+      "value": ""
+    },
+    {
+      "key": "FOUNDRY_TELEMETRY",
+      "value": "false"
+    },
+    {
+      "key": "TIMEZONE",
+      "value": "UTC"
+    },
+    {
+      "key": "FOUNDRY_DATA",
+      "value": "/data/foundryvtt"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "foundryvtt",
+      "foundry",
+      "vtt",
+      "ttrpg",
+      "roleplaying"
+    ],
+    "links": {
+      "docs": "https://foundryvtt.com/kb/"
+    }
+  }
+}

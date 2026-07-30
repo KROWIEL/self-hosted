@@ -1,0 +1,108 @@
+{
+  "slug": "alexandrie",
+  "name": "Alexandrie",
+  "description": "A powerful Markdown workspace designed for speed, clarity, and creativity.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  frontend:\n    image: 'ghcr.io/smaug6739/alexandrie-frontend:v8.10.0'\n    environment:\n      - PORT=8200\n      - 'NUXT_PUBLIC_CONFIG_DISABLE_SIGNUP_PAGE=${CONFIG_DISABLE_SIGNUP:-false}'\n      - 'NUXT_PUBLIC_CONFIG_DISABLE_LANDING_PAGE=${CONFIG_DISABLE_LANDING:-false}'\n      - 'NUXT_PUBLIC_BASE_API=${APP_URL}'\n      - 'NUXT_PUBLIC_BASE_CDN=${APP_URL}'\n      - 'NUXT_PUBLIC_CDN_ENDPOINT=${CDN_ENDPOINT:-/alexandrie/}'\n      - 'NUXT_PUBLIC_BASE_URL=${APP_URL}'\n    depends_on:\n      - backend\n  backend:\n    image: 'ghcr.io/smaug6739/alexandrie-backend:v8.10.0'\n    environment:\n      - BACKEND_PORT=8201\n      - GIN_MODE=release\n      - 'JWT_SECRET=${JWT_PASSWORD}'\n      - 'COOKIE_DOMAIN=${APP_URL}'\n      - 'FRONTEND_URL=${APP_URL}'\n      - 'ALLOW_UNSECURE=${ALLOW_UNSECURE:-false}'\n      - DATABASE_HOST=mysql\n      - DATABASE_PORT=3306\n      - 'DATABASE_NAME=${MYSQL_DATABASE:-alexandrie-db}'\n      - 'DATABASE_USER=${MYSQL_USER}'\n      - 'DATABASE_PASSWORD=${MYSQL_PASSWORD}'\n      - 'MINIO_ENDPOINT=rustfs:9000'\n      - 'MINIO_PUBLIC_URL=${APP_URL}'\n      - 'MINIO_SECURE=${MINIO_SECURE:-false}'\n      - 'MINIO_ACCESSKEY=${RUSTFS_USER}'\n      - 'MINIO_SECRETKEY=${RUSTFS_PASSWORD}'\n      - 'MINIO_BUCKET=${MINIO_BUCKET:-alexandrie}'\n      - 'SMTP_HOST=${SMTP_HOST:-}'\n      - 'SMTP_MAIL=${SMTP_MAIL:-}'\n      - 'SMTP_PASSWORD=${SMTP_PASSWORD:-}'\n    depends_on:\n      mysql:\n        condition: service_healthy\n      rustfs:\n        condition: service_healthy\n  mysql:\n    image: 'mysql:8.0'\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${MYSQLROOT_PASSWORD}'\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-alexandrie-db}'\n    volumes:\n      - 'mysql-data:/var/lib/mysql'\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - localhost\n        - '-u'\n        - root\n        - '-p${MYSQLROOT_PASSWORD}'\n      timeout: 5s\n      interval: 10s\n      retries: 5\n  rustfs:\n    image: 'rustfs/rustfs:1.0.0-beta.8'\n    environment:\n      - 'RUSTFS_ACCESS_KEY=${RUSTFS_USER}'\n      - 'RUSTFS_SECRET_KEY=${RUSTFS_PASSWORD}'\n      - 'RUSTFS_CONSOLE_ENABLE=${RUSTFS_CONSOLE_ENABLE:-false}'\n      - 'RUSTFS_LOG_LEVEL=${RUSTFS_LOG_LEVEL:-info}'\n    volumes:\n      - 'rustfs-data:/data'\n      - 'rustfs-logs:/logs'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'nc -z localhost 9000 || exit 1'\n      interval: 10s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 8200,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "JWT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "RUSTFS_USER",
+      "value": "rustfs"
+    },
+    {
+      "key": "RUSTFS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQLROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CONFIG_DISABLE_SIGNUP",
+      "value": "false"
+    },
+    {
+      "key": "CONFIG_DISABLE_LANDING",
+      "value": "false"
+    },
+    {
+      "key": "CDN_ENDPOINT",
+      "value": "/alexandrie/"
+    },
+    {
+      "key": "ALLOW_UNSECURE",
+      "value": "false"
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "alexandrie-db"
+    },
+    {
+      "key": "MINIO_SECURE",
+      "value": "false"
+    },
+    {
+      "key": "MINIO_BUCKET",
+      "value": "alexandrie"
+    },
+    {
+      "key": "SMTP_HOST",
+      "value": ""
+    },
+    {
+      "key": "SMTP_MAIL",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "RUSTFS_CONSOLE_ENABLE",
+      "value": "false"
+    },
+    {
+      "key": "RUSTFS_LOG_LEVEL",
+      "value": "info"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "note-taking",
+      "markdown",
+      "knowledge-management",
+      "personal-wiki",
+      "productivity"
+    ],
+    "links": {
+      "docs": "https://github.com/Smaug6739/Alexandrie/tree/main/docs"
+    }
+  }
+}

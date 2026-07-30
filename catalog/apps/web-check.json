@@ -1,0 +1,25 @@
+{
+  "slug": "web-check",
+  "name": "Web Check",
+  "description": "All-in-one OSINT tool for analysing any website",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  web-check:\n    image: lissy93/web-check:latest\n    environment:\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:3000/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "osint",
+      "website",
+      "analysis"
+    ],
+    "links": {
+      "docs": "https://github.com/lissy93/web-check"
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "slug": "healthchecks",
+  "name": "Healthchecks",
+  "description": "Healthchecks is a cron job monitoring service. It listens for HTTP requests and email messages from your cron jobs and scheduled tasks.",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "healthchecks",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  healthchecks:\n    image: 'healthchecks/healthchecks:v4.2'\n    container_name: healthchecks\n    environment:\n      - DB=sqlite\n      - DB_NAME=/data/hc.sqlite\n      - 'ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}'\n      - 'REGISTRATION_OPEN=${REGISTRATION_OPEN:-True}'\n      - 'DEBUG=${DEBUG:-False}'\n      - 'SECRET_KEY=${SECRET_KEY:?${HEALTHCHECKS_PASSWORD}}'\n      - 'SITE_ROOT=${APP_URL}'\n      - 'DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-fixme-email-address-here}'\n      - 'EMAIL_HOST=${EMAIL_HOST:-my-smtp-server-here.com}'\n      - 'EMAIL_PORT=${EMAIL_PORT:-465}'\n      - 'EMAIL_HOST_USER=${EMAIL_HOST_USER:-my_username}'\n      - 'EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-mypassword}'\n      - 'EMAIL_USE_SSL=${EMAIL_USE_SSL:-True}'\n      - 'EMAIL_USE_TLS=${EMAIL_USE_TLS:-False}'\n    volumes:\n      - 'healthchecks-data:/data'\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "HEALTHCHECKS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "ALLOWED_HOSTS",
+      "value": "*"
+    },
+    {
+      "key": "REGISTRATION_OPEN",
+      "value": "True"
+    },
+    {
+      "key": "DEBUG",
+      "value": "False"
+    },
+    {
+      "key": "DEFAULT_FROM_EMAIL",
+      "value": "fixme-email-address-here"
+    },
+    {
+      "key": "EMAIL_HOST",
+      "value": "my-smtp-server-here.com"
+    },
+    {
+      "key": "EMAIL_PORT",
+      "value": "465"
+    },
+    {
+      "key": "EMAIL_HOST_USER",
+      "value": "my_username"
+    },
+    {
+      "key": "EMAIL_HOST_PASSWORD",
+      "value": "mypassword"
+    },
+    {
+      "key": "EMAIL_USE_SSL",
+      "value": "True"
+    },
+    {
+      "key": "EMAIL_USE_TLS",
+      "value": "False"
+    }
+  ],
+  "meta": {
+    "about": "Listen for pings and sends alerts when pings are late.",
+    "license": "BSD-3-Clause",
+    "tags": [
+      "monitoring",
+      "status",
+      "performance",
+      "web",
+      "services",
+      "applications",
+      "real-time"
+    ],
+    "stars": 10186,
+    "updatedAt": "2026-07-22",
+    "links": {
+      "docs": "https://healthchecks.io/docs",
+      "website": "https://healthchecks.io/",
+      "source": "https://github.com/healthchecks/healthchecks"
+    }
+  }
+}

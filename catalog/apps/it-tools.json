@@ -1,0 +1,25 @@
+{
+  "slug": "it-tools",
+  "name": "It Tools",
+  "description": "IT Tools is a self-hosted solution for managing various IT tasks.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  it-tools:\n    image: 'corentinth/it-tools:latest'\n    environment:\n    volumes:\n      - 'it-tools-data:/app/data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:80'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "it-tools",
+      "management",
+      "self-hosted"
+    ],
+    "links": {
+      "docs": "https://github.com/corentinth/it-tools"
+    }
+  }
+}

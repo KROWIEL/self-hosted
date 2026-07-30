@@ -1,0 +1,70 @@
+{
+  "slug": "fider",
+  "name": "Fider",
+  "description": "Fider is a feedback platform for collecting and managing user feedback.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "fider",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  fider:\n    image: 'getfider/fider:stable'\n    environment:\n      - BASE_URL=${APP_URL}\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/fider?sslmode=disable'\n      - JWT_SECRET=${FIDER_PASSWORD}\n      - 'EMAIL_NOREPLY=${EMAIL_NOREPLY:-noreply@example.com}'\n      - EMAIL_MAILGUN_API=$EMAIL_MAILGUN_API\n      - EMAIL_MAILGUN_DOMAIN=$EMAIL_MAILGUN_DOMAIN\n      - EMAIL_MAILGUN_REGION=$EMAIL_MAILGUN_REGION\n      - 'EMAIL_SMTP_HOST=${EMAIL_SMTP_HOST:-smtp.mailgun.com}'\n      - 'EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT:-587}'\n      - 'EMAIL_SMTP_USERNAME=${EMAIL_SMTP_USERNAME:-postmaster@mailgun.com}'\n      - EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD\n      - EMAIL_SMTP_ENABLE_STARTTLS=$EMAIL_SMTP_ENABLE_STARTTLS\n      - EMAIL_AWSSES_REGION=$EMAIL_AWSSES_REGION\n      - EMAIL_AWSSES_ACCESS_KEY_ID=$EMAIL_AWSSES_ACCESS_KEY_ID\n      - EMAIL_AWSSES_SECRET_ACCESS_KEY=$EMAIL_AWSSES_SECRET_ACCESS_KEY\n    healthcheck:\n      test:\n        - CMD\n        - /app/fider\n        - ping\n      interval: 2s\n      timeout: 10s\n      retries: 10\n  database:\n    image: 'postgres:12'\n    volumes:\n      - 'pg_data:/var/lib/postgresql/data'\n    environment:\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - 'POSTGRES_DB=${POSTGRES_DB:-fider}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "FIDER_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "EMAIL_NOREPLY",
+      "value": "noreply@example.com"
+    },
+    {
+      "key": "EMAIL_SMTP_HOST",
+      "value": "smtp.mailgun.com"
+    },
+    {
+      "key": "EMAIL_SMTP_PORT",
+      "value": "587"
+    },
+    {
+      "key": "EMAIL_SMTP_USERNAME",
+      "value": "postmaster@mailgun.com"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "fider"
+    }
+  ],
+  "meta": {
+    "about": "Open platform to collect and prioritize feedback (alternative to UserVoice).",
+    "license": "MIT",
+    "tags": [
+      "feedback",
+      "user-feedback"
+    ],
+    "stars": 4436,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://fider.io",
+      "website": "https://fider.io",
+      "source": "https://github.com/getfider/fider",
+      "demo": "https://demo.fider.io"
+    }
+  }
+}

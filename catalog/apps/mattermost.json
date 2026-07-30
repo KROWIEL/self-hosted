@@ -1,0 +1,53 @@
+{
+  "slug": "mattermost",
+  "name": "Mattermost",
+  "description": "Mattermost is an open source, self-hosted Slack-alternative.",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "mattermost",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mattermost:\n    image: 'mattermost/mattermost-team-edition:release-10'\n    platform: linux/amd64\n    volumes:\n      - 'mattermost-data-config:/mattermost/config:rw'\n      - 'mattermost-data-data:/mattermost/data:rw'\n      - 'mattermost-data-logs:/mattermost/logs:rw'\n      - 'mattermost-data-plugins:/mattermost/plugins:rw'\n      - 'mattermost-data-client-plugins:/mattermost/client/plugins:rw'\n      - 'mattermost-data-bleve-indexes:/mattermost/bleve-indexes:rw'\n    environment:\n      - 'MM_SERVICESETTINGS_SITEURL=${APP_URL}'\n      - 'TZ=${TZ:-UTC}'\n      - MM_SQLSETTINGS_DRIVERNAME=postgres\n      - 'MM_SQLSETTINGS_DATASOURCE=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/$POSTGRES_DB?sslmode=disable&connect_timeout=10'\n      - MM_BLEVESETTINGS_INDEXDIR=/mattermost/bleve-indexes\n    depends_on:\n      postgres:\n        condition: service_healthy\n  postgres:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'postgresql-data:/var/lib/postgresql/data'\n    environment:\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - 'POSTGRES_DB=${POSTGRES_DB:-mattermost}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8065,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "mattermost"
+    }
+  ],
+  "meta": {
+    "about": "Platform for secure collaboration across the entire software development lifecycle, can be integrated with Gitlab (alternative to Slack).",
+    "license": "⊘ Proprietary",
+    "tags": [
+      "mattermost",
+      "slack",
+      "alternative"
+    ],
+    "stars": 38591,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://docs.mattermost.com",
+      "website": "https://mattermost.com/",
+      "source": "https://github.com/mattermost/mattermost"
+    }
+  }
+}

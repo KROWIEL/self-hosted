@@ -1,0 +1,110 @@
+{
+  "slug": "chaskiq",
+  "name": "Chaskiq",
+  "description": "Chaskiq is an messaging platform for marketing, support & sales",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  chaskiq:\n    image: 'chaskiq/chaskiq:latest'\n    environment:\n      - 'REDIS_URL=redis://redis:6379/'\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB:-chaskiq}'\n      - POSTGRES_USER=${POSTGRES_USER}\n      - 'SERVICE_FQDN=${APP_URL}'\n      - 'HOST=${APP_URL}'\n      - 'ASSET_HOST=${APP_URL}'\n      - 'WS=wss://${APP_URL}/cable'\n      - SNS_CONFIGURATION_SET=metrics\n      - 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}'\n      - 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}'\n      - 'AWS_S3_BUCKET=${AWS_S3_BUCKET:-}'\n      - 'AWS_S3_REGION=${AWS_S3_REGION:-}'\n      - 'ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example}'\n      - 'ADMIN_PASSWORD=${ADMIN_PASSWORD}'\n      - 'DEFAULT_SENDER_EMAIL=${DEFAULT_SENDER_EMAIL:-admin@example}'\n      - LOCAL_STORAGE_PATH=/data/storage\n      - 'ACTIVE_STORAGE_SERVICE=${ACTIVE_STORAGE_SERVICE:-local}'\n      - 'SMTP_DELIVERY_METHOD=${SMTP_DELIVERY_METHOD:-}'\n      - 'SMTP_ADDRESS=${SMTP_ADDRESS:-}'\n      - 'SMTP_USERNAME=${SMTP_USERNAME:-}'\n      - 'SMTP_PASSWORD=${SMTP_PASSWORD:-}'\n      - 'CHASKIQ_APPSTORE_TOKEN=${CHASKIQ_APPSTORE_TOKEN:-}'\n      - APP_ENV=production\n      - RAILS_ENV=production\n      - RACK_ENV=production\n      - RAILS_SERVE_STATIC_FILES=true\n      - SECRET_KEY_BASE=${SECRET}\n      - RAILS_LOG_TO_STDOUT=true\n      - ENABLED_AUDITS=true\n      - TZ=Europe/Madrid\n    entrypoint:\n      - /entrypoint.sh\n    depends_on:\n      postgresql:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    volumes:\n      - 'chaskiq-storage:/data/storage'\n      -\n        type: bind\n        source: ./entrypoint.sh\n        target: /entrypoint.sh\n        content: \"#!/bin/sh\\nset -e\\nrm -f /usr/src/app/tmp/pids/server.pid\\nexec \\\"$@\\\"\\necho \\\"Running database migrations...\\\"\\nbundle exec rails db:setup || true\\nbundle exec rails db:migrate\\necho \\\"Finished running database migrations.\\\"\\necho \\\"Running packages update...\\\"\\nbundle exec rails packages:update\\necho \\\"Finished packages update.\\\"\\nif [ ! -f /usr/src/app/admin_generated ]; then\\n    echo \\\"/usr/src/app/admin_generated not found, executing admin generation..\\\"\\n    bundle exec rake admin_generator\\n    touch /usr/src/app/admin_generated\\n    echo \\\"Admin generation finished !\\\"\\nfi\\nbundle exec rails s -b 0.0.0.0 -p 3000\\n\"\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000'\n      interval: 5s\n      timeout: 20s\n      retries: 15\n  sidekiq:\n    image: 'chaskiq/chaskiq:latest'\n    environment:\n      - 'REDIS_URL=redis://redis:6379/'\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB:-chaskiq}'\n      - POSTGRES_USER=${POSTGRES_USER}\n      - 'HOST=${APP_URL}'\n      - 'ASSET_HOST=${APP_URL}'\n      - 'WS=wss://${APP_URL}/cable'\n      - SNS_CONFIGURATION_SET=metrics\n      - 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}'\n      - 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}'\n      - 'AWS_S3_BUCKET=${AWS_S3_BUCKET:-}'\n      - 'AWS_S3_REGION=${AWS_S3_REGION:-}'\n      - 'ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example}'\n      - 'ADMIN_PASSWORD=${ADMIN_PASSWORD}'\n      - 'DEFAULT_SENDER_EMAIL=${DEFAULT_SENDER_EMAIL:-admin@example}'\n      - LOCAL_STORAGE_PATH=/data/storage\n      - 'ACTIVE_STORAGE_SERVICE=${ACTIVE_STORAGE_SERVICE:-local}'\n      - 'SMTP_DELIVERY_METHOD=${SMTP_DELIVERY_METHOD:-}'\n      - 'SMTP_ADDRESS=${SMTP_ADDRESS:-}'\n      - 'SMTP_USERNAME=${SMTP_USERNAME:-}'\n      - 'SMTP_PASSWORD=${SMTP_PASSWORD:-}'\n      - 'CHASKIQ_APPSTORE_TOKEN=${CHASKIQ_APPSTORE_TOKEN:-}'\n      - APP_ENV=production\n      - RAILS_ENV=production\n      - RACK_ENV=production\n      - RAILS_SERVE_STATIC_FILES=true\n      - SECRET_KEY_BASE=${SECRET}\n      - RAILS_LOG_TO_STDOUT=true\n      - ENABLED_AUDITS=true\n      - TZ=Europe/Madrid\n    volumes:\n      - 'chaskiq-storage:/data/storage'\n    depends_on:\n      postgresql:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n      chaskiq:\n        condition: service_healthy\n    command:\n      - bundle\n      - exec\n      - sidekiq\n      - '-C'\n      - config/sidekiq.yml\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bundle exec rails runner 'puts Sidekiq.redis(&:info)' > /dev/null 2>&1\"\n      interval: 5s\n      timeout: 10s\n      retries: 15\n  postgresql:\n    image: 'postgres:14-alpine'\n    volumes:\n      - 'postgresql-data:/var/lib/postgresql/data'\n    environment:\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - 'POSTGRES_DB=${POSTGRES_DB:-chaskiq}'\n      - 'POSTGRES_INITDB_ARGS= --data-checksums'\n      - PSQL_HISTFILE=/root/log/.psql_history\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 5s\n      retries: 10\n  redis:\n    image: 'redis:6-alpine'\n    restart: always\n    volumes:\n      - 'redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 5s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "chaskiq"
+    },
+    {
+      "key": "AWS_ACCESS_KEY_ID",
+      "value": ""
+    },
+    {
+      "key": "AWS_SECRET_ACCESS_KEY",
+      "value": ""
+    },
+    {
+      "key": "AWS_S3_BUCKET",
+      "value": ""
+    },
+    {
+      "key": "AWS_S3_REGION",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_EMAIL",
+      "value": "admin@example"
+    },
+    {
+      "key": "DEFAULT_SENDER_EMAIL",
+      "value": "admin@example"
+    },
+    {
+      "key": "ACTIVE_STORAGE_SERVICE",
+      "value": "local"
+    },
+    {
+      "key": "SMTP_DELIVERY_METHOD",
+      "value": ""
+    },
+    {
+      "key": "SMTP_ADDRESS",
+      "value": ""
+    },
+    {
+      "key": "SMTP_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "CHASKIQ_APPSTORE_TOKEN",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "chaskiq",
+      "messaging",
+      "chat",
+      "marketing",
+      "support",
+      "sales",
+      "open",
+      "source",
+      "rails",
+      "redis",
+      "postgresql",
+      "sidekiq"
+    ],
+    "links": {
+      "docs": "https://chaskiq.io"
+    }
+  }
+}

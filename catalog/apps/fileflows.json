@@ -1,0 +1,35 @@
+{
+  "slug": "fileflows",
+  "name": "Fileflows",
+  "description": "FileFlows can drastically reduce your files, up to 90%, saving you space and money. No need to buy more hard drives, just shrink your files and start saving.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  fileflows:\n    image: revenz/fileflows:latest\n    environment:\n      - _APP_URL=${APP_URL}\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-America/Toronto}'\n    volumes:\n      - 'fileflows_temp:/temp'\n      - 'fileflows_configs:/app/Data'\n      - 'fileflows_logs:/app/Logs'\n      - 'fileflows_common:/app/common'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:5000/api/system/version'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 5000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "America/Toronto"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "media",
+      "transcode",
+      "convert",
+      "h265"
+    ],
+    "links": {
+      "docs": "https://fileflows.com/docs/"
+    }
+  }
+}

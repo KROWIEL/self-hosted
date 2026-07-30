@@ -13,5 +13,18 @@
   "deployKind": "image",
   "image": "jgraph/drawio:latest",
   "defaultPort": 8080,
-  "envDefaults": []
+  "envDefaults": [],
+  "meta": {
+    "about": "Diagram software for making flowcharts, process diagrams, org charts, UML, ER and network diagrams.",
+    "license": "Apache-2.0",
+    "tags": [
+      "Note-taking & Editors"
+    ],
+    "stars": 7097,
+    "updatedAt": "2026-07-26",
+    "links": {
+      "website": "https://draw.io",
+      "source": "https://github.com/jgraph/drawio"
+    }
+  }
 }

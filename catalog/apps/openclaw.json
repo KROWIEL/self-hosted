@@ -1,0 +1,188 @@
+{
+  "slug": "openclaw",
+  "name": "Openclaw",
+  "description": "AI-powered coding assistant with multi-provider support and browser automation.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  openclaw:\n    image: 'coollabsio/openclaw:2026.2.6'\n    environment:\n      - AUTH_USERNAME=${OPENCLAW_USER}\n      - AUTH_PASSWORD=${OPENCLAW_PASSWORD}\n      - OPENCLAW_GATEWAY_TOKEN=${GATEWAYTOKEN}\n      - 'ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}'\n      - 'OPENAI_API_KEY=${OPENAI_API_KEY}'\n      - 'OPENROUTER_API_KEY=${OPENROUTER_API_KEY}'\n      - 'GEMINI_API_KEY=${GEMINI_API_KEY}'\n      - 'XAI_API_KEY=${XAI_API_KEY}'\n      - 'GROQ_API_KEY=${GROQ_API_KEY}'\n      - 'MISTRAL_API_KEY=${MISTRAL_API_KEY}'\n      - 'CEREBRAS_API_KEY=${CEREBRAS_API_KEY}'\n      - 'VENICE_API_KEY=${VENICE_API_KEY}'\n      - 'MOONSHOT_API_KEY=${MOONSHOT_API_KEY}'\n      - 'KIMI_API_KEY=${KIMI_API_KEY}'\n      - 'MINIMAX_API_KEY=${MINIMAX_API_KEY}'\n      - 'ZAI_API_KEY=${ZAI_API_KEY}'\n      - 'AI_GATEWAY_API_KEY=${AI_GATEWAY_API_KEY}'\n      - 'OPENCODE_API_KEY=${OPENCODE_API_KEY}'\n      - 'SYNTHETIC_API_KEY=${SYNTHETIC_API_KEY}'\n      - 'COPILOT_GITHUB_TOKEN=${COPILOT_GITHUB_TOKEN}'\n      - 'XIAOMI_API_KEY=${XIAOMI_API_KEY}'\n      - 'OPENCLAW_PRIMARY_MODEL=${OPENCLAW_PRIMARY_MODEL}'\n      - 'DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}'\n      - 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}'\n      - 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}'\n      - 'AWS_REGION=${AWS_REGION:-us-east-1}'\n      - 'AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}'\n      - 'BEDROCK_PROVIDER_FILTER=${BEDROCK_PROVIDER_FILTER:-anthropic}'\n      - 'OLLAMA_BASE_URL=${OLLAMA_BASE_URL}'\n      - PORT=8080\n      - OPENCLAW_GATEWAY_PORT=18789\n      - 'OPENCLAW_GATEWAY_BIND=${OPENCLAW_GATEWAY_BIND:-loopback}'\n      - OPENCLAW_STATE_DIR=/data/.openclaw\n      - OPENCLAW_WORKSPACE_DIR=/data/workspace\n      - 'BROWSER_CDP_URL=http://browser:9223'\n      - 'BROWSER_DEFAULT_PROFILE=${BROWSER_DEFAULT_PROFILE:-openclaw}'\n      - 'BROWSER_EVALUATE_ENABLED=${BROWSER_EVALUATE_ENABLED:-true}'\n      - 'BROWSER_SNAPSHOT_MODE=${BROWSER_SNAPSHOT_MODE:-efficient}'\n      - 'BROWSER_REMOTE_TIMEOUT_MS=${BROWSER_REMOTE_TIMEOUT_MS:-1500}'\n      - 'BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS=${BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS:-3000}'\n      - 'HOOKS_ENABLED=${HOOKS_ENABLED:-false}'\n      - 'HOOKS_PATH=${HOOKS_PATH:-/hooks}'\n      - 'MOONSHOT_BASE_URL=${MOONSHOT_BASE_URL:-https://api.moonshot.ai/v1}'\n      - 'KIMI_BASE_URL=${KIMI_BASE_URL:-https://api.moonshot.ai/anthropic}'\n      - TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN\n      - DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN\n      - SLACK_BOT_TOKEN=$SLACK_BOT_TOKEN\n      - SLACK_APP_TOKEN=$SLACK_APP_TOKEN\n      - WHATSAPP_ENABLED=$WHATSAPP_ENABLED\n      - OPENCLAW_DOCKER_APT_PACKAGES=$OPENCLAW_DOCKER_APT_PACKAGES\n    volumes:\n      - 'openclaw-data:/data'\n    depends_on:\n      browser:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-sf'\n        - 'http://127.0.0.1:8080/healthz'\n      interval: 10s\n      timeout: 10s\n      retries: 5\n  browser:\n    image: 'coollabsio/openclaw-browser:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - TZ=Etc/UTC\n      - CHROME_CLI=--remote-debugging-port=9222\n    volumes:\n      - 'browser-data:/config'\n    shm_size: 2g\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/9222' || exit 1\"\n      interval: 5s\n      timeout: 5s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "OPENCLAW_USER",
+      "value": "openclaw"
+    },
+    {
+      "key": "OPENCLAW_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "GATEWAYTOKEN",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ANTHROPIC_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "OPENAI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "OPENROUTER_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "GEMINI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "XAI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "GROQ_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "MISTRAL_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "CEREBRAS_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "VENICE_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "MOONSHOT_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "KIMI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "MINIMAX_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "ZAI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "AI_GATEWAY_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "OPENCODE_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "SYNTHETIC_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "COPILOT_GITHUB_TOKEN",
+      "secret": true
+    },
+    {
+      "key": "XIAOMI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "OPENCLAW_PRIMARY_MODEL",
+      "value": ""
+    },
+    {
+      "key": "DEEPGRAM_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "AWS_ACCESS_KEY_ID",
+      "secret": true
+    },
+    {
+      "key": "AWS_SECRET_ACCESS_KEY",
+      "secret": true
+    },
+    {
+      "key": "AWS_REGION",
+      "value": "us-east-1"
+    },
+    {
+      "key": "AWS_SESSION_TOKEN",
+      "secret": true
+    },
+    {
+      "key": "BEDROCK_PROVIDER_FILTER",
+      "value": "anthropic"
+    },
+    {
+      "key": "OLLAMA_BASE_URL",
+      "value": ""
+    },
+    {
+      "key": "OPENCLAW_GATEWAY_BIND",
+      "value": "loopback"
+    },
+    {
+      "key": "BROWSER_DEFAULT_PROFILE",
+      "value": "openclaw"
+    },
+    {
+      "key": "BROWSER_EVALUATE_ENABLED",
+      "value": "true"
+    },
+    {
+      "key": "BROWSER_SNAPSHOT_MODE",
+      "value": "efficient"
+    },
+    {
+      "key": "BROWSER_REMOTE_TIMEOUT_MS",
+      "value": "1500"
+    },
+    {
+      "key": "BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS",
+      "value": "3000"
+    },
+    {
+      "key": "HOOKS_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "HOOKS_PATH",
+      "value": "/hooks"
+    },
+    {
+      "key": "MOONSHOT_BASE_URL",
+      "value": "https://api.moonshot.ai/v1"
+    },
+    {
+      "key": "KIMI_BASE_URL",
+      "value": "https://api.moonshot.ai/anthropic"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "ai",
+      "coding",
+      "assistant",
+      "llm",
+      "anthropic",
+      "openai",
+      "automation"
+    ],
+    "links": {
+      "docs": "https://coolify.io/docs/services/openclaw"
+    }
+  }
+}

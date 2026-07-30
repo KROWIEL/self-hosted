@@ -1,0 +1,135 @@
+{
+  "slug": "swetrix",
+  "name": "Swetrix",
+  "description": "Privacy-friendly and cookieless European web analytics alternative to Google Analytics.",
+  "category": "Analytics",
+  "icon": "chart",
+  "upstream": "swetrix",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  swetrix:\n    image: 'swetrix/swetrix-fe:v4.0.5'\n    depends_on:\n      - swetrix-api\n    environment:\n      - API_URL=${APP_URL}\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --no-verbose --tries=1 --spider http://localhost:3000/ping || exit 1'\n      timeout: 5s\n      retries: 10\n      interval: 30s\n      start_period: 15s\n  swetrix-api:\n    image: 'swetrix/swetrix-api:v4.0.5'\n    environment:\n      - SECRET_KEY_BASE=${SECRETKEYBASE_SECRET}\n      - 'DISABLE_REGISTRATION=${DISABLE_REGISTRATION:-false}'\n      - 'IP_GEOLOCATION_DB_PATH=${IP_GEOLOCATION_DB_PATH:-}'\n      - 'DEBUG_MODE=${DEBUG_MODE:-false}'\n      - 'CLOUDFLARE_PROXY_ENABLED=${CLOUDFLARE_PROXY_ENABLED:-false}'\n      - 'SMTP_HOST=${SMTP_HOST:-}'\n      - 'SMTP_PORT=${SMTP_PORT:-}'\n      - 'SMTP_USER=${SMTP_USER:-}'\n      - 'SMTP_PASSWORD=${SMTP_PASSWORD:-}'\n      - 'FROM_EMAIL=${FROM_EMAIL:-}'\n      - 'SMTP_MOCK=${SMTP_MOCK:-false}'\n      - 'OIDC_ENABLED=${OIDC_ENABLED:-false}'\n      - 'OIDC_ONLY_AUTH=${OIDC_ONLY_AUTH:-false}'\n      - 'OIDC_DISCOVERY_URL=${OIDC_DISCOVERY_URL:-}'\n      - 'OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}'\n      - 'OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}'\n      - REDIS_HOST=redis\n      - 'CLICKHOUSE_HOST=http://clickhouse'\n      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}\n      - REDIS_PASSWORD=${REDIS_PASSWORD}\n    depends_on:\n      redis:\n        condition: service_healthy\n      clickhouse:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --no-verbose --tries=1 --spider http://localhost:5005/ping || exit 1'\n      timeout: 5s\n      retries: 10\n      interval: 30s\n      start_period: 15s\n  redis:\n    image: 'redis:8.2-alpine'\n    environment:\n      - 'REDIS_PORT=${REDIS_PORT:-6379}'\n      - 'REDIS_USER=${REDIS_USER:-default}'\n      - REDIS_PASSWORD=${REDIS_PASSWORD}\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'redis-cli ping | grep PONG'\n      timeout: 5s\n      retries: 10\n      interval: 30s\n      start_period: 1m\n  clickhouse:\n    image: 'clickhouse/clickhouse-server:24.10-alpine'\n    environment:\n      - 'CLICKHOUSE_DATABASE=${CLICKHOUSE_DATABASE:-analytics}'\n      - 'CLICKHOUSE_USER=${CLICKHOUSE_USER:-default}'\n      - 'CLICKHOUSE_PORT=${CLICKHOUSE_PORT:-8123}'\n      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --no-verbose --tries=1 -O - http://127.0.0.1:8123/ping || exit 1'\n      timeout: 5s\n      retries: 10\n      interval: 30s\n      start_period: 1m\n    cap_add:\n      - SYS_NICE\n    volumes:\n      - 'swetrix-events-data:/var/lib/clickhouse'\n      -\n        type: bind\n        source: ./disable-user-logging.xml\n        target: /etc/clickhouse-server/users.d/disable-user-logging.xml\n        read_only: true\n        content: \"<clickhouse>\\n  <profiles>\\n    <default>\\n      <log_queries>0</log_queries>\\n      <log_query_threads>0</log_query_threads>\\n    </default>\\n  </profiles>\\n</clickhouse>\\n\"\n      -\n        type: bind\n        source: ./reduce-logs.xml\n        target: /etc/clickhouse-server/config.d/reduce-logs.xml\n        read_only: true\n        content: \"<clickhouse>\\n  <logger>\\n    <level>warning</level>\\n    <console>true</console>\\n  </logger>\\n  <query_thread_log remove=\\\"remove\\\"/>\\n  <query_log remove=\\\"remove\\\"/>\\n  <text_log remove=\\\"remove\\\"/>\\n  <trace_log remove=\\\"remove\\\"/>\\n  <metric_log remove=\\\"remove\\\"/>\\n  <asynchronous_metric_log remove=\\\"remove\\\"/>\\n  <session_log remove=\\\"remove\\\"/>\\n  <part_log remove=\\\"remove\\\"/>\\n</clickhouse>\\n\"\n      -\n        type: bind\n        source: ./preserve-ram-config.xml\n        target: /etc/clickhouse-server/config.d/preserve-ram-config.xml\n        read_only: true\n        content: \"<clickhouse>\\n  <mark_cache_size>536870912</mark_cache_size>\\n  <concurrent_threads_soft_limit_num>1</concurrent_threads_soft_limit_num>\\n</clickhouse>\\n\"\n      -\n        type: bind\n        source: ./preserve-ram-user.xml\n        target: /etc/clickhouse-server/users.d/preserve-ram-user.xml\n        read_only: true\n        content: \"<clickhouse>\\n  <profiles>\\n    <default>\\n      <max_block_size>2048</max_block_size>\\n      <max_download_threads>1</max_download_threads>\\n      <input_format_parallel_parsing>0</input_format_parallel_parsing>\\n      <output_format_parallel_formatting>0</output_format_parallel_formatting>\\n    </default>\\n  </profiles>\\n</clickhouse>\\n\"\n    ulimits:\n      nofile:\n        soft: 262144\n        hard: 262144\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "SECRETKEYBASE_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CLICKHOUSE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "DISABLE_REGISTRATION",
+      "value": "false"
+    },
+    {
+      "key": "IP_GEOLOCATION_DB_PATH",
+      "value": ""
+    },
+    {
+      "key": "DEBUG_MODE",
+      "value": "false"
+    },
+    {
+      "key": "CLOUDFLARE_PROXY_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "SMTP_HOST",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PORT",
+      "value": ""
+    },
+    {
+      "key": "SMTP_USER",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "FROM_EMAIL",
+      "value": ""
+    },
+    {
+      "key": "SMTP_MOCK",
+      "value": "false"
+    },
+    {
+      "key": "OIDC_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "OIDC_ONLY_AUTH",
+      "value": "false"
+    },
+    {
+      "key": "OIDC_DISCOVERY_URL",
+      "value": ""
+    },
+    {
+      "key": "OIDC_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "OIDC_CLIENT_SECRET",
+      "value": ""
+    },
+    {
+      "key": "REDIS_PORT",
+      "value": "6379"
+    },
+    {
+      "key": "REDIS_USER",
+      "value": "default"
+    },
+    {
+      "key": "CLICKHOUSE_DATABASE",
+      "value": "analytics"
+    },
+    {
+      "key": "CLICKHOUSE_USER",
+      "value": "default"
+    },
+    {
+      "key": "CLICKHOUSE_PORT",
+      "value": "8123"
+    }
+  ],
+  "meta": {
+    "about": "Ultimate, open-source web analytics to satisfy all your needs.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "analytics",
+      "privacy",
+      "monitoring",
+      "open-source",
+      "clickhouse",
+      "redis"
+    ],
+    "stars": 71,
+    "updatedAt": "2026-07-01",
+    "links": {
+      "docs": "https://docs.swetrix.com/selfhosting/how-to",
+      "website": "https://swetrix.com/",
+      "source": "https://github.com/Swetrix/selfhosting",
+      "demo": "https://swetrix.com/projects/STEzHcB1rALV"
+    }
+  }
+}

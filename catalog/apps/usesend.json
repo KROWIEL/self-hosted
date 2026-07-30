@@ -1,0 +1,63 @@
+{
+  "slug": "usesend",
+  "name": "Usesend",
+  "description": "Usesend is an open-source alternative to Resend, Sendgrid, Mailgun and Postmark etc.",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  postgres:\n    image: 'postgres:16'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${SERVICE_DB_POSTGRES:-usesend}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    volumes:\n      - 'usesend-postgres-data:/var/lib/postgresql/data'\n  redis:\n    image: 'redis:7'\n    volumes:\n      - 'usesend-redis-data:/data'\n    command:\n      - redis-server\n      - '--maxmemory-policy'\n      - noeviction\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - PING\n      interval: 5s\n      timeout: 10s\n      retries: 20\n  usesend:\n    image: 'usesend/usesend:latest'\n    expose:\n      - 3000\n    environment:\n      - 'DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${SERVICE_DB_POSTGRES:-usesend}'\n      - 'NEXTAUTH_URL=${APP_URL}'\n      - 'NEXTAUTH_SECRET=${NEXTAUTHSECRET}'\n      - 'AWS_ACCESS_KEY=${AWS_ACCESS_KEY:?}'\n      - 'AWS_SECRET_KEY=${AWS_SECRET_KEY:?}'\n      - 'AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:?}'\n      - 'GITHUB_ID=${GITHUB_ID:?}'\n      - 'GITHUB_SECRET=${GITHUB_SECRET:?}'\n      - 'REDIS_URL=redis://redis:6379'\n      - 'NEXT_PUBLIC_IS_CLOUD=${NEXT_PUBLIC_IS_CLOUD:-false}'\n      - 'API_RATE_LIMIT=${API_RATE_LIMIT:-1}'\n      - HOSTNAME=0.0.0.0\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://usesend:3000 || exit 1'\n      interval: 5s\n      retries: 10\n      timeout: 2s\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "NEXTAUTHSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SERVICE_DB_POSTGRES",
+      "value": "usesend"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    },
+    {
+      "key": "NEXT_PUBLIC_IS_CLOUD",
+      "value": "false"
+    },
+    {
+      "key": "API_RATE_LIMIT",
+      "value": "1"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "resend",
+      "mailer",
+      "marketing emails",
+      "transaction emails",
+      "self-hosting",
+      "postmark"
+    ],
+    "links": {
+      "docs": "https://docs.usesend.com/self-hosting/overview"
+    }
+  }
+}

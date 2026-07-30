@@ -28,5 +28,18 @@
       "secret": true,
       "required": false
     }
-  ]
+  ],
+  "meta": {
+    "about": "Lightweight Bitwarden server API implementation written in Rust.",
+    "license": "GPL-3.0",
+    "tags": [
+      "Password Managers"
+    ],
+    "stars": 64427,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "website": "https://github.com/dani-garcia/vaultwarden",
+      "source": "https://github.com/dani-garcia/vaultwarden"
+    }
+  }
 }

@@ -21,5 +21,19 @@
       "secret": true,
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "Modern, lightweight and powerful wiki app using Git and Markdown.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "Wikis"
+    ],
+    "stars": 28668,
+    "updatedAt": "2026-05-01",
+    "links": {
+      "website": "https://js.wiki/",
+      "source": "https://github.com/Requarks/wiki",
+      "demo": "https://docs.requarks.io"
+    }
+  }
 }

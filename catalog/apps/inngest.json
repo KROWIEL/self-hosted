@@ -1,0 +1,44 @@
+{
+  "slug": "inngest",
+  "name": "Inngest",
+  "description": "Durable workflow engine for background jobs, queues and scheduled tasks.",
+  "category": "Automation",
+  "icon": "workflow",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  inngest:\n    image: 'inngest/inngest:v1.27.0'\n    command: 'inngest start --host 0.0.0.0'\n    environment:\n      - 'INNGEST_EVENT_KEY=${EVENTKEY}'\n      - 'INNGEST_SIGNING_KEY=${SIGNINGKEY}'\n      - 'INNGEST_POSTGRES_URI=postgres://inngest:${POSTGRES_PASSWORD}@postgres:5432/inngest'\n      - 'INNGEST_REDIS_URI=redis://redis:6379'\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - inngest\n        - alpha\n        - doctor\n        - healthcheck\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 40s\n    restart: unless-stopped\n  postgres:\n    image: 'postgres:17'\n    environment:\n      - POSTGRES_DB=inngest\n      - POSTGRES_USER=inngest\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n    volumes:\n      - 'postgres-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U inngest -d inngest'\n      interval: 5s\n      timeout: 5s\n      retries: 5\n    restart: unless-stopped\n  redis:\n    image: 'redis:7-alpine'\n    command: 'redis-server --appendonly yes'\n    volumes:\n      - 'redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 3s\n      retries: 5\n    restart: unless-stopped\n",
+  "defaultPort": 8288,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "EVENTKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SIGNINGKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "queue",
+      "workflow",
+      "jobs",
+      "events",
+      "background",
+      "automation"
+    ],
+    "links": {
+      "docs": "https://www.inngest.com/docs/self-hosting"
+    }
+  }
+}

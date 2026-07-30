@@ -1,0 +1,39 @@
+{
+  "slug": "prowlarr",
+  "name": "Prowlarr",
+  "description": "Prowlarr⁠ is a indexer manager/proxy built on the popular arr .net/reactjs base stack to integrate with your various PVR apps.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  prowlarr:\n    image: 'lscr.io/linuxserver/prowlarr:latest'\n    environment:\n      - _APP_URL=${APP_URL}\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-America/Toronto}'\n    volumes:\n      - 'prowlarr-config:/config'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:9696/ping'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 9696,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "America/Toronto"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "media",
+      "server",
+      "movies",
+      "tv",
+      "indexer",
+      "torrent",
+      "nzb",
+      "usenet"
+    ],
+    "links": {
+      "docs": "https://hub.docker.com/r/linuxserver/prowlarr"
+    }
+  }
+}

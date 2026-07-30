@@ -1,0 +1,43 @@
+{
+  "slug": "mosquitto",
+  "name": "Mosquitto",
+  "description": "Mosquitto is lightweight and suitable for use on all devices, from low-power single-board computers to full servers.",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mosquitto:\n    image: eclipse-mosquitto:latest\n    environment:\n      - 'MQTT_USERNAME=${MOSQUITTO_USER}'\n      - 'MQTT_PASSWORD=${MOSQUITTO_PASSWORD}'\n      - 'REQUIRE_CERTIFICATE=${REQUIRE_CERTIFICATE:-false}'\n      - 'ALLOW_ANONYMOUS=${ALLOW_ANONYMOUS:-true}'\n    volumes:\n      - './mosquitto/config:/mosquitto/config'\n      - './certs:/certs'\n    ports:\n      - '8883:8883'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'exit 0'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n    entrypoint: \"sh -c \\\" if [ '$REQUIRE_CERTIFICATE' = 'true' ]; then echo 'listener 8883' > /mosquitto/config/mosquitto.conf && echo 'cafile /certs/ca.crt' >> /mosquitto/config/mosquitto.conf && echo 'certfile /certs/server.crt' >> /mosquitto/config/mosquitto.conf && echo 'keyfile  /certs/server.key' >> /mosquitto/config/mosquitto.conf; else echo 'listener 1883' > /mosquitto/config/mosquitto.conf; fi && echo 'require_certificate '$REQUIRE_CERTIFICATE >> /mosquitto/config/mosquitto.conf && echo 'allow_anonymous '$ALLOW_ANONYMOUS >> /mosquitto/config/mosquitto.conf; if [ -n '${MOSQUITTO_USER}' ] && [ -n '${MOSQUITTO_PASSWORD}' ]; then echo 'password_file /mosquitto/config/passwords' >> /mosquitto/config/mosquitto.conf && touch /mosquitto/config/passwords && chmod 0700 /mosquitto/config/passwords && chown root:root /mosquitto/config/passwords && mosquitto_passwd -b -c /mosquitto/config/passwords ${MOSQUITTO_USER} ${MOSQUITTO_PASSWORD} && chown mosquitto:mosquitto /mosquitto/config/passwords; fi && exec mosquitto -c /mosquitto/config/mosquitto.conf \\\"\"\n    labels:\n      - traefik.tcp.routers.mqtt.entrypoints=mqtt\n      - traefik.tcp.routers.mqtts.entrypoints=mqtts\n",
+  "defaultPort": 1883,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "MOSQUITTO_USER",
+      "value": "mosquitto"
+    },
+    {
+      "key": "MOSQUITTO_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "REQUIRE_CERTIFICATE",
+      "value": "false"
+    },
+    {
+      "key": "ALLOW_ANONYMOUS",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "mosquitto",
+      "mqtt",
+      "open-source"
+    ],
+    "links": {
+      "docs": "https://mosquitto.org/documentation/"
+    }
+  }
+}

@@ -23,5 +23,19 @@
       "key": "NODE_ENV",
       "value": "production"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Feature-rich homepage for your homelab, with easy YAML configuration.",
+    "license": "MIT",
+    "tags": [
+      "Personal Dashboards"
+    ],
+    "stars": 26014,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://dashy.to/",
+      "source": "https://github.com/lissy93/dashy",
+      "demo": "https://demo.dashy.to/"
+    }
+  }
 }

@@ -1,0 +1,32 @@
+{
+  "slug": "overseerr",
+  "name": "Overseerr",
+  "description": "Overseerr is a request management and media discovery tool built to work with your existing Plex ecosystem.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  overseerr:\n    image: 'sctx/overseerr:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-America/Toronto}'\n    volumes:\n      - 'overseerr-config:/app/config'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--tries'\n        - '1'\n        - '--no-verbose'\n        - '--spider'\n        - 'http://localhost:5055/api/v1/status'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 5055,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "TZ",
+      "value": "America/Toronto"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "media",
+      "request",
+      "plex",
+      "sonarr",
+      "radarr"
+    ],
+    "links": {
+      "docs": "https://docs.overseerr.dev/getting-started/installation#docker"
+    }
+  }
+}

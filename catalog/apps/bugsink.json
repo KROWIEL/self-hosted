@@ -1,0 +1,55 @@
+{
+  "slug": "bugsink",
+  "name": "Bugsink",
+  "description": "Self-hosted Error Tracking.",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "bugsink",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mysql:\n    image: 'mysql:latest'\n    restart: unless-stopped\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-bugsink}'\n      - 'MYSQL_USER=${BUGSINK_USER}'\n      - 'MYSQL_PASSWORD=${BUGSINK_PASSWORD}'\n    volumes:\n      - 'my-datavolume:/var/lib/mysql'\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - 127.0.0.1\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  web:\n    image: bugsink/bugsink:latest\n    restart: unless-stopped\n    environment:\n      - SECRET_KEY=${BUGSINK_PASSWORD}\n      - 'CREATE_SUPERUSER=admin:${BUGSINK_PASSWORD}'\n      - BASE_URL=${APP_URL}\n      - 'DATABASE_URL=mysql://${BUGSINK_USER}:${BUGSINK_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-bugsink}'\n      - BEHIND_HTTPS_PROXY=True\n    depends_on:\n      mysql:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'python -c ''import requests; requests.get(\"http://localhost:8000/\").raise_for_status()'''\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "BUGSINK_USER",
+      "value": "bugsink"
+    },
+    {
+      "key": "BUGSINK_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "bugsink"
+    }
+  ],
+  "meta": {
+    "about": "Real-time error tracking for your applications with all the details in one place. Easy setup with clear instructions included.",
+    "license": "⊘ Proprietary",
+    "tags": [
+      "python",
+      "error-tracking",
+      "django",
+      "mysql"
+    ],
+    "stars": 1963,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://www.bugsink.com/docs/",
+      "website": "https://www.bugsink.com/",
+      "source": "https://github.com/bugsink/bugsink/"
+    }
+  }
+}

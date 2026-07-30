@@ -1,0 +1,53 @@
+{
+  "slug": "plunk",
+  "name": "Plunk",
+  "description": "Plunk, The Open-Source Email Platform for AWS",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  plunk:\n    image: 'driaug/plunk:latest'\n    depends_on:\n      postgresql:\n        condition: service_healthy\n      redis:\n        condition: service_started\n    environment:\n      - 'REDIS_URL=redis://redis:6379'\n      - 'DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql/plunk-db?schema=public'\n      - 'JWT_SECRET=${JWTSECRET}'\n      - 'AWS_REGION=${AWS_REGION:?}'\n      - 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?}'\n      - 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?}'\n      - 'AWS_SES_CONFIGURATION_SET=${AWS_SES_CONFIGURATION_SET:?}'\n      - 'NEXT_PUBLIC_API_URI=${APP_URL}/api'\n      - 'APP_URI=${APP_URL}'\n      - 'API_URI=${APP_URL}/api'\n      - 'DISABLE_SIGNUPS=${DISABLE_SIGNUPS:-False}'\n      - NODE_OPTIONS=--no-network-family-autoselection\n    entrypoint:\n      - /app/entry.sh\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - '(wget -S --spider http://127.0.0.1:3000/api/health 2>&1 | grep -q \"HTTP/1.1 [1-3]\")'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n  postgresql:\n    image: 'postgres:16-alpine'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-plunk-db}'\n    volumes:\n      - 'plunk-postgresql-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: 'redis:7.4-alpine'\n    volumes:\n      - 'plunk-redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - PING\n      interval: 5s\n      timeout: 10s\n      retries: 20\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "JWTSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "DISABLE_SIGNUPS",
+      "value": "False"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "plunk-db"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "plunk",
+      "email",
+      "automation",
+      "aws"
+    ],
+    "links": {
+      "docs": "https://docs.useplunk.com/getting-started/introduction"
+    }
+  }
+}

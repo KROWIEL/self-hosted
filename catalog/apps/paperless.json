@@ -1,0 +1,39 @@
+{
+  "slug": "paperless",
+  "name": "Paperless",
+  "description": "Paperless-ngx is a community-supported open-source document management system that transforms your physical documents into a searchable online archive so you can keep, well, less paper.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  redis:\n    image: 'redis:7.4'\n    volumes:\n      - 'paperless-redis:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      timeout: 10s\n      retries: 3\n  paperless:\n    image: 'paperlessngx/paperless-ngx:latest'\n    depends_on:\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-fs'\n        - '-S'\n        - '--max-time'\n        - '2'\n        - 'http://localhost:8000'\n      interval: 30s\n      timeout: 10s\n      retries: 5\n    volumes:\n      - 'paperless-data:/usr/src/paperless/data'\n      - 'paperless-media:/usr/src/paperless/media'\n      -\n        type: bind\n        source: ./export\n        target: /usr/src/paperless/export\n        is_directory: true\n      -\n        type: bind\n        source: ./consume\n        target: /usr/src/paperless/consume\n        is_directory: true\n    environment:\n      - PAPERLESS_URL=${APP_URL}\n      - 'PAPERLESS_ADMIN_PASSWORD=${PAPERLESS_PASSWORD}'\n      - 'PAPERLESS_ADMIN_USER=${PAPERLESS_USER}'\n      - 'PAPERLESS_REDIS=redis://redis:6379'\n      - 'PAPERLESS_SECRET_KEY=${PAPERLESS_SECRET}'\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "PAPERLESS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "PAPERLESS_USER",
+      "value": "paperless"
+    },
+    {
+      "key": "PAPERLESS_SECRET",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "links": {
+      "docs": "https://docs.paperless-ngx.com/configuration/"
+    }
+  }
+}

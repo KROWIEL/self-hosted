@@ -1,0 +1,26 @@
+{
+  "slug": "pairdrop",
+  "name": "Pairdrop",
+  "description": "Pairdrop is a self-hosted file sharing and collaboration platform, offering secure file sharing and collaboration capabilities for efficient teamwork.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  pairdrop:\n    image: 'lscr.io/linuxserver/pairdrop:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - TZ=Europe/Madrid\n      - DEBUG_MODE=false\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "file",
+      "sharing",
+      "collaboration",
+      "teamwork"
+    ],
+    "links": {
+      "docs": "https://pairdrop.net/"
+    }
+  }
+}

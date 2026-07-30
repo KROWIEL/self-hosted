@@ -1,0 +1,47 @@
+{
+  "slug": "listmonk",
+  "name": "Listmonk",
+  "description": "Self-hosted newsletter and mailing list manager",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "listmonk",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  listmonk:\n    image: 'listmonk/listmonk:v6.0.0'\n    environment:\n      - 'LISTMONK_app__address=0.0.0.0:9000'\n      - LISTMONK_db__host=postgres\n      - LISTMONK_db__database=listmonk\n      - LISTMONK_db__user=${POSTGRES_USER}\n      - LISTMONK_db__password=${POSTGRES_PASSWORD}\n      - LISTMONK_db__port=5432\n      - TZ=Etc/UTC\n    volumes:\n      - 'listmonk-data:/listmonk/uploads'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:9000'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    depends_on:\n      postgres:\n        condition: service_healthy\n  listmonk-initial-database-setup:\n    image: 'listmonk/listmonk:v6.0.0'\n    command: './listmonk --install --yes --idempotent'\n    restart: 'no'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    environment:\n      - LISTMONK_db__host=postgres\n      - LISTMONK_db__database=listmonk\n      - LISTMONK_db__user=${POSTGRES_USER}\n      - LISTMONK_db__password=${POSTGRES_PASSWORD}\n      - LISTMONK_db__port=5432\n  postgres:\n    image: 'postgres:18-alpine'\n    environment:\n      - POSTGRES_DB=listmonk\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - POSTGRES_USER=${POSTGRES_USER}\n    volumes:\n      - 'postgres-data:/var/lib/postgresql'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 9000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "High performance, self-hosted newsletter and mailing list manager with a modern dashboard.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "newsletter",
+      "mailing list",
+      "self-hosted",
+      "open source"
+    ],
+    "stars": 22488,
+    "updatedAt": "2026-07-21",
+    "links": {
+      "docs": "https://listmonk.app/",
+      "website": "https://listmonk.app/",
+      "source": "https://github.com/knadh/listmonk",
+      "demo": "https://demo.listmonk.app/"
+    }
+  }
+}

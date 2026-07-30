@@ -28,5 +28,18 @@
       "key": "SEARXNG_BASE_URL",
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "Internet metasearch engine which aggregates results from various search services and databases (Fork of Searx).",
+    "license": "AGPL-3.0",
+    "tags": [
+      "Search Engines"
+    ],
+    "stars": 34506,
+    "updatedAt": "2026-07-26",
+    "links": {
+      "website": "https://docs.searxng.org/",
+      "source": "https://github.com/searxng/searxng/"
+    }
+  }
 }

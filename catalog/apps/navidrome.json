@@ -26,5 +26,19 @@
       "key": "ND_LOGLEVEL",
       "value": "info"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Modern Music Server and Streamer, compatible with Subsonic/Airsonic.",
+    "license": "GPL-3.0",
+    "tags": [
+      "Media Streaming - Audio Streaming"
+    ],
+    "stars": 22542,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "website": "https://www.navidrome.org",
+      "source": "https://github.com/navidrome/navidrome",
+      "demo": "https://www.navidrome.org/demo"
+    }
+  }
 }

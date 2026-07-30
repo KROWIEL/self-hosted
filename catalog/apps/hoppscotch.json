@@ -13,5 +13,18 @@
   "deployKind": "image",
   "image": "hoppscotch/hoppscotch:latest",
   "defaultPort": 3000,
-  "envDefaults": []
+  "envDefaults": [],
+  "meta": {
+    "about": "Fast and beautiful API request builder.",
+    "license": "MIT",
+    "tags": [
+      "Software Development - API Management"
+    ],
+    "stars": 79903,
+    "updatedAt": "2026-07-15",
+    "links": {
+      "website": "https://hoppscotch.io",
+      "source": "https://github.com/hoppscotch/hoppscotch"
+    }
+  }
 }

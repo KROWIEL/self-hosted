@@ -1,0 +1,51 @@
+{
+  "slug": "redmine",
+  "name": "Redmine",
+  "description": "Redmine is a flexible project management web application.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "redmine",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  redmine:\n    image: 'redmine:6-alpine'\n    environment:\n      - 'SECRET_KEY_BASE=${REDMINE_PASSWORD}'\n      - REDMINE_DB_POSTGRES=postgresql\n      - REDMINE_DB_PORT=5432\n      - 'REDMINE_DB_USERNAME=${POSTGRES_USER}'\n      - 'REDMINE_DB_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'REDMINE_DB_DATABASE=${POSTGRES_DATABASE:-redmine-db}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:3000/'\n      interval: 5s\n      timeout: 5s\n      retries: 5\n    volumes:\n      - 'redmine-config:/usr/src/redmine/config'\n      - 'redmine-files:/usr/src/redmine/files'\n      - 'redmine-themes:/usr/src/redmine/themes'\n      - 'redmine-plugins:/usr/src/redmine/plugins'\n    depends_on:\n      postgresql:\n        condition: service_healthy\n  postgresql:\n    image: 'postgres:17-alpine'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DATABASE:-redmine-db}'\n    volumes:\n      - 'postgresql-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "REDMINE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DATABASE",
+      "value": "redmine-db"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Flexible project management web application.",
+    "license": "GPL-2.0",
+    "tags": [
+      "redmine",
+      "project management"
+    ],
+    "links": {
+      "docs": "https://www.redmine.org/",
+      "website": "https://www.redmine.org/",
+      "source": "https://svn.redmine.org/redmine/"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "slug": "tolgee",
+  "name": "Tolgee",
+  "description": "Tolgee is a localization management platform for developers and translators.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "tolgee",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  tolgee:\n    image: tolgee/tolgee:latest\n    environment:\n      - TOLGEE_AUTHENTICATION_ENABLED=true\n      - TOLGEE_AUTHENTICATION_INITIAL_PASSWORD=${TOLGEE_PASSWORD}\n      - TOLGEE_AUTHENTICATION_INITIAL_USERNAME=admin\n      - TOLGEE_AUTHENTICATION_JWT_SECRET=${JWT_PASSWORD}\n      - TOLGEE_POSTGRES_AUTOSTART_ENABLED=false\n      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/${POSTGRES_DB:-tolgee}'\n      - 'SPRING_DATASOURCE_USERNAME=${POSTGRESQL_USER}'\n      - 'SPRING_DATASOURCE_PASSWORD=${POSTGRESQL_PASSWORD}'\n    volumes:\n      - 'tolgee-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:8080'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    depends_on:\n      postgresql:\n        condition: service_healthy\n  postgresql:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'tolgee-postgresql-data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${POSTGRESQL_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRESQL_DATABASE:-tolgee}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "TOLGEE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "JWT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRESQL_USER",
+      "value": "postgresql"
+    },
+    {
+      "key": "POSTGRESQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "tolgee"
+    },
+    {
+      "key": "POSTGRESQL_DATABASE",
+      "value": "tolgee"
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Developer & translator friendly web-based localization platform enabling users to translate directly in the app they develop.",
+    "license": "Apache-2.0",
+    "tags": [
+      "localization",
+      "translation",
+      "management",
+      "platform"
+    ],
+    "stars": 4053,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://tolgee.io/",
+      "website": "https://tolgee.io",
+      "source": "https://github.com/tolgee/tolgee-platform"
+    }
+  }
+}

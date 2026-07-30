@@ -31,5 +31,19 @@
       "key": "PHOTOPRISM_SITE_URL",
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "Personal photo management powered by Go and Google TensorFlow.  Browse, organize, and share your personal photo collection, using the latest technologies to automatically tag and find pictures.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "Photo Galleries"
+    ],
+    "stars": 40012,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://photoprism.org",
+      "source": "https://github.com/photoprism/photoprism",
+      "demo": "https://demo.photoprism.app/library/browse"
+    }
+  }
 }

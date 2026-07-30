@@ -23,5 +23,19 @@
       "key": "MEMOS_MODE",
       "value": "prod"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Knowledge base that works with a SQLite db file.",
+    "license": "MIT",
+    "tags": [
+      "Note-taking & Editors"
+    ],
+    "stars": 61838,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://usememos.com/",
+      "source": "https://github.com/usememos/memos",
+      "demo": "https://demo.usememos.com/explore"
+    }
+  }
 }

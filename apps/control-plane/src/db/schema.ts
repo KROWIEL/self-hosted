@@ -290,6 +290,12 @@ export const catalogApps = pgTable('catalog_apps', {
   envDefaults: jsonb('env_defaults')
     .notNull()
     .default(sql`'[]'::jsonb`),
+  // Everything the details view shows beyond the card: long description,
+  // license, tags, popularity and outbound links. Baked into the manifest by
+  // `tools/catalog`, so rendering it never needs an outbound request.
+  meta: jsonb('meta')
+    .notNull()
+    .default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

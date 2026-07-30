@@ -1,0 +1,111 @@
+{
+  "slug": "bookstack",
+  "name": "BookStack",
+  "description": "BookStack is a simple, self-hosted, easy-to-use platform for organising and storing information",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "bookstack",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  bookstack:\n    image: 'lscr.io/linuxserver/bookstack:latest'\n    environment:\n      - 'APP_URL=${APP_URL}'\n      - 'APP_KEY=${APPKEY}'\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-Europe/Berlin}'\n      - DB_HOST=mariadb\n      - DB_PORT=3306\n      - 'DB_USERNAME=${MYSQL_USER}'\n      - 'DB_PASSWORD=${MYSQL_PASSWORD}'\n      - 'DB_DATABASE=${MYSQL_DATABASE:-bookstackapp}'\n      - 'QUEUE_CONNECTION=${QUEUE_CONNECTION}'\n      - 'GITHUB_APP_ID=${GITHUB_APP_ID}'\n      - 'GITHUB_APP_SECRET=${GITHUB_APP_SECRET}'\n      - 'MAIL_DRIVER=${MAIL_DRIVER:-smtp}'\n      - 'MAIL_HOST=${MAIL_HOST}'\n      - 'MAIL_PORT=${MAIL_PORT:-587}'\n      - 'MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-tls}'\n      - 'MAIL_USERNAME=${MAIL_USERNAME}'\n      - 'MAIL_PASSWORD=${MAIL_PASSWORD}'\n      - 'MAIL_FROM=${MAIL_FROM}'\n      - 'MAIL_FROM_NAME=${MAIL_FROM_NAME:-BookStack}'\n    volumes:\n      - 'bookstack-data:/config'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'curl -f http://127.0.0.1:80/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    depends_on:\n      mariadb:\n        condition: service_healthy\n  mariadb:\n    image: 'lscr.io/linuxserver/mariadb:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - 'TZ=${TZ:-Europe/Berlin}'\n      - 'MYSQL_ROOT_PASSWORD=${MYSQLROOT_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-bookstack}'\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n    volumes:\n      - 'bookstack-mariadb-data:/config'\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - 127.0.0.1\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "APPKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQLROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "Europe/Berlin"
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "bookstackapp"
+    },
+    {
+      "key": "QUEUE_CONNECTION",
+      "value": ""
+    },
+    {
+      "key": "GITHUB_APP_ID",
+      "value": ""
+    },
+    {
+      "key": "GITHUB_APP_SECRET",
+      "secret": true
+    },
+    {
+      "key": "MAIL_DRIVER",
+      "value": "smtp"
+    },
+    {
+      "key": "MAIL_HOST",
+      "value": ""
+    },
+    {
+      "key": "MAIL_PORT",
+      "value": "587"
+    },
+    {
+      "key": "MAIL_ENCRYPTION",
+      "value": "tls"
+    },
+    {
+      "key": "MAIL_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "MAIL_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "MAIL_FROM",
+      "value": ""
+    },
+    {
+      "key": "MAIL_FROM_NAME",
+      "value": "BookStack"
+    }
+  ],
+  "meta": {
+    "about": "Organize and store information. Stores documentation in a book like fashion.",
+    "license": "MIT",
+    "tags": [
+      "free-and-open-source",
+      "mfa",
+      "dark-light-themes",
+      "searchable",
+      "connected",
+      "simple-interface",
+      "diagramms",
+      "notes"
+    ],
+    "links": {
+      "docs": "https://www.bookstackapp.com/docs/",
+      "website": "https://www.bookstackapp.com/",
+      "source": "https://codeberg.org/bookstack/bookstack",
+      "demo": "https://www.bookstackapp.com/#demo"
+    }
+  }
+}

@@ -18,5 +18,18 @@
       "mountPath": "/usr/app/data"
     }
   ],
-  "envDefaults": []
+  "envDefaults": [],
+  "meta": {
+    "about": "No-code platform that turns any database into a smart spreadsheet (alternative to Airtable and Smartsheet).",
+    "license": "SUL-1.0",
+    "tags": [
+      "Database Management"
+    ],
+    "stars": 64331,
+    "updatedAt": "2026-07-24",
+    "links": {
+      "website": "https://www.nocodb.com/",
+      "source": "https://github.com/nocodb/nocodb"
+    }
+  }
 }

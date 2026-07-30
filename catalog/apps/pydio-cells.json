@@ -1,0 +1,46 @@
+{
+  "slug": "pydio-cells",
+  "name": "Pydio Cells",
+  "description": "High-performance large file sharing, native no-code automation, and a collaboration-centric architecture that simplifies access control without compromising security or compliance.",
+  "category": "Storage",
+  "icon": "storage",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  cells:\n    image: 'pydio/cells:4.4'\n    environment:\n      - 'CELLS_SITE_EXTERNAL=${APP_URL}'\n      - CELLS_SITE_NO_TLS=1\n    volumes:\n      - 'cells_data:/var/cells'\n  mariadb:\n    image: 'mariadb:11'\n    volumes:\n      - 'mysql_data:/var/lib/mysql'\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${MYSQLROOT_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-cells}'\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - healthcheck.sh\n        - '--connect'\n        - '--innodb_initialized'\n      interval: 10s\n      timeout: 20s\n      retries: 5\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "MYSQLROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "cells"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "storage"
+    ],
+    "links": {
+      "docs": "https://docs.pydio.com/"
+    }
+  }
+}

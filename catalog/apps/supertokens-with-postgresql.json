@@ -1,0 +1,51 @@
+{
+  "slug": "supertokens-with-postgresql",
+  "name": "Supertokens With Postgresql",
+  "description": "An open-source authentication solution that simplifies the implementation of secure user authentication and session management for web and mobile applications.",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  supertokens:\n    image: 'registry.supertokens.io/supertokens/supertokens-postgresql:latest'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    environment:\n      - 'API_KEYS=${API_KEYS:-}'\n      - 'POSTGRESQL_CONNECTION_URI=\"postgresql://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@postgres:5432/${POSTGRES_DB:-supertokens}\"'\n    healthcheck:\n      test: \"bash -c 'exec 3<>/dev/tcp/127.0.0.1/3567 && echo -e \\\"GET /hello HTTP/1.1\\\\r\\\\nhost: 127.0.0.1:3567\\\\r\\\\nConnection: close\\\\r\\\\n\\\\r\\\\n\\\" >&3 && cat <&3 | grep \\\"Hello\\\"'\\n\"\n      interval: 10s\n      timeout: 5s\n      retries: 5\n  postgres:\n    image: 'postgres:16'\n    environment:\n      - POSTGRES_USER=${POSTGRESQL_USER}\n      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}\n      - 'POSTGRES_DB=${POSTGRES_DB:-supertokens}'\n    volumes:\n      - 'supertokens-postgres-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD\n        - pg_isready\n        - '-U'\n        - ${POSTGRESQL_USER}\n        - '-d'\n        - '${POSTGRES_DB:-supertokens}'\n      interval: 5s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 3567,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRESQL_USER",
+      "value": "postgresql"
+    },
+    {
+      "key": "POSTGRESQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "API_KEYS",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "supertokens"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "supertokens",
+      "login",
+      "authentication",
+      "authorization",
+      "oauth",
+      "user-management",
+      "session-management",
+      "access-control",
+      "otp",
+      "magic-link",
+      "passwordless"
+    ],
+    "links": {
+      "docs": "https://supertokens.com/docs/guides"
+    }
+  }
+}

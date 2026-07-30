@@ -1,0 +1,117 @@
+{
+  "slug": "activepieces",
+  "name": "Activepieces",
+  "description": "Open source no-code business automation.",
+  "category": "Automation",
+  "icon": "workflow",
+  "upstream": "activepieces",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  activepieces:\n    image: 'ghcr.io/activepieces/activepieces:0.75.0'\n    environment:\n      - AP_API_KEY=${APIKEY}\n      - AP_ENCRYPTION_KEY=${ENCRYPTIONKEY}\n      - 'AP_ENGINE_EXECUTABLE_PATH=${AP_ENGINE_EXECUTABLE_PATH:-dist/packages/engine/main.js}'\n      - 'AP_ENVIRONMENT=${AP_ENVIRONMENT:-prod}'\n      - 'AP_EXECUTION_MODE=${AP_EXECUTION_MODE:-UNSANDBOXED}'\n      - 'AP_FRONTEND_URL=${APP_URL}'\n      - AP_JWT_SECRET=${JWT_PASSWORD}\n      - 'AP_POSTGRES_DATABASE=${POSTGRES_DB:-activepieces}'\n      - 'AP_POSTGRES_HOST=${POSTGRES_HOST:-postgres}'\n      - 'AP_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'AP_POSTGRES_PORT=${POSTGRES_PORT:-5432}'\n      - AP_POSTGRES_USERNAME=${POSTGRES_USER}\n      - 'AP_REDIS_HOST=${REDIS_HOST:-redis}'\n      - 'AP_REDIS_PORT=${REDIS_PORT:-6379}'\n      - 'AP_SANDBOX_RUN_TIME_SECONDS=${AP_SANDBOX_RUN_TIME_SECONDS:-600}'\n      - 'AP_TELEMETRY_ENABLED=${AP_TELEMETRY_ENABLED:-false}'\n      - 'AP_TEMPLATES_SOURCE_URL=${AP_TEMPLATES_SOURCE_URL:-https://cloud.activepieces.com/api/v1/flow-templates}'\n      - 'AP_TRIGGER_DEFAULT_POLL_INTERVAL=${AP_TRIGGER_DEFAULT_POLL_INTERVAL:-5}'\n      - 'AP_SIGN_UP_ENABLED=${AP_SIGN_UP_ENABLED:-true}'\n      - 'AP_WEBHOOK_TIMEOUT_SECONDS=${AP_WEBHOOK_TIMEOUT_SECONDS:-30}'\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_started\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:80'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  postgres:\n    image: 'postgres:18-alpine'\n    environment:\n      - 'POSTGRES_DB=${POSTGRES_DB:-activepieces}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PORT=${POSTGRES_PORT:-5432}'\n    volumes:\n      - 'pg-data:/var/lib/postgresql'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: 'redis:7-alpine'\n    volumes:\n      - 'redis_data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APIKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ENCRYPTIONKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "JWT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "AP_ENGINE_EXECUTABLE_PATH",
+      "value": "dist/packages/engine/main.js"
+    },
+    {
+      "key": "AP_ENVIRONMENT",
+      "value": "prod"
+    },
+    {
+      "key": "AP_EXECUTION_MODE",
+      "value": "UNSANDBOXED"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "activepieces"
+    },
+    {
+      "key": "POSTGRES_HOST",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PORT",
+      "value": "5432"
+    },
+    {
+      "key": "REDIS_HOST",
+      "value": "redis"
+    },
+    {
+      "key": "REDIS_PORT",
+      "value": "6379"
+    },
+    {
+      "key": "AP_SANDBOX_RUN_TIME_SECONDS",
+      "value": "600"
+    },
+    {
+      "key": "AP_TELEMETRY_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "AP_TEMPLATES_SOURCE_URL",
+      "value": "https://cloud.activepieces.com/api/v1/flow-templates"
+    },
+    {
+      "key": "AP_TRIGGER_DEFAULT_POLL_INTERVAL",
+      "value": "5"
+    },
+    {
+      "key": "AP_SIGN_UP_ENABLED",
+      "value": "true"
+    },
+    {
+      "key": "AP_WEBHOOK_TIMEOUT_SECONDS",
+      "value": "30"
+    }
+  ],
+  "meta": {
+    "about": "No-code business automation tool like Zapier or Tray. For example, you can send a Slack notification for each new Trello card.",
+    "license": "MIT",
+    "tags": [
+      "workflow",
+      "automation",
+      "no code",
+      "open source"
+    ],
+    "stars": 23446,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://www.activepieces.com/docs/getting-started/introduction",
+      "website": "https://www.activepieces.com",
+      "source": "https://github.com/activepieces/activepieces"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "slug": "kimai",
+  "name": "Kimai",
+  "description": "Open source time-tracking app.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "kimai",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mysql:\n    image: 'mysql:8'\n    volumes:\n      - 'kimai-mysql-data:/var/lib/mysql'\n    environment:\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-kimai}'\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n      - 'MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}'\n    command: '--default-storage-engine innodb'\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - 127.0.0.1\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  kimai:\n    image: 'kimai/kimai2:apache'\n    container_name: kimai\n    depends_on:\n      mysql:\n        condition: service_healthy\n    volumes:\n      - 'kimai-data:/opt/kimai/var/data'\n    environment:\n      - 'APP_SECRET=${APPSECRET}'\n      - 'MAILER_FROM=${MAILER_FROM:-kimai@example.com}'\n      - 'MAILER_URL=${MAILER_URL:-null://null}'\n      - 'ADMINMAIL=${ADMINMAIL:-admin@kimai.local}'\n      - 'ADMINPASS=${ADMINPASS_PASSWORD}'\n      - 'DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql/${MYSQL_DATABASE}?charset=utf8mb4&serverVersion=8.3.0'\n      - 'TRUSTED_HOSTS=${TRUSTED_HOSTS}|localhost|127.0.0.1'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8001'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8001,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APPSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ADMINPASS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "kimai"
+    },
+    {
+      "key": "MAILER_FROM",
+      "value": "kimai@example.com"
+    },
+    {
+      "key": "MAILER_URL",
+      "value": "null://null"
+    },
+    {
+      "key": "ADMINMAIL",
+      "value": "admin@kimai.local"
+    },
+    {
+      "key": "TRUSTED_HOSTS",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Track work time and print out a summary of your activities on demand.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "time-tracking",
+      "open-source"
+    ],
+    "stars": 4844,
+    "updatedAt": "2026-07-26",
+    "links": {
+      "docs": "https://www.kimai.org/",
+      "website": "https://www.kimai.org/",
+      "source": "https://github.com/kimai/kimai",
+      "demo": "https://www.kimai.org/demo/"
+    }
+  }
+}

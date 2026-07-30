@@ -1,0 +1,26 @@
+{
+  "slug": "bento-pdf",
+  "name": "Bento Pdf",
+  "description": "Process PDFs entirely in your browser. No uploads. No servers. Complete privacy.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  bento-pdf:\n    image: 'ghcr.io/alam00000/bentopdf:v1.16.1'\n    environment:\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:8080'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "pdf",
+      "manipulation",
+      "web",
+      "tool"
+    ],
+    "links": {
+      "docs": "https://bentopdf.com/docs"
+    }
+  }
+}

@@ -31,5 +31,19 @@
       "key": "BASE_URL",
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "Material design inspired recipe manager with category and tag management, shopping-lists, meal-planner, and site customizations. Mealie is focused on simple user interactions to keep the whole family using the app.",
+    "license": "MIT",
+    "tags": [
+      "Recipe Management"
+    ],
+    "stars": 12810,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://nightly.mealie.io/",
+      "source": "https://github.com/mealie-recipes/mealie",
+      "demo": "https://demo.mealie.io"
+    }
+  }
 }

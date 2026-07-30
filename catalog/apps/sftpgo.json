@@ -21,5 +21,18 @@
       "mountPath": "/var/lib/sftpgo"
     }
   ],
-  "envDefaults": []
+  "envDefaults": [],
+  "meta": {
+    "about": "Flexible, fully featured and highly configurable SFTP server with optional FTP/S and WebDAV support.",
+    "license": "AGPL-3.0, ⊘ Proprietary",
+    "tags": [
+      "File Transfer - Object Storage & File Servers"
+    ],
+    "stars": 12324,
+    "updatedAt": "2026-07-21",
+    "links": {
+      "website": "https://github.com/drakkan/sftpgo",
+      "source": "https://github.com/drakkan/sftpgo"
+    }
+  }
 }

@@ -1,0 +1,36 @@
+{
+  "slug": "deno-kv",
+  "name": "Deno Kv",
+  "description": "The Denoland key-value database",
+  "category": "Databases",
+  "icon": "database",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  denokv:\n    image: 'ghcr.io/denoland/denokv:latest'\n    environment:\n      - 'ACCESS_TOKEN=${DENOKV_PASSWORD}'\n    volumes:\n      - '${COOLIFY_VOLUME_APP}:/data'\n    command: '--sqlite-path /data/denokv.sqlite serve --access-token ${DENOKV_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - nc\n        - '-zv'\n        - 127.0.0.1\n        - '4512'\n      interval: 5s\n      timeout: 5s\n      retries: 3\n",
+  "defaultPort": 4512,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DENOKV_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "COOLIFY_VOLUME_APP",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "deno",
+      "kv",
+      "key-value",
+      "database"
+    ],
+    "links": {
+      "docs": "https://docs.deno.com/deploy/kv/manual/"
+    }
+  }
+}

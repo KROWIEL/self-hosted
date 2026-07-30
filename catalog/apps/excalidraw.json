@@ -1,0 +1,27 @@
+{
+  "slug": "excalidraw",
+  "name": "Excalidraw",
+  "description": "Virtual whiteboard for sketching hand-drawn like diagrams",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  excalidraw:\n    image: 'excalidraw/excalidraw:latest'\n    environment:\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--spider'\n        - '--quiet'\n        - 'http://localhost'\n      interval: 10s\n      timeout: 5s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "canvas",
+      "diagrams",
+      "drawing",
+      "productivity",
+      "whiteboard"
+    ],
+    "links": {
+      "docs": "https://docs.excalidraw.com/docs"
+    }
+  }
+}

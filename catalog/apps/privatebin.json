@@ -1,0 +1,31 @@
+{
+  "slug": "privatebin",
+  "name": "PrivateBin",
+  "description": "PrivateBin is a minimalist, open source online pastebin where the server has zero knowledge of pasted data.",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "privatebin",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  privatebin:\n    image: privatebin/nginx-fpm-alpine:latest\n    environment:\n    volumes:\n      - 'privatebin_data:/srv/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:8080/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Minimalist pastebin/discussion board where the server has zero knowledge of hosted data.",
+    "license": "Zlib",
+    "tags": [
+      "text",
+      "sharing"
+    ],
+    "stars": 8484,
+    "updatedAt": "2026-07-22",
+    "links": {
+      "docs": "https://github.com/PrivateBin/PrivateBin/blob/master/doc/README.md",
+      "website": "https://privatebin.info/",
+      "source": "https://github.com/PrivateBin/PrivateBin",
+      "demo": "https://privatebin.net/"
+    }
+  }
+}

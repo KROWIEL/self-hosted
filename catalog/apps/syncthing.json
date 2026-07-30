@@ -27,5 +27,18 @@
       "key": "PGID",
       "value": "1000"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Syncthing is an open source peer-to-peer file synchronisation tool.",
+    "license": "MPL-2.0",
+    "tags": [
+      "File Transfer & Synchronization"
+    ],
+    "stars": 86967,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://syncthing.net/",
+      "source": "https://github.com/syncthing/syncthing"
+    }
+  }
 }

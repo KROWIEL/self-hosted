@@ -1,0 +1,34 @@
+{
+  "slug": "trailbase",
+  "name": "TrailBase",
+  "description": "A blazingly fast Rust/SQLite/Wasmtime app server with type-safe APIs",
+  "category": "Backend",
+  "icon": "database",
+  "upstream": "trailbase",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  trailbase:\n    image: 'trailbase/trailbase:0.22.6'\n    environment:\n    volumes:\n      - 'trailbase-data:/app/traildepot'\n",
+  "defaultPort": 4000,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Open, sub-millisecond, single-executable FireBase alternative with type-safe REST & realtime APIs, built-in JS/TS runtime, auth & admin UI.",
+    "license": "OSL-3.0",
+    "tags": [
+      "trailbase",
+      "backend",
+      "saas",
+      "mobile",
+      "api"
+    ],
+    "stars": 5415,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "docs": "https://trailbase.io/",
+      "website": "https://trailbase.io/",
+      "source": "https://github.com/trailbaseio/trailbase",
+      "demo": "https://demo.trailbase.io"
+    }
+  }
+}

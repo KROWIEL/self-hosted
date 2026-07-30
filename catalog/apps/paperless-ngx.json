@@ -38,5 +38,20 @@
       "key": "PAPERLESS_TIME_ZONE",
       "value": "UTC"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Scan, index, and archive all of your paper documents with an improved interface (fork of Paperless).",
+    "license": "GPL-3.0",
+    "tags": [
+      "Document Management",
+      "Archiving and Digital Preservation (DP)"
+    ],
+    "stars": 43637,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://docs.paperless-ngx.com/",
+      "source": "https://github.com/paperless-ngx/paperless-ngx",
+      "demo": "https://demo.paperless-ngx.com/"
+    }
+  }
 }

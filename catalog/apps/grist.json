@@ -1,0 +1,149 @@
+{
+  "slug": "grist",
+  "name": "Grist",
+  "description": "Grist is a modern relational spreadsheet. It combines the flexibility of a spreadsheet with the robustness of a database.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "grist",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  grist:\n    image: 'gristlabs/grist:latest'\n    environment:\n      - 'APP_HOME_URL=${APP_URL}'\n      - 'APP_DOC_URL=${APP_URL}'\n      - 'GRIST_DOMAIN=${APP_URL}'\n      - 'TZ=${TZ:-UTC}'\n      - 'GRIST_SUPPORT_ANON=${SUPPORT_ANON:-false}'\n      - 'GRIST_FORCE_LOGIN=${FORCE_LOGIN:-true}'\n      - 'COOKIE_MAX_AGE=${COOKIE_MAX_AGE:-86400000}'\n      - 'GRIST_PAGE_TITLE_SUFFIX=${PAGE_TITLE_SUFFIX:- - Suffix}'\n      - 'GRIST_HIDE_UI_ELEMENTS=${HIDE_UI_ELEMENTS:-billing,sendToDrive,supportGrist,multiAccounts,tutorials}'\n      - 'GRIST_UI_FEATURES=${UI_FEATURES:-helpCenter,billing,templates,createSite,multiSite,sendToDrive,tutorials,supportGrist}'\n      - 'GRIST_DEFAULT_EMAIL=${DEFAULT_EMAIL:-?}'\n      - 'GRIST_ORG_IN_PATH=${ORG_IN_PATH:-true}'\n      - 'GRIST_OIDC_SP_HOST=${APP_URL}'\n      - 'GRIST_OIDC_IDP_SCOPES=${OIDC_IDP_SCOPES:-openid profile email}'\n      - 'GRIST_OIDC_IDP_SKIP_END_SESSION_ENDPOINT=${OIDC_IDP_SKIP_END_SESSION_ENDPOINT:-false}'\n      - 'GRIST_OIDC_IDP_ISSUER=${OIDC_IDP_ISSUER:?}'\n      - 'GRIST_OIDC_IDP_CLIENT_ID=${OIDC_IDP_CLIENT_ID:?}'\n      - 'GRIST_OIDC_IDP_CLIENT_SECRET=${OIDC_IDP_CLIENT_SECRET:?}'\n      - 'GRIST_SESSION_SECRET=${APP_SECRET}'\n      - 'GRIST_HOME_INCLUDE_STATIC=${HOME_INCLUDE_STATIC:-true}'\n      - 'GRIST_SANDBOX_FLAVOR=${SANDBOX_FLAVOR:-gvisor}'\n      - 'ALLOWED_WEBHOOK_DOMAINS=${ALLOWED_WEBHOOK_DOMAINS}'\n      - 'COMMENTS=${COMMENTS:-true}'\n      - 'TYPEORM_TYPE=${TYPEORM_TYPE:-postgres}'\n      - 'TYPEORM_DATABASE=${POSTGRES_DATABASE:-grist-db}'\n      - 'TYPEORM_USERNAME=${POSTGRES_USER}'\n      - 'TYPEORM_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'TYPEORM_HOST=${TYPEORM_HOST:-postgres}'\n      - 'TYPEORM_PORT=${TYPEORM_PORT:-5432}'\n      - 'TYPEORM_LOGGING=${TYPEORM_LOGGING:-false}'\n      - 'REDIS_URL=${REDIS_URL:-redis://redis:6379}'\n      - 'GRIST_HELP_CENTER=${APP_URL}/help'\n      - 'GRIST_TERMS_OF_SERVICE_FQDN=${APP_URL}/terms'\n      - 'FREE_COACHING_CALL_URL=${FREE_COACHING_CALL_URL}'\n      - 'GRIST_CONTACT_SUPPORT_URL=${CONTACT_SUPPORT_URL}'\n    volumes:\n      - 'grist-data:/persist'\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - node\n        - '-e'\n        - \"require('http').get('http://localhost:8484/status', res => process.exit(res.statusCode === 200 ? 0 : 1))\"\n        - '> /dev/null 2>&1'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  postgres:\n    image: 'postgres:16'\n    environment:\n      - 'POSTGRES_DB=${POSTGRES_DATABASE:-grist-db}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n    volumes:\n      - 'grist_postgres_data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 10s\n      retries: 20\n  redis:\n    image: 'redis:7'\n    volumes:\n      - 'grist_redis_data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - PING\n      interval: 5s\n      timeout: 10s\n      retries: 20\n",
+  "defaultPort": 8484,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    },
+    {
+      "key": "SUPPORT_ANON",
+      "value": "false"
+    },
+    {
+      "key": "FORCE_LOGIN",
+      "value": "true"
+    },
+    {
+      "key": "COOKIE_MAX_AGE",
+      "value": "86400000"
+    },
+    {
+      "key": "PAGE_TITLE_SUFFIX",
+      "value": " - Suffix"
+    },
+    {
+      "key": "HIDE_UI_ELEMENTS",
+      "value": "billing,sendToDrive,supportGrist,multiAccounts,tutorials"
+    },
+    {
+      "key": "UI_FEATURES",
+      "value": "helpCenter,billing,templates,createSite,multiSite,sendToDrive,tutorials,supportGrist"
+    },
+    {
+      "key": "DEFAULT_EMAIL",
+      "value": "?"
+    },
+    {
+      "key": "ORG_IN_PATH",
+      "value": "true"
+    },
+    {
+      "key": "OIDC_IDP_SCOPES",
+      "value": "openid profile email"
+    },
+    {
+      "key": "OIDC_IDP_SKIP_END_SESSION_ENDPOINT",
+      "value": "false"
+    },
+    {
+      "key": "HOME_INCLUDE_STATIC",
+      "value": "true"
+    },
+    {
+      "key": "SANDBOX_FLAVOR",
+      "value": "gvisor"
+    },
+    {
+      "key": "ALLOWED_WEBHOOK_DOMAINS",
+      "value": ""
+    },
+    {
+      "key": "COMMENTS",
+      "value": "true"
+    },
+    {
+      "key": "TYPEORM_TYPE",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_DATABASE",
+      "value": "grist-db"
+    },
+    {
+      "key": "TYPEORM_HOST",
+      "value": "postgres"
+    },
+    {
+      "key": "TYPEORM_PORT",
+      "value": "5432"
+    },
+    {
+      "key": "TYPEORM_LOGGING",
+      "value": "false"
+    },
+    {
+      "key": "REDIS_URL",
+      "value": "redis://redis:6379"
+    },
+    {
+      "key": "FREE_COACHING_CALL_URL",
+      "value": ""
+    },
+    {
+      "key": "CONTACT_SUPPORT_URL",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Next-generation spreadsheet with relational structure, formula-based access control, and a portable, self-contained format (alternative to Airtable).",
+    "license": "Apache-2.0",
+    "tags": [
+      "lowcode",
+      "nocode",
+      "spreadsheet",
+      "database",
+      "relational"
+    ],
+    "stars": 11348,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://support.getgrist.com/",
+      "website": "https://getgrist.com/",
+      "source": "https://github.com/gristlabs/grist-core",
+      "demo": "https://docs.getgrist.com"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "slug": "lowcoder",
+  "name": "Lowcoder",
+  "description": "Lowcoder (forked from OpenBlocks) is a self-hosted, open-source, low-code platform for building internal tools.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  lowcoder:\n    image: lowcoderorg/lowcoder-ce:latest\n    environment:\n      - 'LOWCODER_EMAIL_SIGNUP_ENABLED=${LOWCODER_EMAIL_SIGNUP_ENABLED:-true}'\n      - 'LOWCODER_DB_ENCRYPTION_PASSWORD=${ENCRYPTION_PASSWORD}'\n      - 'LOWCODER_DB_ENCRYPTION_SALT=${SALT_PASSWORD}'\n    volumes:\n      - 'lowcoder_data:/lowcoder-stacks'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000/health'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ENCRYPTION_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SALT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "LOWCODER_EMAIL_SIGNUP_ENABLED",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "lowcoder",
+      "openblocks",
+      "low",
+      "code",
+      "platform",
+      "open",
+      "source",
+      "low",
+      "code"
+    ],
+    "links": {
+      "docs": "https://docs.lowcoder.cloud/"
+    }
+  }
+}

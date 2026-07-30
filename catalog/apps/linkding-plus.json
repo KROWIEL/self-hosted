@@ -1,0 +1,34 @@
+{
+  "slug": "linkding-plus",
+  "name": "Linkding Plus",
+  "description": "A self-hosted bookmark manager designed to be minimal, fast, and easy to set up. (Includes feature for archiving websites as HTML snapshots)",
+  "category": "Feeds",
+  "icon": "rss",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  linkding-plus:\n    image: 'sissbruecker/linkding:latest-plus'\n    volumes:\n      - 'linkding_data:/etc/linkding/data'\n    environment:\n      - 'LD_SUPERUSER_NAME=${LINKDING_USER}'\n      - 'LD_SUPERUSER_PASSWORD=${LINKDING_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/9090' || exit 1\"\n      interval: 5s\n      timeout: 5s\n",
+  "defaultPort": 9090,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "LINKDING_USER",
+      "value": "linkding"
+    },
+    {
+      "key": "LINKDING_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "rss",
+      "feed"
+    ],
+    "links": {
+      "docs": "https://linkding.link/"
+    }
+  }
+}

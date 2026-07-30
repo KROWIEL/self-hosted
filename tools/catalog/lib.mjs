@@ -64,9 +64,18 @@ export function translatedCategories(lang) {
 }
 
 /** Every `image:` reference in a compose document, in file order. */
+/**
+ * Resolve a reference the way Compose would before the pull: `${TAG:-v2}` is
+ * really `v2`. A variable with no default stays as-is, which leaves the ref
+ * visibly unresolved rather than silently wrong.
+ */
+export function expandComposeVars(ref) {
+  return ref.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*):?-([^}]*)\}/g, (_m, _key, fallback) => fallback);
+}
+
 export function composeImages(yaml) {
   return [...yaml.matchAll(/^\s*image:\s*(\S+)\s*$/gm)].map((m) =>
-    m[1].replace(/^['"]|['"]$/g, ''),
+    expandComposeVars(m[1].replace(/^['"]|['"]$/g, '')),
   );
 }
 
@@ -109,8 +118,16 @@ export function validateManifest({ file, data }, ctx) {
     bad(`icon "${data.icon}" is not defined in catalog-icons.tsx`);
   }
 
+  // Russian is optional: the UI falls back to the English text, and demanding a
+  // translation for every machine-imported app would block the import outright.
   const ru = data.translations?.ru;
-  if (!ru?.description?.trim()) bad('translations.ru.description is required');
+  if (ru && !ru.description?.trim() && !ru.name?.trim()) {
+    bad('translations.ru is present but empty — drop it or fill it in');
+  }
+
+  if (data.source !== undefined && data.source !== 'coolify') {
+    bad(`unknown source "${data.source}"`);
+  }
 
   if (!DEPLOY_KINDS.includes(data.deployKind)) {
     bad(`deployKind must be one of ${DEPLOY_KINDS.join(' | ')}`);

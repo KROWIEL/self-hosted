@@ -1,0 +1,59 @@
+{
+  "slug": "zipline",
+  "name": "Zipline",
+  "description": "A ShareX/file upload server that is easy to use, packed with features, and with an easy setup!",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "zipline",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  zipline:\n    image: 'ghcr.io/diced/zipline:latest'\n    environment:\n      - 'CORE_RETURN_HTTPS=${CORE_RETURN_HTTPS:-false}'\n      - 'CORE_SECRET=${ZIPLINE_PASSWORD}'\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB:-zipline-db}'\n      - 'CORE_LOGGER=${CORE_LOGGER:-true}'\n    volumes:\n      - 'zipline-uploads:/zipline/uploads'\n      - 'zipline-public:/zipline/public'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1:3000/auth/login'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  postgres:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'zipline-postgres-data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-zipline-db}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ZIPLINE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CORE_RETURN_HTTPS",
+      "value": "false"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "zipline-db"
+    },
+    {
+      "key": "CORE_LOGGER",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "about": "A lightweight, fast and reliable file sharing server that is commonly used with ShareX, offering a react-based Web UI and fast API.",
+    "license": "MIT",
+    "tags": [
+      "zipline",
+      "file-sharing",
+      "upload",
+      "sharing"
+    ],
+    "stars": 3288,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "docs": "https://zipline.diced.sh/docs/config",
+      "website": "https://github.com/diced/zipline",
+      "source": "https://github.com/diced/zipline"
+    }
+  }
+}

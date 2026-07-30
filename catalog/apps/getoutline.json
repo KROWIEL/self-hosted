@@ -1,0 +1,257 @@
+{
+  "slug": "getoutline",
+  "name": "Getoutline",
+  "description": "Your team’s knowledge base",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  outline:\n    image: 'docker.getoutline.com/outlinewiki/outline:latest'\n    volumes:\n      - 'storage-data:/var/lib/outline/data'\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    environment:\n      - NODE_ENV=production\n      - 'SECRET_KEY=${OUTLINE_SECRET}'\n      - 'UTILS_SECRET=${OUTLINE_PASSWORD}'\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DATABASE:-outline}'\n      - 'REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379'\n      - 'URL=${APP_URL}'\n      - 'PORT=${OUTLINE_PORT:-3000}'\n      - 'FILE_STORAGE=${FILE_STORAGE:-local}'\n      - 'FILE_STORAGE_LOCAL_ROOT_DIR=${FILE_STORAGE_LOCAL_ROOT_DIR:-/var/lib/outline/data}'\n      - 'FILE_STORAGE_UPLOAD_MAX_SIZE=${FILE_STORAGE_UPLOAD_MAX_SIZE:-2000}'\n      - 'FILE_STORAGE_IMPORT_MAX_SIZE=${FILE_STORAGE_IMPORT_MAX_SIZE:-100}'\n      - 'FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE=${FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE}'\n      - 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}'\n      - 'AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}'\n      - 'AWS_REGION=${AWS_REGION}'\n      - 'AWS_S3_ACCELERATE_URL=${AWS_S3_ACCELERATE_URL}'\n      - 'AWS_S3_UPLOAD_BUCKET_URL=${AWS_S3_UPLOAD_BUCKET_URL}'\n      - 'AWS_S3_UPLOAD_BUCKET_NAME=${AWS_S3_UPLOAD_BUCKET_NAME}'\n      - 'AWS_S3_FORCE_PATH_STYLE=${AWS_S3_FORCE_PATH_STYLE:-true}'\n      - 'AWS_S3_ACL=${AWS_S3_ACL:-private}'\n      - 'SLACK_CLIENT_ID=${SLACK_CLIENT_ID}'\n      - 'SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}'\n      - 'GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}'\n      - 'GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}'\n      - 'AZURE_CLIENT_ID=${AZURE_CLIENT_ID}'\n      - 'AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}'\n      - 'AZURE_RESOURCE_APP_ID=${AZURE_RESOURCE_APP_ID}'\n      - 'OIDC_CLIENT_ID=${OIDC_CLIENT_ID}'\n      - 'OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}'\n      - 'OIDC_AUTH_URI=${OIDC_AUTH_URI}'\n      - 'OIDC_TOKEN_URI=${OIDC_TOKEN_URI}'\n      - 'OIDC_USERINFO_URI=${OIDC_USERINFO_URI}'\n      - 'OIDC_LOGOUT_URI=${OIDC_LOGOUT_URI}'\n      - 'OIDC_USERNAME_CLAIM=${OIDC_USERNAME_CLAIM}'\n      - 'OIDC_DISPLAY_NAME=${OIDC_DISPLAY_NAME}'\n      - 'OIDC_SCOPES=${OIDC_SCOPES}'\n      - 'GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}'\n      - 'GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}'\n      - 'GITHUB_APP_NAME=${GITHUB_APP_NAME}'\n      - 'GITHUB_APP_ID=${GITHUB_APP_ID}'\n      - 'GITHUB_APP_PRIVATE_KEY=${GITHUB_APP_PRIVATE_KEY}'\n      - 'DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}'\n      - 'DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}'\n      - 'DISCORD_SERVER_ID=${DISCORD_SERVER_ID}'\n      - 'DISCORD_SERVER_ROLES=${DISCORD_SERVER_ROLES}'\n      - 'PGSSLMODE=${PGSSLMODE:-disable}'\n      - 'FORCE_HTTPS=${FORCE_HTTPS:-true}'\n      - 'SMTP_HOST=${SMTP_HOST}'\n      - 'SMTP_PORT=${SMTP_PORT}'\n      - 'SMTP_USERNAME=${SMTP_USERNAME}'\n      - 'SMTP_PASSWORD=${SMTP_PASSWORD}'\n      - 'SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}'\n      - 'SMTP_REPLY_EMAIL=${SMTP_REPLY_EMAIL}'\n      - 'SMTP_TLS_CIPHERS=${SMTP_TLS_CIPHERS}'\n      - 'SMTP_SECURE=${SMTP_SECURE}'\n      - 'SMTP_NAME=${SMTP_NAME}'\n    healthcheck:\n      disable: true\n  redis:\n    image: 'redis:alpine'\n    environment:\n      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'\n    command:\n      - redis-server\n      - '--requirepass'\n      - '${REDIS_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - '-a'\n        - '${REDIS_PASSWORD}'\n        - PING\n      interval: 10s\n      timeout: 30s\n      retries: 3\n  postgres:\n    image: 'postgres:12-alpine'\n    volumes:\n      - 'database-data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DATABASE:-outline}'\n    healthcheck:\n      test:\n        - CMD\n        - pg_isready\n        - '-U'\n        - '${POSTGRES_USER}'\n        - '-d'\n        - '${POSTGRES_DATABASE:-outline}'\n      interval: 30s\n      timeout: 20s\n      retries: 3\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "OUTLINE_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "OUTLINE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DATABASE",
+      "value": "outline"
+    },
+    {
+      "key": "OUTLINE_PORT",
+      "value": "3000"
+    },
+    {
+      "key": "FILE_STORAGE",
+      "value": "local"
+    },
+    {
+      "key": "FILE_STORAGE_LOCAL_ROOT_DIR",
+      "value": "/var/lib/outline/data"
+    },
+    {
+      "key": "FILE_STORAGE_UPLOAD_MAX_SIZE",
+      "value": "2000"
+    },
+    {
+      "key": "FILE_STORAGE_IMPORT_MAX_SIZE",
+      "value": "100"
+    },
+    {
+      "key": "FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE",
+      "value": ""
+    },
+    {
+      "key": "AWS_ACCESS_KEY_ID",
+      "secret": true
+    },
+    {
+      "key": "AWS_SECRET_ACCESS_KEY",
+      "secret": true
+    },
+    {
+      "key": "AWS_REGION",
+      "value": ""
+    },
+    {
+      "key": "AWS_S3_ACCELERATE_URL",
+      "value": ""
+    },
+    {
+      "key": "AWS_S3_UPLOAD_BUCKET_URL",
+      "value": ""
+    },
+    {
+      "key": "AWS_S3_UPLOAD_BUCKET_NAME",
+      "value": ""
+    },
+    {
+      "key": "AWS_S3_FORCE_PATH_STYLE",
+      "value": "true"
+    },
+    {
+      "key": "AWS_S3_ACL",
+      "value": "private"
+    },
+    {
+      "key": "SLACK_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "SLACK_CLIENT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "GOOGLE_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "GOOGLE_CLIENT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "AZURE_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "AZURE_CLIENT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "AZURE_RESOURCE_APP_ID",
+      "value": ""
+    },
+    {
+      "key": "OIDC_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "OIDC_CLIENT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "OIDC_AUTH_URI",
+      "value": ""
+    },
+    {
+      "key": "OIDC_TOKEN_URI",
+      "secret": true
+    },
+    {
+      "key": "OIDC_USERINFO_URI",
+      "value": ""
+    },
+    {
+      "key": "OIDC_LOGOUT_URI",
+      "value": ""
+    },
+    {
+      "key": "OIDC_USERNAME_CLAIM",
+      "value": ""
+    },
+    {
+      "key": "OIDC_DISPLAY_NAME",
+      "value": ""
+    },
+    {
+      "key": "OIDC_SCOPES",
+      "value": ""
+    },
+    {
+      "key": "GITHUB_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "GITHUB_CLIENT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "GITHUB_APP_NAME",
+      "value": ""
+    },
+    {
+      "key": "GITHUB_APP_ID",
+      "value": ""
+    },
+    {
+      "key": "GITHUB_APP_PRIVATE_KEY",
+      "secret": true
+    },
+    {
+      "key": "DISCORD_CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "DISCORD_CLIENT_SECRET",
+      "secret": true
+    },
+    {
+      "key": "DISCORD_SERVER_ID",
+      "value": ""
+    },
+    {
+      "key": "DISCORD_SERVER_ROLES",
+      "value": ""
+    },
+    {
+      "key": "PGSSLMODE",
+      "value": "disable"
+    },
+    {
+      "key": "FORCE_HTTPS",
+      "value": "true"
+    },
+    {
+      "key": "SMTP_HOST",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PORT",
+      "value": ""
+    },
+    {
+      "key": "SMTP_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "SMTP_FROM_EMAIL",
+      "value": ""
+    },
+    {
+      "key": "SMTP_REPLY_EMAIL",
+      "value": ""
+    },
+    {
+      "key": "SMTP_TLS_CIPHERS",
+      "value": ""
+    },
+    {
+      "key": "SMTP_SECURE",
+      "value": ""
+    },
+    {
+      "key": "SMTP_NAME",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "knowledge base",
+      "documentation"
+    ],
+    "links": {
+      "docs": "https://docs.getoutline.com/s/hosting/doc/hosting-outline-nipGaCRBDu"
+    }
+  }
+}

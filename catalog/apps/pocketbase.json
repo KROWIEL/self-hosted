@@ -1,0 +1,33 @@
+{
+  "slug": "pocketbase",
+  "name": "PocketBase",
+  "description": "Open Source backend for your next SaaS and Mobile app in 1 file",
+  "category": "Backend",
+  "icon": "database",
+  "upstream": "pocketbase",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  pocketbase:\n    image: 'ghcr.io/coollabsio/pocketbase:latest'\n    environment:\n    volumes:\n      - 'pocketbase-data:/app/pb_data'\n      - 'pocketbase-hooks:/app/pb_hooks'\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Backend for your next SaaS and Mobile app in one file.",
+    "license": "MIT",
+    "tags": [
+      "pocketbase",
+      "backend",
+      "saas",
+      "mobile",
+      "api"
+    ],
+    "stars": 60308,
+    "updatedAt": "2026-07-22",
+    "links": {
+      "docs": "https://pocketbase.io/docs/",
+      "website": "https://pocketbase.io/",
+      "source": "https://github.com/pocketbase/pocketbase"
+    }
+  }
+}

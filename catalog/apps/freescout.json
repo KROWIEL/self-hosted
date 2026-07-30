@@ -1,0 +1,73 @@
+{
+  "slug": "freescout",
+  "name": "FreeScout",
+  "description": "FreeScout is the super lightweight and powerful free open source help desk and shared inbox written in PHP (Laravel framework).",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "freescout",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  freescout:\n    image: 'tiredofit/freescout:latest'\n    volumes:\n      - 'freescout-data:/data'\n      - 'freescout-logs:/www/logs'\n    depends_on:\n      mariadb:\n        condition: service_healthy\n    environment:\n      - DB_HOST=mariadb\n      - 'DB_NAME=${MARIADB_DATABASE:-freescout}'\n      - 'DB_USER=${MARIADB_USER}:-freescout}'\n      - 'DB_PASS=${MARIADB_PASSWORD}'\n      - 'SITE_URL=${APP_URL}'\n      - 'ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}'\n      - 'ADMIN_PASS=${ADMIN_PASSWORD}'\n      - 'DISPLAY_ERRORS=${DISPLAY_ERRORS:-FALSE}'\n      - 'TIMEZONE=${TIMEZONE:-UTC}'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1'\n      start_period: 10s\n      interval: 5s\n      timeout: 10s\n      retries: 15\n  mariadb:\n    image: mariadb:latest\n    volumes:\n      - 'mariadb-data:/var/lib/mysql'\n    environment:\n      - 'MARIADB_ROOT_PASSWORD=${ROOT_PASSWORD}'\n      - 'MARIADB_DATABASE=${MARIADB_DATABASE}'\n      - 'MARIADB_USER=${MARIADB_USER}'\n      - 'MARIADB_PASSWORD=${MARIADB_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - healthcheck.sh\n        - '--connect'\n        - '--innodb_initialized'\n      start_period: 10s\n      interval: 5s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "MARIADB_USER",
+      "value": "mariadb"
+    },
+    {
+      "key": "MARIADB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MARIADB_DATABASE",
+      "value": "freescout"
+    },
+    {
+      "key": "ADMIN_EMAIL",
+      "value": "admin@example.com"
+    },
+    {
+      "key": "DISPLAY_ERRORS",
+      "value": "FALSE"
+    },
+    {
+      "key": "TIMEZONE",
+      "value": "UTC"
+    }
+  ],
+  "meta": {
+    "about": "Email-based customer support application, help desk and shared mailbox (alternative to Zendesk and Help Scout).",
+    "license": "AGPL-3.0",
+    "tags": [
+      "helpdesk",
+      "support",
+      "ticketing",
+      "customer-support"
+    ],
+    "stars": 4439,
+    "updatedAt": "2026-07-25",
+    "links": {
+      "docs": "https://github.com/freescout-help-desk/freescout/wiki/",
+      "website": "https://freescout.net/",
+      "source": "https://github.com/freescout-help-desk/freescout",
+      "demo": "https://demo.freescout.net/login"
+    }
+  }
+}

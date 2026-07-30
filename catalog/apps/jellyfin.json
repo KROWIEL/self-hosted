@@ -29,5 +29,19 @@
       "key": "JELLYFIN_PublishedServerUrl",
       "required": false
     }
-  ]
+  ],
+  "meta": {
+    "about": "Media server for audio, video, books, comics, and photos with a sleek interface and robust transcoding capabilities. Almost all modern platforms have clients, including Roku, Android TV, iOS, and Kodi.",
+    "license": "GPL-2.0",
+    "tags": [
+      "Media Streaming - Multimedia Streaming"
+    ],
+    "stars": 55064,
+    "updatedAt": "2026-07-26",
+    "links": {
+      "website": "https://jellyfin.org",
+      "source": "https://github.com/jellyfin/jellyfin",
+      "demo": "https://demo.jellyfin.org/stable"
+    }
+  }
 }

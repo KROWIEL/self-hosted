@@ -99,11 +99,13 @@ and catalog apps.
   `Dockerfile`), or `nixpacks` (auto-detect build).
 - **Git-based deploys** — connect a repo (public, or private via a Personal
   Access Token), pick a build mode, deploy. Build logs stream live to the UI.
-- **App catalog** (`/catalog`) — one-click install of 40+ curated apps, from
-  Immich and Jellyfin to Gitea, Vaultwarden and Ollama, searchable and filtered
-  by category. The whole catalog is free on every plan; it is never gated by a
-  license. Manifests live in [`catalog/apps`](catalog/apps) and are checked
-  against upstream by [`tools/catalog`](tools/catalog/README.md).
+- **App catalog** (`/catalog`) — one-click install of 250+ apps across 20
+  categories, from Immich and Jellyfin to Gitea, Vaultwarden and Ollama,
+  searchable and filtered by category. The whole catalog is free on every plan;
+  it is never gated by a license. Manifests live in
+  [`catalog/apps`](catalog/apps); most are generated from Coolify's Apache-2.0
+  service templates (see [`NOTICE`](NOTICE)) and all are checked against upstream
+  by [`tools/catalog`](tools/catalog/README.md).
 - **Persistent volumes** — attach named volumes to services for durable data.
 - **Zero-downtime deployments** — blue-green rollout with agent-side health
   checks; traffic switches to the new container only once it is healthy.

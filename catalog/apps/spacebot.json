@@ -1,0 +1,67 @@
+{
+  "slug": "spacebot",
+  "name": "Spacebot",
+  "description": "An agentic AI system with specialized processes for thinking, working, and remembering.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  spacebot:\n    image: 'ghcr.io/spacedriveapp/spacebot:full'\n    environment:\n      - 'ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}'\n      - 'OPENAI_API_KEY=${OPENAI_API_KEY}'\n      - 'OPENROUTER_API_KEY=${OPENROUTER_API_KEY}'\n      - 'DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}'\n      - 'SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}'\n      - 'SLACK_APP_TOKEN=${SLACK_APP_TOKEN}'\n      - 'BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}'\n      - 'SPACEBOT_CHANNEL_MODEL=${SPACEBOT_CHANNEL_MODEL}'\n      - 'SPACEBOT_WORKER_MODEL=${SPACEBOT_WORKER_MODEL}'\n    volumes:\n      - 'spacebot-data:/data'\n    security_opt:\n      - seccomp=unconfined\n    shm_size: 1g\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-sf'\n        - 'http://localhost:19898/api/health'\n      interval: 30s\n      timeout: 5s\n      retries: 3\n",
+  "defaultPort": 19898,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ANTHROPIC_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "OPENAI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "OPENROUTER_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "DISCORD_BOT_TOKEN",
+      "secret": true
+    },
+    {
+      "key": "SLACK_BOT_TOKEN",
+      "secret": true
+    },
+    {
+      "key": "SLACK_APP_TOKEN",
+      "secret": true
+    },
+    {
+      "key": "BRAVE_SEARCH_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "SPACEBOT_CHANNEL_MODEL",
+      "value": ""
+    },
+    {
+      "key": "SPACEBOT_WORKER_MODEL",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "ai",
+      "agent",
+      "anthropic",
+      "openai",
+      "discord",
+      "slack",
+      "llm",
+      "agentic"
+    ],
+    "links": {
+      "docs": "https://docs.spacebot.sh/docker"
+    }
+  }
+}

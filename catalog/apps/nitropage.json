@@ -1,0 +1,40 @@
+{
+  "slug": "nitropage",
+  "name": "Nitropage",
+  "description": "Nitropage is an extensible, visual website builder, offering a growing library of versatile building blocks, focal-point image cropping and sovereign font management.",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  nitropage:\n    image: 'nitropage/nitropage:sqlite'\n    environment:\n      - 'NP_AUTH_SALT=${SALT_SECRET}'\n      - 'NP_AUTH_PASSWORD=${SESSION_PASSWORD}'\n      - 'DATABASE_URL=file:../.data/dev.db'\n    volumes:\n      - 'nitropage-data:/app/.data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000/admin'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "SALT_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SESSION_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "nitropage",
+      "builder",
+      "editor",
+      "wysiwyg",
+      "cms",
+      "content",
+      "management"
+    ],
+    "links": {
+      "docs": "https://nitropage.org"
+    }
+  }
+}

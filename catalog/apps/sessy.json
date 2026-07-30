@@ -1,0 +1,41 @@
+{
+  "slug": "sessy",
+  "name": "Sessy",
+  "description": "Email observability platform for monitoring and analyzing email systems.",
+  "category": "Monitoring",
+  "icon": "monitor",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  sessy:\n    image: 'ghcr.io/marckohlbrugge/sessy:main'\n    environment:\n      - SECRET_KEY_BASE=${SESSYSECRET}\n      - HTTP_AUTH_USERNAME=${SESSY_USER}\n      - HTTP_AUTH_PASSWORD=${SESSY_PASSWORD}\n    volumes:\n      - 'sessy-data:/rails/storage'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'curl -sf http://127.0.0.1:80 || [ $? -eq 22 ]'\n      interval: 5s\n      timeout: 10s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "SESSYSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SESSY_USER",
+      "value": "sessy"
+    },
+    {
+      "key": "SESSY_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "email",
+      "observability",
+      "monitoring",
+      "analytics"
+    ],
+    "links": {
+      "docs": "https://github.com/marckohlbrugge/sessy/blob/main/docs/docker-deployment.md"
+    }
+  }
+}

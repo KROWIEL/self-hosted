@@ -1,0 +1,73 @@
+{
+  "slug": "owncloud",
+  "name": "ownCloud",
+  "description": "OwnCloud with Open Web UI integrates file management with a powerful, user-friendly interface.",
+  "category": "Storage",
+  "icon": "storage",
+  "upstream": "owncloud",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  owncloud:\n    image: 'owncloud/server:latest'\n    depends_on:\n      mariadb:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n    environment:\n      - 'OWNCLOUD_DOMAIN=${APP_URL}'\n      - 'OWNCLOUD_TRUSTED_DOMAINS=${APP_URL}'\n      - OWNCLOUD_DB_TYPE=mysql\n      - OWNCLOUD_DB_HOST=mariadb\n      - 'OWNCLOUD_DB_NAME=${DB_NAME:-owncloud}'\n      - 'OWNCLOUD_DB_USERNAME=${MARIADB_USER}'\n      - 'OWNCLOUD_DB_PASSWORD=${MARIADB_PASSWORD}'\n      - 'OWNCLOUD_ADMIN_USERNAME=${OWNCLOUD_USER}'\n      - 'OWNCLOUD_ADMIN_PASSWORD=${OWNCLOUD_PASSWORD}'\n      - 'OWNCLOUD_MYSQL_UTF8MB4=${MYSQL_UTF8MB4:-true}'\n      - 'OWNCLOUD_REDIS_ENABLED=${REDIS_ENABLED:-true}'\n      - OWNCLOUD_REDIS_HOST=redis\n    healthcheck:\n      test:\n        - CMD\n        - /usr/bin/healthcheck\n      interval: 30s\n      timeout: 10s\n      retries: 5\n    volumes:\n      - 'owncloud-data:/mnt/data'\n  mariadb:\n    image: 'mariadb:latest'\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${MARIADBROOT_PASSWORD}'\n      - 'MYSQL_USER=${MARIADB_USER}'\n      - 'MYSQL_PASSWORD=${MARIADB_PASSWORD}'\n      - 'MYSQL_DATABASE=${DB_NAME:-owncloud}'\n      - TZ=auto\n    command:\n      - '--character-set-server=utf8mb4'\n      - '--collation-server=utf8mb4_bin'\n      - '--max-allowed-packet=128M'\n      - '--innodb-log-file-size=64M'\n    healthcheck:\n      test:\n        - CMD\n        - healthcheck.sh\n        - '--connect'\n        - '--innodb_initialized'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n    volumes:\n      - 'owncloud-mysql-data:/var/lib/mysql'\n  redis:\n    image: 'redis:6'\n    command:\n      - '--databases'\n      - '1'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 10s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "MARIADB_USER",
+      "value": "mariadb"
+    },
+    {
+      "key": "MARIADB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "OWNCLOUD_USER",
+      "value": "owncloud"
+    },
+    {
+      "key": "OWNCLOUD_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MARIADBROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "DB_NAME",
+      "value": "owncloud"
+    },
+    {
+      "key": "MYSQL_UTF8MB4",
+      "value": "true"
+    },
+    {
+      "key": "REDIS_ENABLED",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "about": "All-in-one solution for saving, synchronizing, viewing, editing and sharing files, calendars, address books and more.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "owncloud",
+      "file-management",
+      "open-web-ui",
+      "integration",
+      "cloud"
+    ],
+    "stars": 8825,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://owncloud.com/docs-guides/",
+      "website": "https://owncloud.org/",
+      "source": "https://github.com/owncloud/core"
+    }
+  }
+}

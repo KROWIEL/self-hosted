@@ -1,0 +1,59 @@
+{
+  "slug": "jitsi",
+  "name": "Jitsi",
+  "description": "Self-hosted Jitsi Meet — open-source video conferencing platform",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  jitsi-web:\n    image: 'jitsi/web:stable-10888'\n    restart: unless-stopped\n    environment:\n      - PUBLIC_URL=${APP_URL}\n      - ENABLE_AUTH=0\n      - ENABLE_GUESTS=1\n      - ENABLE_LETSENCRYPT=0\n      - ENABLE_HTTP_REDIRECT=0\n      - DISABLE_HTTPS=1\n      - XMPP_DOMAIN=meet.jitsi\n      - XMPP_AUTH_DOMAIN=auth.meet.jitsi\n      - XMPP_GUEST_DOMAIN=guest.meet.jitsi\n      - XMPP_MUC_DOMAIN=conference.meet.jitsi\n      - XMPP_INTERNAL_MUC_DOMAIN=internal.auth.meet.jitsi\n      - 'XMPP_BOSH_URL_BASE=http://prosody:5280'\n      - JVB_BREWERY_MUC=jvbbrewery\n      - 'JICOFO_COMPONENT_SECRET=${JICOFO_PASSWORD}'\n      - 'JICOFO_AUTH_PASSWORD=${JICOFO_PASSWORD}'\n      - 'JVB_AUTH_PASSWORD=${JVB_PASSWORD}'\n      - 'TZ=${TZ:-UTC}'\n    depends_on:\n      - prosody\n      - jicofo\n      - jvb\n    volumes:\n      - 'jitsi-web:/config'\n    networks:\n      meet.jitsi:\n        aliases:\n          - meet.jitsi\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost'\n      interval: 5s\n      timeout: 10s\n      retries: 15\n  prosody:\n    image: 'jitsi/prosody:stable-10888'\n    restart: unless-stopped\n    environment:\n      - AUTH_TYPE=internal\n      - ENABLE_AUTH=0\n      - ENABLE_GUESTS=1\n      - XMPP_DOMAIN=meet.jitsi\n      - XMPP_AUTH_DOMAIN=auth.meet.jitsi\n      - XMPP_GUEST_DOMAIN=guest.meet.jitsi\n      - XMPP_MUC_DOMAIN=conference.meet.jitsi\n      - XMPP_INTERNAL_MUC_DOMAIN=internal.auth.meet.jitsi\n      - 'JICOFO_COMPONENT_SECRET=${JICOFO_PASSWORD}'\n      - 'JICOFO_AUTH_PASSWORD=${JICOFO_PASSWORD}'\n      - 'JVB_AUTH_PASSWORD=${JVB_PASSWORD}'\n      - PUBLIC_URL=${APP_URL}\n      - 'TZ=${TZ:-UTC}'\n      - 'LOG_LEVEL=${LOG_LEVEL:-info}'\n    volumes:\n      - 'jitsi-prosody:/config'\n    networks:\n      meet.jitsi:\n        aliases:\n          - xmpp.meet.jitsi\n          - auth.meet.jitsi\n          - guest.meet.jitsi\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:5280/http-bind'\n      interval: 5s\n      timeout: 10s\n      retries: 15\n  jicofo:\n    image: 'jitsi/jicofo:stable-10888'\n    restart: unless-stopped\n    environment:\n      - AUTH_TYPE=internal\n      - ENABLE_AUTH=0\n      - XMPP_DOMAIN=meet.jitsi\n      - XMPP_AUTH_DOMAIN=auth.meet.jitsi\n      - XMPP_INTERNAL_MUC_DOMAIN=internal.auth.meet.jitsi\n      - XMPP_MUC_DOMAIN=conference.meet.jitsi\n      - XMPP_SERVER=prosody\n      - 'JICOFO_COMPONENT_SECRET=${JICOFO_PASSWORD}'\n      - 'JICOFO_AUTH_PASSWORD=${JICOFO_PASSWORD}'\n      - JVB_BREWERY_MUC=jvbbrewery\n      - JICOFO_ENABLE_HEALTH_CHECKS=1\n      - 'TZ=${TZ:-UTC}'\n    depends_on:\n      - prosody\n    volumes:\n      - 'jitsi-jicofo:/config'\n    networks:\n      meet.jitsi: null\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:8888/about/health'\n      interval: 5s\n      timeout: 10s\n      retries: 15\n  jvb:\n    image: 'jitsi/jvb:stable-10888'\n    restart: unless-stopped\n    ports:\n      - '10000:10000/udp'\n    environment:\n      - XMPP_SERVER=prosody\n      - XMPP_DOMAIN=meet.jitsi\n      - XMPP_AUTH_DOMAIN=auth.meet.jitsi\n      - XMPP_INTERNAL_MUC_DOMAIN=internal.auth.meet.jitsi\n      - XMPP_MUC_DOMAIN=conference.meet.jitsi\n      - JVB_AUTH_USER=jvb\n      - 'JVB_AUTH_PASSWORD=${JVB_PASSWORD}'\n      - JVB_BREWERY_MUC=jvbbrewery\n      - JVB_PORT=10000\n      - 'JVB_ADVERTISE_IPS=${JVB_ADVERTISE_IPS:-}'\n      - 'JVB_STUN_SERVERS=${JVB_STUN_SERVERS:-stun.l.google.com:19302}'\n      - PUBLIC_URL=${APP_URL}\n      - 'TZ=${TZ:-UTC}'\n    depends_on:\n      - prosody\n    volumes:\n      - 'jitsi-jvb:/config'\n    networks:\n      meet.jitsi: null\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:8080/about/health'\n      interval: 5s\n      timeout: 10s\n      retries: 15\nnetworks:\n  meet.jitsi: null\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "JICOFO_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "JVB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    },
+    {
+      "key": "LOG_LEVEL",
+      "value": "info"
+    },
+    {
+      "key": "JVB_ADVERTISE_IPS",
+      "value": ""
+    },
+    {
+      "key": "JVB_STUN_SERVERS",
+      "value": "stun.l.google.com:19302"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "jitsi",
+      "video",
+      "conference",
+      "webrtc",
+      "meeting",
+      "self-hosted"
+    ],
+    "links": {
+      "docs": "https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker/"
+    }
+  }
+}

@@ -46,6 +46,7 @@ async function seedCatalogApps(
         secret?: boolean;
         required?: boolean;
       }[];
+      meta?: Record<string, unknown>;
     };
     const values = {
       slug: raw.slug,
@@ -62,6 +63,7 @@ async function seedCatalogApps(
       defaultPort: raw.defaultPort ?? null,
       recommendedVolumes: raw.recommendedVolumes ?? [],
       envDefaults: raw.envDefaults ?? [],
+      meta: raw.meta ?? {},
       updatedAt: new Date(),
     };
     const existing = await db

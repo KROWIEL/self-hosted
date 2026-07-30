@@ -1,0 +1,93 @@
+{
+  "slug": "teable",
+  "name": "Teable",
+  "description": "Teable is a powerful visual interface built on relational databases (PostgreSQL).",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  teable:\n    image: 'ghcr.io/teableio/teable:latest'\n    volumes:\n      - 'teable_data:/app/.assets:rw'\n    environment:\n      - 'PUBLIC_ORIGIN=${APP_URL}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'SECRET_KEY=${SECRET}'\n      - 'TZ=${TIMEZONE}'\n      - 'PRISMA_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@teable-db:${POSTGRES_PORT}/${POSTGRES_DB}'\n      - NEXT_ENV_IMAGES_ALL_REMOTE=true\n      - PORT=3000\n      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'\n      - BACKEND_CACHE_PROVIDER=redis\n      - 'BACKEND_CACHE_REDIS_URI=redis://default:${REDIS_PASSWORD}@teable-cache:6379/0'\n      - 'BACKEND_MAIL_HOST=${BACKEND_MAIL_HOST}'\n      - 'BACKEND_MAIL_PORT=${BACKEND_MAIL_PORT}'\n      - 'BACKEND_MAIL_SECURE=${BACKEND_MAIL_SECURE}'\n      - 'BACKEND_MAIL_SENDER=${BACKEND_MAIL_SENDER}'\n      - 'BACKEND_MAIL_SENDER_NAME=${BACKEND_MAIL_SENDER_NAME}'\n      - 'BACKEND_MAIL_AUTH_USER=${BACKEND_MAIL_AUTH_USER}'\n      - 'BACKEND_MAIL_AUTH_PASS=${BACKEND_MAIL_AUTH_PASS}'\n    depends_on:\n      teable-cache:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  teable-db:\n    image: 'postgres:15.4'\n    volumes:\n      - 'teable_db_data:/var/lib/postgresql/data:rw'\n    environment:\n      - 'TZ=${TIMEZONE}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-teable}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PORT=${POSTGRES_PORT:-5432}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  teable-db-migrate:\n    image: 'ghcr.io/teableio/teable-db-migrate:latest'\n    restart: 'no'\n    environment:\n      - 'TZ=${TIMEZONE}'\n      - 'PRISMA_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@teable-db:${POSTGRES_PORT}/${POSTGRES_DB}'\n    depends_on:\n      teable-db:\n        condition: service_healthy\n  teable-cache:\n    image: 'redis:7.2.4'\n    environment:\n      - REDIS_PORT=6379\n      - REDIS_DB=0\n      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'\n    volumes:\n      - 'teable_cache_data:/data:rw'\n    command: 'redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - '--raw'\n        - incr\n        - ping\n      interval: 10s\n      timeout: 3s\n      retries: 3\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TIMEZONE",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_PORT",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    },
+    {
+      "key": "BACKEND_MAIL_HOST",
+      "value": ""
+    },
+    {
+      "key": "BACKEND_MAIL_PORT",
+      "value": ""
+    },
+    {
+      "key": "BACKEND_MAIL_SECURE",
+      "value": ""
+    },
+    {
+      "key": "BACKEND_MAIL_SENDER",
+      "value": ""
+    },
+    {
+      "key": "BACKEND_MAIL_SENDER_NAME",
+      "value": ""
+    },
+    {
+      "key": "BACKEND_MAIL_AUTH_USER",
+      "value": ""
+    },
+    {
+      "key": "BACKEND_MAIL_AUTH_PASS",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "airtable",
+      "teable",
+      "database",
+      "visual",
+      "interface",
+      "relational",
+      "postgresql"
+    ],
+    "links": {
+      "docs": "https://help.teable.io/"
+    }
+  }
+}

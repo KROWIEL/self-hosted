@@ -1,0 +1,63 @@
+{
+  "slug": "metamcp",
+  "name": "Metamcp",
+  "description": "MCP Aggregator, Orchestrator, Middleware, Gateway in one app",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  app:\n    image: 'ghcr.io/metatool-ai/metamcp:2.4'\n    environment:\n      - 'POSTGRES_HOST=${POSTGRES_HOST:-postgres}'\n      - 'POSTGRES_PORT=${POSTGRES_PORT:-5432}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-metamcp_db}'\n      - 'DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-metamcp_db}'\n      - 'APP_URL=${APP_URL}'\n      - 'NEXT_PUBLIC_APP_URL=${APP_URL}'\n      - 'BETTER_AUTH_SECRET=${AUTH_PASSWORD}'\n      - 'TRANSFORM_LOCALHOST_TO_DOCKER_INTERNAL=${TRANSFORM_LOCALHOST_TO_DOCKER_INTERNAL:-true}'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://localhost:12008/health'\n      interval: 10s\n      timeout: 5s\n      retries: 5\n  postgres:\n    image: 'postgres:16-alpine'\n    environment:\n      - 'POSTGRES_DB=${POSTGRES_DB:-metamcp_db}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n    volumes:\n      - 'postgres_data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-metamcp_db}'\n      interval: 10s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 12008,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "AUTH_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_HOST",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PORT",
+      "value": "5432"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "metamcp_db"
+    },
+    {
+      "key": "TRANSFORM_LOCALHOST_TO_DOCKER_INTERNAL",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "mcp",
+      "ai",
+      "sse",
+      "aggregator",
+      "orchestrator",
+      "middleware"
+    ],
+    "links": {
+      "docs": "https://github.com/metatool-ai/metamcp"
+    }
+  }
+}

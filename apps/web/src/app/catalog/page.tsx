@@ -73,6 +73,7 @@ export default function CatalogPage() {
   const [apps, setApps] = useState<CatalogApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [installing, setInstalling] = useState<CatalogApp | null>(null);
+  const [details, setDetails] = useState<CatalogApp | null>(null);
   const [category, setCategory] = useState<string>(ALL);
   const [query, setQuery] = useState('');
 
@@ -174,19 +175,39 @@ export default function CatalogPage() {
                   <div className="mb-3 flex flex-wrap gap-2 text-xs text-neutral-500">
                     <span>{t(`catalog.kind.${app.deployKind}` as TKey)}</span>
                     {app.defaultPort != null && <span>:{app.defaultPort}</span>}
+                    {app.meta?.license && <span>{app.meta.license}</span>}
                   </div>
-                  <button
-                    type="button"
-                    className="btn-primary btn-sm self-start"
-                    onClick={() => setInstalling(app)}
-                  >
-                    {t('catalog.install')}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="btn-primary btn-sm"
+                      onClick={() => setInstalling(app)}
+                    >
+                      {t('catalog.install')}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost btn-sm"
+                      onClick={() => setDetails(app)}
+                    >
+                      {t('catalog.details')}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
           )}
         </>
+      )}
+      {details && (
+        <DetailsModal
+          app={details}
+          onClose={() => setDetails(null)}
+          onInstall={() => {
+            setInstalling(details);
+            setDetails(null);
+          }}
+        />
       )}
       {installing && (
         <InstallModal
@@ -200,6 +221,176 @@ export default function CatalogPage() {
         />
       )}
     </AppShell>
+  );
+}
+
+/** Images a manifest pulls, so the details view can say what actually runs. */
+function deployedImages(app: CatalogApp): string[] {
+  if (app.deployKind === 'image') return app.image ? [app.image] : [];
+  if (!app.composeYaml) return [];
+  const found = [...app.composeYaml.matchAll(/^\s*image:\s*['"]?([^'"\s]+)/gm)].map(
+    (m) => m[1],
+  );
+  return [...new Set(found)];
+}
+
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <div className="text-sm text-neutral-300">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Everything known about an app without leaving the page. The data is baked into
+ * the manifest by `tools/catalog`, so this renders instantly and works on a box
+ * with no outbound access; the links are there for anyone who wants more.
+ */
+function DetailsModal({
+  app,
+  onClose,
+  onInstall,
+}: {
+  app: CatalogApp;
+  onClose: () => void;
+  onInstall: () => void;
+}) {
+  const { t, lang } = useI18n();
+  const categoryLabel = useCategoryLabel();
+  const meta = app.meta ?? {};
+  const images = deployedImages(app);
+  const required = app.envDefaults.filter((e) => e.required);
+
+  const links = (
+    [
+      ['website', meta.links?.website],
+      ['source', meta.links?.source],
+      ['docs', meta.links?.docs],
+      ['demo', meta.links?.demo],
+    ] as const
+  ).filter(([, href]) => !!href);
+
+  return (
+    <Modal title={localized(app, lang).name} onClose={onClose}>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-neutral-300">
+            <CatalogIcon icon={app.icon} size={22} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm text-neutral-300">
+              {categoryLabel(app.category || 'Apps')}
+            </p>
+            <p className="text-xs text-neutral-500">
+              {t(`catalog.kind.${app.deployKind}` as TKey)}
+              {app.defaultPort != null && ` · :${app.defaultPort}`}
+            </p>
+          </div>
+        </div>
+
+        {meta.archived && (
+          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            {t('catalog.archived')}
+          </p>
+        )}
+
+        <Detail label={t('catalog.about')}>
+          {meta.about || localized(app, lang).description}
+        </Detail>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {meta.license && <Detail label={t('catalog.license')}>{meta.license}</Detail>}
+          {meta.stars != null && (
+            <Detail label={t('catalog.stars')}>{meta.stars.toLocaleString(lang)}</Detail>
+          )}
+          {meta.updatedAt && (
+            <Detail label={t('catalog.lastCommit')}>{meta.updatedAt}</Detail>
+          )}
+        </div>
+
+        {!!meta.tags?.length && (
+          <Detail label={t('catalog.tags')}>
+            <div className="flex flex-wrap gap-1.5">
+              {meta.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-xs text-neutral-400"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </Detail>
+        )}
+
+        {links.length > 0 && (
+          <Detail label={t('catalog.links')}>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {links.map(([kind, href]) => (
+                <a
+                  key={kind}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-violet-300 underline-offset-2 hover:underline"
+                >
+                  {t(`catalog.link.${kind}` as TKey)}
+                </a>
+              ))}
+            </div>
+          </Detail>
+        )}
+
+        <div className="space-y-3 rounded-lg border border-white/10 bg-white/[0.02] p-3">
+          <p className="text-sm font-medium text-neutral-200">
+            {t('catalog.deployTitle')}
+          </p>
+          {images.length > 0 && (
+            <Detail label={t('catalog.deployImages')}>
+              <ul className="space-y-0.5 font-mono text-xs text-neutral-400">
+                {images.map((image) => (
+                  <li key={image}>{image}</li>
+                ))}
+              </ul>
+            </Detail>
+          )}
+          {app.recommendedVolumes.length > 0 && (
+            <Detail label={t('catalog.deployVolumes')}>
+              <ul className="space-y-0.5 font-mono text-xs text-neutral-400">
+                {app.recommendedVolumes.map((v) => (
+                  <li key={v.mountPath}>{v.mountPath}</li>
+                ))}
+              </ul>
+            </Detail>
+          )}
+          <Detail label={t('catalog.deployEnvRequired')}>
+            {required.length === 0 ? (
+              <span className="text-neutral-500">{t('catalog.deployEnvNone')}</span>
+            ) : (
+              <ul className="space-y-0.5 font-mono text-xs text-neutral-400">
+                {required.map((e) => (
+                  <li key={e.key}>
+                    {e.key}
+                    {e.secret && <span className="ml-2 font-sans text-neutral-500">secret</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Detail>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-1">
+          <button type="button" className="btn-ghost" onClick={onClose}>
+            {t('common.close')}
+          </button>
+          <button type="button" className="btn-primary" onClick={onInstall}>
+            {t('catalog.install')}
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

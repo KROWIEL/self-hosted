@@ -23,5 +23,18 @@
       "key": "HOMEPAGE_ALLOWED_HOSTS",
       "value": "*"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Highly customizable homepage (or startpage / application dashboard) with Docker and service API integrations.",
+    "license": "GPL-3.0",
+    "tags": [
+      "Personal Dashboards"
+    ],
+    "stars": 31724,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://github.com/gethomepage/homepage",
+      "source": "https://github.com/gethomepage/homepage"
+    }
+  }
 }

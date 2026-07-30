@@ -25,5 +25,19 @@
       "key": "TZ",
       "value": "UTC"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Photo and video backup solution directly from your mobile phone (alternative to Google Photos).",
+    "license": "AGPL-3.0",
+    "tags": [
+      "Photo Galleries"
+    ],
+    "stars": 108990,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://immich.app/",
+      "source": "https://github.com/immich-app/immich",
+      "demo": "https://github.com/immich-app/immich#demo"
+    }
+  }
 }

@@ -1,0 +1,41 @@
+{
+  "slug": "transmission",
+  "name": "Transmission",
+  "description": "Fast, easy, and free BitTorrent client.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "transmission",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  transmission:\n    image: 'lscr.io/linuxserver/transmission:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - 'USER=${ADMIN_USER}'\n      - 'PASS=${ADMIN_PASSWORD}'\n    volumes:\n      - 'transmission-config:/config'\n      - 'transmission-downloads:/downloads'\n      - 'transmission-watch:/watch'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-sSfL'\n        - '-u'\n        - '${ADMIN_USER}:${ADMIN_PASSWORD}'\n        - 'http://localhost:9091/'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n",
+  "defaultPort": 9091,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ADMIN_USER",
+      "value": "admin"
+    },
+    {
+      "key": "ADMIN_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "Fast, easy, free Bittorrent client.",
+    "license": "GPL-3.0",
+    "tags": [
+      "bittorrent",
+      "torrent",
+      "peer-to-peer"
+    ],
+    "stars": 15016,
+    "updatedAt": "2026-07-12",
+    "links": {
+      "docs": "https://docs.linuxserver.io/images/docker-transmission/",
+      "website": "https://transmissionbt.com/",
+      "source": "https://github.com/transmission/transmission"
+    }
+  }
+}

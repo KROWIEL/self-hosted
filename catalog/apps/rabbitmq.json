@@ -1,0 +1,44 @@
+{
+  "slug": "rabbitmq",
+  "name": "Rabbitmq",
+  "description": "With tens of thousands of users, RabbitMQ is one of the most popular open source message brokers.",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  rabbitmq:\n    image: 'rabbitmq:3-management'\n    hostname: rabbitmq\n    environment:\n      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}\n      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}\n      - 'PORT=${PORT:-5672}'\n    ports:\n      - '${PORT}:5672'\n    healthcheck:\n      test: 'rabbitmq-diagnostics -q ping'\n      interval: 5s\n      timeout: 30s\n      retries: 10\n    volumes:\n      - 'rabbitmq-data:/var/lib/rabbitmq/'\n",
+  "defaultPort": 15672,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "RABBITMQ_USER",
+      "value": "rabbitmq"
+    },
+    {
+      "key": "RABBITMQ_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "PORT",
+      "value": "5672"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "message broker",
+      "message queue",
+      "message-oriented middleware",
+      "mom",
+      "amqp",
+      "mqtt",
+      "stomp",
+      "messaging"
+    ],
+    "links": {
+      "docs": "https://www.rabbitmq.com/documentation.html"
+    }
+  }
+}

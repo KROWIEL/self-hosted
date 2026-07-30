@@ -1,0 +1,35 @@
+{
+  "slug": "docker-registry",
+  "name": "Docker Registry",
+  "description": "The Docker Registry lets you distribute Docker images.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  registry:\n    image: 'registry:3'\n    environment:\n      - 'USERNAME=${REGISTRY_USER}'\n      - 'PASSWORD=${REGISTRY_PASSWORD}'\n      - REGISTRY_AUTH=htpasswd\n      - 'REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm'\n      - REGISTRY_AUTH_HTPASSWD_PATH=/auth/registry.password\n    command:\n      - /entrypoint.sh\n    volumes:\n      - 'registry-data:/var/lib/registry'\n      -\n        type: bind\n        source: ./etc/entrypoint.sh\n        target: /entrypoint.sh\n        mode: '0755'\n        content: \"#!/usr/bin/env sh\\nset -e \\n\\nif [ -z \\\"$USERNAME\\\" ] || [ -z \\\"$PASSWORD\\\" ]; then\\n    echo \\\"Error: USERNAME and PASSWORD environment variables must be set\\\"\\n    exit 1\\nfi\\n\\napk add --no-cache apache2-utils\\nmkdir -p \\\"$(dirname \\\"$REGISTRY_AUTH_HTPASSWD_PATH\\\")\\\"\\nchmod 755 \\\"$(dirname \\\"$REGISTRY_AUTH_HTPASSWD_PATH\\\")\\\"\\nhtpasswd -Bbc \\\"$REGISTRY_AUTH_HTPASSWD_PATH\\\" \\\"$USERNAME\\\" \\\"$PASSWORD\\\"\\nregistry serve /etc/docker/registry/config.yml\\n\"\n      -\n        type: bind\n        source: ./config/config.yml\n        target: /etc/docker/registry/config.yml\n        isDirectory: false\n        content: \"version: 0.1\\nlog:\\n  fields:\\n    service: registry\\nstorage:\\n  cache:\\n    blobdescriptor: inmemory\\n  filesystem:\\n    rootdirectory: /var/lib/registry\\nhttp:\\n  addr: :5000\\n  headers:\\n    X-Content-Type-Options: [nosniff]\\nhealth:\\n  storagedriver:\\n    enabled: true\\n    interval: 10s\\n    threshold: 3\"\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://localhost:5000/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 5000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "REGISTRY_USER",
+      "value": "registry"
+    },
+    {
+      "key": "REGISTRY_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "registry",
+      "images",
+      "docker"
+    ],
+    "links": {
+      "docs": "https://distribution.github.io/distribution/"
+    }
+  }
+}

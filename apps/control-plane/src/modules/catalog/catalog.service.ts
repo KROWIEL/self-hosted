@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import {
   type CatalogApp,
   type CatalogEnvDefault,
+  type CatalogAppMeta,
   type CatalogTranslation,
   type CatalogVolumeHint,
 } from '@selfhosted/shared';
@@ -102,6 +103,7 @@ export class CatalogService {
       defaultPort: row.defaultPort,
       recommendedVolumes: (row.recommendedVolumes ?? []) as CatalogVolumeHint[],
       envDefaults: (row.envDefaults ?? []) as CatalogEnvDefault[],
+      meta: (row.meta ?? {}) as CatalogAppMeta,
     };
   }
 }

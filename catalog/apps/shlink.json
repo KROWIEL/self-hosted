@@ -1,0 +1,45 @@
+{
+  "slug": "shlink",
+  "name": "Shlink",
+  "description": "The definitive self-hosted URL shortener",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "shlink",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  shlink:\n    image: 'shlinkio/shlink:stable'\n    environment:\n      - 'DEFAULT_DOMAIN=${APP_URL}'\n      - IS_HTTPS_ENABLED=false\n      - 'INITIAL_API_KEY=${SHLINKAPIKEY}'\n    volumes:\n      - 'shlink-data:/etc/shlink/data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8080/rest/v3/health'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n  shlink-web:\n    image: shlinkio/shlink-web-client:latest\n    environment:\n      - 'SHLINK_SERVER_API_KEY=${SHLINKAPIKEY}'\n      - 'SHLINK_SERVER_URL=${APP_URL}'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8080'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "SHLINKAPIKEY",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "about": "URL shortener with REST API and command line interface. Includes official progressive web application and docker images.",
+    "license": "MIT",
+    "tags": [
+      "links",
+      "shortener",
+      "sharing",
+      "url",
+      "short",
+      "link",
+      "sharing"
+    ],
+    "stars": 5183,
+    "updatedAt": "2026-06-22",
+    "links": {
+      "docs": "https://shlink.io/",
+      "website": "https://shlink.io",
+      "source": "https://github.com/shlinkio/shlink"
+    }
+  }
+}

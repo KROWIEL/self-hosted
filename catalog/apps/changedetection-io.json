@@ -23,5 +23,18 @@
       "key": "BASE_URL",
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "Stay up-to-date with web-site content changes.",
+    "license": "Apache-2.0",
+    "tags": [
+      "Automation"
+    ],
+    "stars": 32517,
+    "updatedAt": "2026-07-22",
+    "links": {
+      "website": "https://changedetection.io/",
+      "source": "https://github.com/dgtlmoon/changedetection.io"
+    }
+  }
 }

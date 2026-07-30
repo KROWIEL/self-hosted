@@ -1,0 +1,55 @@
+{
+  "slug": "convertx",
+  "name": "ConvertX",
+  "description": "A self-hosted online file converter. Supports over a thousand different formats.",
+  "category": "Backend",
+  "icon": "database",
+  "upstream": "convertx",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  convertx:\n    image: 'ghcr.io/c4illin/convertx:latest'\n    environment:\n      - 'ACCOUNT_REGISTRATION=${ACCOUNT_REGISTRATION:-false}'\n      - 'HTTP_ALLOWED=${HTTP_ALLOWED:-true}'\n      - 'ALLOW_UNAUTHENTICATED=${ALLOW_UNAUTHENTICATED:-false}'\n      - 'AUTO_DELETE_EVERY_N_HOURS=${AUTO_DELETE_EVERY_N_HOURS:-24}'\n      - 'JWT_SECRET=${CONVERTXJWTSECRET}'\n    volumes:\n      - 'convertx_data:/app/data'\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "CONVERTXJWTSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ACCOUNT_REGISTRATION",
+      "value": "false"
+    },
+    {
+      "key": "HTTP_ALLOWED",
+      "value": "true"
+    },
+    {
+      "key": "ALLOW_UNAUTHENTICATED",
+      "value": "false"
+    },
+    {
+      "key": "AUTO_DELETE_EVERY_N_HOURS",
+      "value": "24"
+    }
+  ],
+  "meta": {
+    "about": "Online file converter which supports over a thousand different formats.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "converter",
+      "file",
+      "documents",
+      "files",
+      "directories"
+    ],
+    "stars": 18119,
+    "updatedAt": "2026-06-21",
+    "links": {
+      "docs": "https://github.com/C4illin/ConvertX",
+      "website": "https://github.com/C4illin/ConvertX",
+      "source": "https://github.com/C4illin/ConvertX"
+    }
+  }
+}

@@ -19,6 +19,12 @@ const GLYPHS: Record<string, ReactNode> = {
       <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
     </>
   ),
+  chat: (
+    <>
+      <path d="M20 14.5a2.5 2.5 0 0 1-2.5 2.5H9l-4.5 3.5V6.5A2.5 2.5 0 0 1 7 4h10.5A2.5 2.5 0 0 1 20 6.5z" />
+      <path d="M9 8.5h6M9 12h4" />
+    </>
+  ),
   check: (
     <>
       <path d="M9.5 6H20M9.5 12H20M9.5 18H17" />
@@ -60,6 +66,12 @@ const GLYPHS: Record<string, ReactNode> = {
     <>
       <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
       <path d="M14 3v5h5M9 13h6M9 17h4" />
+    </>
+  ),
+  game: (
+    <>
+      <path d="M8 5.5h8a5.5 5.5 0 0 1 5.4 6.5l-.8 4.4A2.8 2.8 0 0 1 16.2 18L14.5 16h-5L7.8 18a2.8 2.8 0 0 1-4.4-1.6l-.8-4.4A5.5 5.5 0 0 1 8 5.5z" />
+      <path d="M7.5 9.5v3M6 11h3M15.5 10.5h.01M17.5 12.5h.01" />
     </>
   ),
   git: (

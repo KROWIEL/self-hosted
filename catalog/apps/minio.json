@@ -26,5 +26,8 @@
       "secret": true,
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "links": {}
+  }
 }

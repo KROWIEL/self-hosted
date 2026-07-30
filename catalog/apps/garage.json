@@ -1,0 +1,48 @@
+{
+  "slug": "garage",
+  "name": "Garage",
+  "description": "Garage is an S3-compatible distributed object storage service designed for self-hosting.",
+  "category": "Storage",
+  "icon": "storage",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  garage:\n    image: 'dxflrs/garage:v2.1.0'\n    environment:\n      - GARAGE_S3_API_URL=$GARAGE_S3_API_URL\n      - GARAGE_WEB_URL=$GARAGE_WEB_URL\n      - GARAGE_ADMIN_URL=$GARAGE_ADMIN_URL\n      - 'GARAGE_RPC_SECRET=${RPCSECRET}'\n      - GARAGE_ADMIN_TOKEN=${GARAGE_PASSWORD}\n      - GARAGE_METRICS_TOKEN=${GARAGEMETRICS_PASSWORD}\n      - GARAGE_ALLOW_WORLD_READABLE_SECRETS=true\n      - 'RUST_LOG=${RUST_LOG:-garage=info}'\n    volumes:\n      - 'garage-meta:/var/lib/garage/meta'\n      - 'garage-data:/var/lib/garage/data'\n      -\n        type: bind\n        source: ./garage.toml\n        target: /etc/garage.toml\n        content: \"metadata_dir = \\\"/var/lib/garage/meta\\\"\\ndata_dir = \\\"/var/lib/garage/data\\\"\\ndb_engine = \\\"lmdb\\\"\\n\\nreplication_factor = 1\\nconsistency_mode = \\\"consistent\\\"\\n\\ncompression_level = 1\\nblock_size = \\\"1M\\\"\\n\\nrpc_bind_addr = \\\"[::]:3901\\\"\\nrpc_secret_file = \\\"env:GARAGE_RPC_SECRET\\\"\\nbootstrap_peers = []\\n\\n[s3_api]\\ns3_region = \\\"garage\\\"\\napi_bind_addr = \\\"[::]:3900\\\"\\nroot_domain = \\\".s3.garage.localhost\\\"\\n\\n[s3_web]\\nbind_addr = \\\"[::]:3902\\\"\\nroot_domain = \\\".web.garage.localhost\\\"\\n\\n[admin]\\napi_bind_addr = \\\"[::]:3903\\\"\\nadmin_token_file = \\\"env:GARAGE_ADMIN_TOKEN\\\"\\nmetrics_token_file = \\\"env:GARAGE_METRICS_TOKEN\\\"\"\n    healthcheck:\n      test:\n        - CMD\n        - /garage\n        - stats\n        - '-a'\n      interval: 10s\n      timeout: 5s\n      retries: 5\n",
+  "defaultPort": 3900,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "RPCSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "GARAGE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "GARAGEMETRICS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "RUST_LOG",
+      "value": "garage=info"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "object",
+      "storage",
+      "server",
+      "s3",
+      "api",
+      "distributed"
+    ],
+    "links": {
+      "docs": "https://garagehq.deuxfleurs.fr/documentation/"
+    }
+  }
+}

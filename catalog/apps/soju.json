@@ -1,0 +1,27 @@
+{
+  "slug": "soju",
+  "name": "Soju",
+  "description": "A user-friendly IRC bouncer with a modern web interface",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  soju:\n    image: 'codeberg.org/emersion/soju:latest'\n    volumes:\n      - 'soju-db:/db'\n      - 'soju-uploads:/uploads'\n      - 'soju-run:/run/soju'\n      -\n        type: bind\n        source: ./soju/config\n        target: /soju-config\n        content: \"db sqlite3 /db/main.db\\nmessage-store db\\nfile-upload fs /uploads/\\nlisten irc+insecure://0.0.0.0:6667\\nlisten ws+insecure://0.0.0.0:80\\nlisten unix+admin:///run/soju/admin\\n\"\n    networks:\n      default:\n        aliases:\n          - gamja-backend\n  gamja:\n    image: 'codeberg.org/emersion/gamja:latest'\n    environment:\n    depends_on:\n      - soju\nvolumes:\n  soju-db: null\n  soju-uploads: null\n  soju-run: null\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "irc",
+      "bouncer",
+      "chat",
+      "messaging",
+      "relay"
+    ],
+    "links": {
+      "docs": "https://soju.im/"
+    }
+  }
+}

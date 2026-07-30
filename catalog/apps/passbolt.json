@@ -1,0 +1,55 @@
+{
+  "slug": "passbolt",
+  "name": "Passbolt",
+  "description": "Passbolt Community Edition (CE) API. The JSON API for the open source password manager for teams!",
+  "category": "Security",
+  "icon": "lock",
+  "upstream": "passbolt",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  passbolt:\n    image: 'passbolt/passbolt:latest-ce'\n    environment:\n      - 'APP_FULL_BASE_URL=${APP_URL}'\n      - DATASOURCES_DEFAULT_HOST=mariadb\n      - 'DATASOURCES_DEFAULT_USERNAME=${PASSBOLT_USER}'\n      - 'DATASOURCES_DEFAULT_PASSWORD=${PASSBOLT_PASSWORD}'\n      - 'DATASOURCES_DEFAULT_DATABASE=${MYSQL_DB:-passbolt-db}'\n    volumes:\n      - 'gpg_volume:/etc/passbolt/gpg'\n      - 'jwt_volume:/etc/passbolt/jwt'\n    command:\n      - /usr/bin/wait-for.sh\n      - '-t'\n      - '0'\n      - 'mariadb:3306'\n      - '--'\n      - /docker-entrypoint.sh\n    depends_on:\n      mariadb:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:80'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  mariadb:\n    image: 'mariadb:11'\n    environment:\n      - 'MARIADB_ROOT_PASSWORD=${ROOTMARIADB_PASSWORD}'\n      - 'MARIADB_DATABASE=${MYSQL_DB:-passbolt-db}'\n      - 'MARIADB_USER=${PASSBOLT_USER}'\n      - 'MARIADB_PASSWORD=${PASSBOLT_PASSWORD}'\n    volumes:\n      - 'passbolt_mariadb_data:/var/lib/mysql'\n    healthcheck:\n      test:\n        - CMD\n        - healthcheck.sh\n        - '--connect'\n        - '--innodb_initialized'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "PASSBOLT_USER",
+      "value": "passbolt"
+    },
+    {
+      "key": "PASSBOLT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ROOTMARIADB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DB",
+      "value": "passbolt-db"
+    }
+  ],
+  "meta": {
+    "about": "Collaborative password manager.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "security",
+      "credentials",
+      "password-manager",
+      "open source"
+    ],
+    "stars": 6042,
+    "updatedAt": "2026-07-20",
+    "links": {
+      "docs": "https://www.passbolt.com/ce/docker",
+      "website": "https://www.passbolt.com/",
+      "source": "https://github.com/passbolt/passbolt_api"
+    }
+  }
+}

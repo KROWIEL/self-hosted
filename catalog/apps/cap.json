@@ -1,0 +1,69 @@
+{
+  "slug": "cap",
+  "name": "Cap",
+  "description": "Cap is the open source alternative to Loom. Lightweight, powerful, and cross-platform. Record and share in seconds.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  cap-web:\n    image: 'ghcr.io/capsoftware/cap-web:latest'\n    environment:\n      - 'DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@cap-db:3306/${MYSQL_DATABASE:-planetscale}'\n      - 'WEB_URL=${APP_URL}'\n      - 'NEXTAUTH_URL=${APP_URL}'\n      - 'DATABASE_ENCRYPTION_KEY=${DATABASEENCRYPTIONKEY}'\n      - 'NEXTAUTH_SECRET=${NEXTAUTHSECRET}'\n      - 'CAP_AWS_ACCESS_KEY=${CAP_AWS_ACCESS_KEY:?}'\n      - 'CAP_AWS_SECRET_KEY=${CAP_AWS_SECRET_KEY:?}'\n      - 'CAP_AWS_BUCKET=${CAP_AWS_BUCKET:?}'\n      - 'CAP_AWS_REGION=${CAP_AWS_REGION:?}'\n      - 'S3_PUBLIC_ENDPOINT=${S3_PUBLIC_ENDPOINT:?}'\n      - 'S3_INTERNAL_ENDPOINT=${S3_INTERNAL_ENDPOINT:?}'\n      - NEXT_RUNTIME=nodejs\n      - 'S3_PATH_STYLE=${S3_PATH_STYLE:-true}'\n      - 'CAP_AWS_ENDPOINT=${CAP_AWS_ENDPOINT:?}'\n    depends_on:\n      cap-db:\n        condition: service_healthy\n  cap-db:\n    image: 'mysql:8.0'\n    environment:\n      - 'MYSQL_USER=${MYSQL_USER}'\n      - 'MYSQL_PASSWORD=${MYSQL_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-planetscale}'\n      - 'MYSQL_ROOT_PASSWORD=${MYSQLROOT_PASSWORD}'\n      - 'MYSQL_ALLOW_EMPTY_PASSWORD=${MYSQL_ALLOW_EMPTY_PASSWORD:-yes}'\n    command:\n      - '--max_connections=1000'\n      - '--default-authentication-plugin=mysql_native_password'\n    healthcheck:\n      test:\n        - CMD\n        - mysqladmin\n        - ping\n        - '-h'\n        - 127.0.0.1\n      interval: 10s\n      timeout: 10s\n      retries: 5\n    volumes:\n      - 'cap_db:/var/lib/mysql'\n",
+  "defaultPort": 5679,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "MYSQL_USER",
+      "value": "mysql"
+    },
+    {
+      "key": "MYSQL_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "DATABASEENCRYPTIONKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "NEXTAUTHSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQLROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "planetscale"
+    },
+    {
+      "key": "S3_PATH_STYLE",
+      "value": "true"
+    },
+    {
+      "key": "MYSQL_ALLOW_EMPTY_PASSWORD",
+      "value": "yes"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "cap",
+      "loom",
+      "open",
+      "source",
+      "low",
+      "code"
+    ],
+    "links": {
+      "docs": "https://cap.so"
+    }
+  }
+}

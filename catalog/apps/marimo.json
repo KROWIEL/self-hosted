@@ -1,0 +1,32 @@
+{
+  "slug": "marimo",
+  "name": "Marimo",
+  "description": "An open-source reactive notebook for Python — reproducible, git-friendly, SQL built-in, executable as a script, and shareable as an app.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  marimo:\n    image: 'ghcr.io/marimo-team/marimo:latest-sql'\n    environment:\n      - TOKEN_PASSWORD=${MARIMO_PASSWORD}\n    volumes:\n      - 'marimo:/app'\n    command:\n      - marimo\n      - edit\n      - '--token-password'\n      - '${MARIMO_PASSWORD}'\n      - '--port'\n      - '8080'\n      - '--host'\n      - 0.0.0.0\n    healthcheck:\n      test:\n        - CMD\n        - uvx\n        - '--with'\n        - 'httpx[cli]'\n        - httpx\n        - 'http://localhost:8080/health'\n      interval: 5s\n      timeout: 5s\n      retries: 3\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "MARIMO_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "notebook",
+      "python",
+      "data",
+      "analysis"
+    ],
+    "links": {
+      "docs": "https://marimo.io/"
+    }
+  }
+}

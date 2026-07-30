@@ -1,0 +1,46 @@
+{
+  "slug": "nodebb",
+  "name": "NodeBB",
+  "description": "A next-generation discussion platform.",
+  "category": "Communication",
+  "icon": "chat",
+  "upstream": "nodebb",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  nodebb:\n    image: 'ghcr.io/nodebb/nodebb:latest'\n    environment:\n    volumes:\n      - 'nodebb_build:/usr/src/app/build'\n      - 'nodebb_uploads:/usr/src/app/public/uploads'\n      - 'nodebb_config:/opt/config'\n    command: \"/bin/bash -c \\\" cat > /usr/src/app/setup.json <<EOL {\\n    \\\\\\\"defaults\\\\\\\": {\\n        \\\\\\\"postgres\\\\\\\": {\\n            \\\\\\\"host\\\\\\\": \\\\\\\"postgres\\\\\\\",\\n            \\\\\\\"port\\\\\\\": 5432,\\n            \\\\\\\"database\\\\\\\": \\\\\\\"nodebb\\\\\\\",\\n            \\\\\\\"username\\\\\\\": \\\\\\\"${POSTGRES_USER}\\\\\\\",\\n            \\\\\\\"password\\\\\\\": \\\\\\\"${POSTGRES_PASSWORD}\\\\\\\"\\n        }\\n    }\\n} EOL && tini -- entrypoint.sh \\\"\\n\"\n    depends_on:\n      postgres:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/4567' || exit 1\"\n      interval: 5s\n      timeout: 20s\n      retries: 3\n  postgres:\n    image: 'postgres:17.2-alpine'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - POSTGRES_DB=nodebb\n    volumes:\n      - 'nodebb_postgres_data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 4567,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Forum software built for the modern web.",
+    "license": "GPL-3.0",
+    "tags": [
+      "communication",
+      "forums",
+      "discussion"
+    ],
+    "stars": 15165,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://docs.nodebb.org/",
+      "website": "https://nodebb.org/",
+      "source": "https://github.com/NodeBB/NodeBB",
+      "demo": "https://try.nodebb.org/"
+    }
+  }
+}

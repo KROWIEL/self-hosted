@@ -1,0 +1,53 @@
+{
+  "slug": "kuzzle",
+  "name": "Kuzzle",
+  "description": "Kuzzle is a generic backend offering the basic building blocks common to every application.",
+  "category": "Backend",
+  "icon": "database",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  redis:\n    image: 'redis:7-alpine'\n    command: 'redis-server --appendonly yes'\n    volumes:\n      - 'elastic-redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  elasticsearch:\n    image: 'kuzzleio/elasticsearch:7'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:9200'\n      interval: 2s\n      timeout: 2s\n      retries: 10\n    ulimits:\n      nofile: 65536\n  kuzzle:\n    image: 'kuzzleio/kuzzle:latest'\n    environment:\n      - 'kuzzle_services__storageEngine__client__node=http://elasticsearch:9200'\n      - kuzzle_services__storageEngine__commonMapping__dynamic=true\n      - kuzzle_services__internalCache__node__host=redis\n      - kuzzle_services__memoryStorage__node__host=redis\n      - kuzzle_server__protocols__mqtt__enabled=true\n      - kuzzle_server__protocols__mqtt__developmentMode=false\n      - kuzzle_limits__loginsPerSecond=50\n      - NODE_ENV=production\n      - 'DEBUG=${DEBUG:-kuzzle:cluster:sync}'\n      - 'DEBUG_DEPTH=${DEBUG_DEPTH:-0}'\n      - 'DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}'\n      - 'DEBUG_EXPAND=${DEBUG_EXPAND:-off}'\n      - 'DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}'\n      - 'DEBUG_COLORS=${DEBUG_COLORS:-on}'\n    cap_add:\n      - SYS_PTRACE\n    ulimits:\n      nofile: 65536\n    sysctls:\n      - net.core.somaxconn=8192\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:7512/_healthcheck'\n      timeout: 1s\n      interval: 2s\n      retries: 30\n    depends_on:\n      redis:\n        condition: service_healthy\n      elasticsearch:\n        condition: service_healthy\n",
+  "defaultPort": 7512,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "DEBUG",
+      "value": "kuzzle:cluster:sync"
+    },
+    {
+      "key": "DEBUG_DEPTH",
+      "value": "0"
+    },
+    {
+      "key": "DEBUG_MAX_ARRAY",
+      "value": "100"
+    },
+    {
+      "key": "DEBUG_EXPAND",
+      "value": "off"
+    },
+    {
+      "key": "DEBUG_COLORS",
+      "value": "on"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "backend",
+      "api",
+      "realtime",
+      "websocket",
+      "mqtt",
+      "rest",
+      "sdk",
+      "iot",
+      "geofencing",
+      "low-code"
+    ],
+    "links": {
+      "docs": "https://kuzzle.io"
+    }
+  }
+}

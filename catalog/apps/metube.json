@@ -1,0 +1,32 @@
+{
+  "slug": "metube",
+  "name": "MeTube",
+  "description": "A web GUI for youtube-dl with playlist support. It enables you to effortlessly download videos from YouTube and dozens of other sites.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "metube",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  metube:\n    image: 'ghcr.io/alexta69/metube:latest'\n    environment:\n      - UID=1000\n      - GID=1000\n    volumes:\n      - 'metube-downloads:/downloads'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8081'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8081,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Web GUI for youtube-dl, with playlist support. Allows downloading videos from dozens of websites.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "youtube",
+      "download",
+      "videos",
+      "playlist"
+    ],
+    "stars": 14264,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://github.com/alexta69/metube",
+      "website": "https://github.com/alexta69/metube",
+      "source": "https://github.com/alexta69/metube"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "jupyter-notebook-python",
+  "name": "Jupyter Notebook Python",
+  "description": "Jupyter Notebook is an open-source web application that allows you to create and share documents that contain live code, equations, visualizations, and narrative text.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  jupyter-notebook-python:\n    image: 'quay.io/jupyter/base-notebook:latest'\n    environment:\n    volumes:\n      - '/jupyter:/home/jovyan/work'\n    command: start-notebook.sh\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:8888/'\n      interval: 30s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8888,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "tags": [
+      "notebook",
+      "python",
+      "data",
+      "analysis"
+    ],
+    "links": {
+      "docs": "https://jupyter.org/"
+    }
+  }
+}

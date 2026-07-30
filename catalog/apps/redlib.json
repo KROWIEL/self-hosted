@@ -1,0 +1,115 @@
+{
+  "slug": "redlib",
+  "name": "Redlib",
+  "description": "An alternative private front-end to Reddit, with its origins in Libreddit.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "redlib",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  redlib:\n    image: 'quay.io/redlib/redlib:latest'\n    environment:\n      - 'REDLIB_SFW_ONLY=${REDLIB_SFW_ONLY:-off}'\n      - 'REDLIB_BANNER=${REDLIB_BANNER:-\"\"}'\n      - 'REDLIB_ROBOTS_DISABLE_INDEXING=${REDLIB_ROBOTS_DISABLE_INDEXING:-off}'\n      - 'REDLIB_DEFAULT_FRONT_PAGE=${REDLIB_DEFAULT_FRONT_PAGE:-worldnews}'\n      - 'REDLIB_PUSHSHIFT_FRONTEND=${REDLIB_PUSHSHIFT_FRONTEND:-undelete.pullpush.io}'\n      - 'REDLIB_DEFAULT_LAYOUT=${REDLIB_DEFAULT_LAYOUT:-card}'\n      - 'REDLIB_DEFAULT_WIDE=${REDLIB_DEFAULT_WIDE:-off}'\n      - 'REDLIB_DEFAULT_POST_SORT=${REDLIB_DEFAULT_POST_SORT:-hot}'\n      - 'REDLIB_DEFAULT_COMMENT_SORT=${REDLIB_DEFAULT_COMMENT_SORT:-confidence}'\n      - 'REDLIB_DEFAULT_BLUR_SPOILER=${REDLIB_DEFAULT_BLUR_SPOILER:-off}'\n      - 'REDLIB_DEFAULT_SHOW_NSFW=${REDLIB_DEFAULT_SHOW_NSFW:-off}'\n      - 'REDLIB_DEFAULT_BLUR_NSFW=${REDLIB_DEFAULT_BLUR_NSFW:-off}'\n      - 'REDLIB_DEFAULT_USE_HLS=${REDLIB_DEFAULT_USE_HLS:-off}'\n      - 'REDLIB_DEFAULT_HIDE_HLS_NOTIFICATION=${REDLIB_DEFAULT_HIDE_HLS_NOTIFICATION:-off}'\n      - 'REDLIB_DEFAULT_AUTOPLAY_VIDEOS=${REDLIB_DEFAULT_AUTOPLAY_VIDEOS:-off}'\n      - 'REDLIB_DEFAULT_SUBSCRIPTIONS=${REDLIB_DEFAULT_SUBSCRIPTIONS:-\"\"}'\n      - 'REDLIB_DEFAULT_HIDE_AWARDS=${REDLIB_DEFAULT_HIDE_AWARDS:-off}'\n      - 'REDLIB_DEFAULT_HIDE_SIDEBAR_AND_SUMMARY=${REDLIB_DEFAULT_HIDE_SIDEBAR_AND_SUMMARY:-off}'\n      - 'REDLIB_DEFAULT_DISABLE_VISIT_REDDIT_CONFIRMATION=${REDLIB_DEFAULT_DISABLE_VISIT_REDDIT_CONFIRMATION:-off}'\n      - 'REDLIB_DEFAULT_HIDE_SCORE=${REDLIB_DEFAULT_HIDE_SCORE:-off}'\n      - 'REDLIB_DEFAULT_FIXED_NAVBAR=${REDLIB_DEFAULT_FIXED_NAVBAR:-on}'\n    user: nobody\n    security_opt:\n      - 'no-new-privileges:true'\n    cap_drop:\n      - ALL\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:8080/'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "REDLIB_SFW_ONLY",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_BANNER",
+      "value": "\"\""
+    },
+    {
+      "key": "REDLIB_ROBOTS_DISABLE_INDEXING",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_FRONT_PAGE",
+      "value": "worldnews"
+    },
+    {
+      "key": "REDLIB_PUSHSHIFT_FRONTEND",
+      "value": "undelete.pullpush.io"
+    },
+    {
+      "key": "REDLIB_DEFAULT_LAYOUT",
+      "value": "card"
+    },
+    {
+      "key": "REDLIB_DEFAULT_WIDE",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_POST_SORT",
+      "value": "hot"
+    },
+    {
+      "key": "REDLIB_DEFAULT_COMMENT_SORT",
+      "value": "confidence"
+    },
+    {
+      "key": "REDLIB_DEFAULT_BLUR_SPOILER",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_SHOW_NSFW",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_BLUR_NSFW",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_USE_HLS",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_HIDE_HLS_NOTIFICATION",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_AUTOPLAY_VIDEOS",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_SUBSCRIPTIONS",
+      "value": "\"\""
+    },
+    {
+      "key": "REDLIB_DEFAULT_HIDE_AWARDS",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_HIDE_SIDEBAR_AND_SUMMARY",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_DISABLE_VISIT_REDDIT_CONFIRMATION",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_HIDE_SCORE",
+      "value": "off"
+    },
+    {
+      "key": "REDLIB_DEFAULT_FIXED_NAVBAR",
+      "value": "on"
+    }
+  ],
+  "meta": {
+    "about": "An alternative private front-end to Reddit, with its origins in Libreddit.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "frontend",
+      "feed"
+    ],
+    "stars": 3557,
+    "updatedAt": "2026-04-24",
+    "links": {
+      "docs": "https://github.com/redlib-org/redlib",
+      "website": "https://github.com/redlib-org/redlib",
+      "source": "https://github.com/redlib-org/redlib"
+    }
+  }
+}

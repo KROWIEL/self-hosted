@@ -1,0 +1,35 @@
+{
+  "slug": "readeck",
+  "name": "Readeck",
+  "description": "Simple web application that lets you save the precious readable content of web pages you like and want to keep forever.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "readeck",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  readeck:\n    image: 'codeberg.org/readeck/readeck:latest'\n    environment:\n      - 'READECK_USE_X_FORWARDED=${READECK_USE_X_FORWARDED:-true}'\n    volumes:\n      - 'readeck_data:/readeck'\n    healthcheck:\n      test:\n        - CMD\n        - /bin/readeck\n        - healthcheck\n        - '-config'\n        - config.toml\n      interval: 30s\n      timeout: 2s\n      retries: 3\n",
+  "defaultPort": 8000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "READECK_USE_X_FORWARDED",
+      "value": "true"
+    }
+  ],
+  "meta": {
+    "about": "Save the precious readable content of web pages you like and want to keep forever. See it as a bookmark manager and a read later tool.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "read-it-later",
+      "pocket-alternative",
+      "omnivore-alternative",
+      "instapaper-alternative"
+    ],
+    "links": {
+      "docs": "https://readeck.org/en/docs/",
+      "website": "https://readeck.org/en/",
+      "source": "https://codeberg.org/readeck/readeck"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "slug": "cockpit",
+  "name": "Cockpit",
+  "description": "Cockpit is a headless content platform that is lightweight, fast and ready for takeoff.",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "cockpit",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  cockpit:\n    image: 'cockpithq/cockpit:core-latest'\n    volumes:\n      - 'cockpit-config:/var/www/html/config'\n      - 'cockpit-spaces:/var/www/html/.spaces'\n      - 'cockpit-storage:/var/www/html/storage'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '-q'\n        - '--spider'\n        - 'http://127.0.0.1/api/system/healthcheck'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Simple content platform to manage any structured content.",
+    "license": "MIT",
+    "tags": [
+      "cockpit",
+      "headless",
+      "cms",
+      "database",
+      "nosql"
+    ],
+    "stars": 742,
+    "updatedAt": "2026-07-05",
+    "links": {
+      "docs": "https://getcockpit.com/documentation/",
+      "website": "https://getcockpit.com",
+      "source": "https://github.com/Cockpit-HQ/Cockpit"
+    }
+  }
+}

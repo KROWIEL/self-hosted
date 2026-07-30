@@ -1,0 +1,138 @@
+{
+  "slug": "librechat",
+  "name": "LibreChat",
+  "description": "Self-hosted, powerful, and privacy-focused chat UI for multiple AI models",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "librechat",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  librechat:\n    image: 'ghcr.io/danny-avila/librechat-dev-api:6ecd1b510faaa593ad954fb6276c18e5f12a8e53'\n    environment:\n      - 'DOMAIN_CLIENT=${APP_URL}'\n      - 'DOMAIN_SERVER=${APP_URL}'\n      - HOST=0.0.0.0\n      - PORT=3080\n      - 'MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/librechat?authSource=admin'\n      - 'MEILI_HOST=http://meilisearch:7700'\n      - 'MEILI_MASTER_KEY=${MEILI_PASSWORD}'\n      - RAG_PORT=8000\n      - 'RAG_API_URL=http://rag-api:8000'\n      - 'JWT_SECRET=${JWT_PASSWORD}'\n      - 'JWT_REFRESH_SECRET=${JWT_PASSWORD}'\n      - 'APP_TITLE=${APP_TITLE:-LibreChat}'\n      - 'ALLOW_EMAIL_LOGIN=${ALLOW_EMAIL_LOGIN:-true}'\n      - 'ALLOW_REGISTRATION=${ALLOW_REGISTRATION:-true}'\n      - 'ALLOW_SOCIAL_LOGIN=${ALLOW_SOCIAL_LOGIN:-false}'\n      - 'ALLOW_SOCIAL_REGISTRATION=${ALLOW_SOCIAL_REGISTRATION:-false}'\n      - 'ALLOW_PASSWORD_RESET=${ALLOW_PASSWORD_RESET:-false}'\n      - 'ALLOW_UNVERIFIED_EMAIL_LOGIN=${ALLOW_UNVERIFIED_EMAIL_LOGIN:-true}'\n      - 'CREDS_KEY=${CREDS_PASSWORD}'\n      - 'CREDS_IV=${CREDS_PASSWORD}'\n      - 'ANTHROPIC_API_KEY=${SERVICE_ANTHROPIC_API_KEY:-user_provided}'\n      - 'GOOGLE_KEY=${SERVICE_GOOGLE_API_KEY:-user_provided}'\n      - 'OPENAI_API_KEY=${SERVICE_OPENAI_API_KEY:-user_provided}'\n      - 'ASSISTANTS_API_KEY=${SERVICE_ASSISTANTS_API_KEY:-user_provided}'\n      - 'DEBUG_LOGGING=${DEBUG_LOGGING:-false}'\n      - 'DEBUG_OPENAI=${DEBUG_OPENAI:-false}'\n      - 'DEBUG_PLUGINS=${DEBUG_OPENAI:-false}'\n      - 'NO_INDEX=${NO_INDEX:-true}'\n    volumes:\n      - 'librechat-images:/app/client/public/images'\n      - 'librechat-logs:/app/api/logs'\n      - 'librechat-uploads:/app/uploads'\n      -\n        type: bind\n        source: ./librechat.yaml\n        target: /app/librechat.yaml\n        content: \"version: 1.2.8\\n\"\n    depends_on:\n      mongodb:\n        condition: service_healthy\n      meilisearch:\n        condition: service_healthy\n      vectordb:\n        condition: service_healthy\n      rag-api:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--no-verbose'\n        - '--tries=1'\n        - '--spider'\n        - 'http://127.0.0.1:3080/health'\n      interval: 5s\n      timeout: 10s\n      retries: 5\n  mongodb:\n    image: 'mongo:8'\n    environment:\n      - 'MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}'\n      - 'MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}'\n    volumes:\n      - 'mongodb-data:/data/db'\n    healthcheck:\n      test:\n        - CMD\n        - mongosh\n        - '--eval'\n        - \"db.runCommand('ping').ok\"\n        - '127.0.0.1:27017/test'\n        - '--quiet'\n      interval: 5s\n      timeout: 10s\n      retries: 3\n  meilisearch:\n    image: 'getmeili/meilisearch:v1.35.1'\n    environment:\n      - 'MEILI_MASTER_KEY=${MEILI_PASSWORD}'\n      - 'MEILI_NO_ANALYTICS=${MEILI_NO_ANALYTICS:-false}'\n      - MEILI_ENV=production\n      - 'MEILI_HOST=http://meilisearch:7700'\n    volumes:\n      - 'meilisearch-data:/meili_data'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:7700/health'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n  vectordb:\n    image: 'ankane/pgvector:v0.5.1'\n    environment:\n      - POSTGRES_DB=rag\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - POSTGRES_HOST_AUTH_METHOD=trust\n    volumes:\n      - 'vectordb-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD\n        - pg_isready\n        - '--username=${POSTGRES_USER}'\n        - '--host=127.0.0.1'\n        - '--port=5432'\n        - '--dbname=rag'\n      interval: 2s\n      timeout: 1m\n      retries: 5\n      start_period: 10s\n  rag-api:\n    image: 'ghcr.io/danny-avila/librechat-rag-api-dev-lite:v0.7.3'\n    environment:\n      - POSTGRES_DB=rag\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - DB_HOST=vectordb\n      - 'DB_USER=${POSTGRES_USER}'\n      - 'DB_PASSWORD=${POSTGRES_PASSWORD}'\n      - DB_NAME=rag\n      - RAG_PORT=8000\n      - 'RAG_OPENAI_API_KEY=${SERVICE_OPENAI_API_KEY:-user_provided}'\n    depends_on:\n      vectordb:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - python\n        - '-c'\n        - \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\"\n      interval: 5s\n      timeout: 10s\n      retries: 10\n",
+  "defaultPort": 3080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "MONGO_USER",
+      "value": "mongo"
+    },
+    {
+      "key": "MONGO_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MEILI_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "JWT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "CREDS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_TITLE",
+      "value": "LibreChat"
+    },
+    {
+      "key": "ALLOW_EMAIL_LOGIN",
+      "value": "true"
+    },
+    {
+      "key": "ALLOW_REGISTRATION",
+      "value": "true"
+    },
+    {
+      "key": "ALLOW_SOCIAL_LOGIN",
+      "value": "false"
+    },
+    {
+      "key": "ALLOW_SOCIAL_REGISTRATION",
+      "value": "false"
+    },
+    {
+      "key": "ALLOW_PASSWORD_RESET",
+      "value": "false"
+    },
+    {
+      "key": "ALLOW_UNVERIFIED_EMAIL_LOGIN",
+      "value": "true"
+    },
+    {
+      "key": "SERVICE_ANTHROPIC_API_KEY",
+      "value": "user_provided"
+    },
+    {
+      "key": "SERVICE_GOOGLE_API_KEY",
+      "value": "user_provided"
+    },
+    {
+      "key": "SERVICE_OPENAI_API_KEY",
+      "value": "user_provided"
+    },
+    {
+      "key": "SERVICE_ASSISTANTS_API_KEY",
+      "value": "user_provided"
+    },
+    {
+      "key": "DEBUG_LOGGING",
+      "value": "false"
+    },
+    {
+      "key": "DEBUG_OPENAI",
+      "value": "false"
+    },
+    {
+      "key": "NO_INDEX",
+      "value": "true"
+    },
+    {
+      "key": "MEILI_NO_ANALYTICS",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "about": "Enhanced ChatGPT-compatible AI chat interface supporting multiple AI providers, with multi-user auth, message search, and plugin support.",
+    "license": "MIT",
+    "tags": [
+      "ai",
+      "chat",
+      "gpt",
+      "claude",
+      "palm",
+      "openai",
+      "azure",
+      "huggingface",
+      "anthropic",
+      "ollama",
+      "llm"
+    ],
+    "stars": 41352,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://docs.librechat.ai/install/configuration/dotenv.html",
+      "website": "https://www.librechat.ai",
+      "source": "https://github.com/danny-avila/LibreChat",
+      "demo": "https://chat.librechat.ai"
+    }
+  }
+}

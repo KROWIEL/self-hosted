@@ -1,0 +1,71 @@
+{
+  "slug": "weblate",
+  "name": "Weblate",
+  "description": "Weblate is a libre software web-based continuous localization system.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "weblate",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  weblate:\n    image: 'weblate/weblate:latest'\n    environment:\n      - WEBLATE_SITE_DOMAIN=${APP_URL}\n      - 'WEBLATE_ADMIN_NAME=${WEBLATE_ADMIN_NAME:-Admin}'\n      - 'WEBLATE_ADMIN_EMAIL=${WEBLATE_ADMIN_EMAIL:-admin@example.com}'\n      - WEBLATE_ADMIN_PASSWORD=${WEBLATE_PASSWORD}\n      - 'DEFAULT_FROM_EMAIL=${WEBLATE_ADMIN_EMAIL:-admin@example.com}'\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - POSTGRES_USER=${POSTGRES_USER}\n      - 'POSTGRES_DATABASE=${POSTGRES_DB:-weblate}'\n      - POSTGRES_HOST=postgresql\n      - POSTGRES_PORT=5432\n      - REDIS_HOST=redis\n      - REDIS_PORT=6379\n      - REDIS_PASSWORD=${REDIS_PASSWORD}\n    volumes:\n      - 'weblate-data:/app/data'\n      - 'weblate-cache:/app/cache'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8080'\n      interval: 2s\n      timeout: 10s\n      retries: 30\n  postgresql:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'postgresql-data:/var/lib/postgresql/data'\n    environment:\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n      - 'POSTGRES_DB=${POSTGRES_DB:-weblate}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n  redis:\n    image: 'redis:7-alpine'\n    command: \"--appendonly yes --requirepass ${REDIS_PASSWORD}\\n\"\n    environment:\n      - REDIS_PASSWORD=${REDIS_PASSWORD}\n    volumes:\n      - 'weblate-redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - ping\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "WEBLATE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "REDIS_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "WEBLATE_ADMIN_NAME",
+      "value": "Admin"
+    },
+    {
+      "key": "WEBLATE_ADMIN_EMAIL",
+      "value": "admin@example.com"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "weblate"
+    }
+  ],
+  "meta": {
+    "about": "Web-based translation tool with tight version control integration.",
+    "license": "GPL-3.0",
+    "tags": [
+      "localization",
+      "translation",
+      "web",
+      "web-based",
+      "continuous",
+      "libre",
+      "software"
+    ],
+    "stars": 6000,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://weblate.org",
+      "website": "https://weblate.org",
+      "source": "https://github.com/WeblateOrg/weblate"
+    }
+  }
+}

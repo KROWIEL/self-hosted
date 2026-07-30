@@ -1,0 +1,41 @@
+{
+  "slug": "siyuan",
+  "name": "SiYuan",
+  "description": "A privacy-first, self-hosted, fully open source personal knowledge management software, written in typescript and golang.",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "siyuan",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  siyuan:\n    image: 'b3log/siyuan:v3.3.5'\n    volumes:\n      - 'siyuan_workspace:/siyuan/workspace'\n    environment:\n      - 'TZ=${TZ:-UTC}'\n      - PUID=1000\n      - PGID=1000\n      - 'SIYUAN_ACCESS_AUTH_CODE=${SIYUAN_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--spider'\n        - '--quiet'\n        - 'http://127.0.0.1:6806/api/system/version'\n      interval: 15s\n      timeout: 10s\n      retries: 5\n      start_period: 20s\n",
+  "defaultPort": 6806,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "SIYUAN_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TZ",
+      "value": "UTC"
+    }
+  ],
+  "meta": {
+    "about": "A privacy-first personal knowledge management software, written in typescript and golang.",
+    "license": "AGPL-3.0",
+    "tags": [
+      "note-taking",
+      "markdown",
+      "pkm"
+    ],
+    "stars": 45458,
+    "updatedAt": "2026-07-21",
+    "links": {
+      "docs": "https://github.com/siyuan-note/siyuan",
+      "website": "https://b3log.org/siyuan/",
+      "source": "https://github.com/siyuan-note/siyuan"
+    }
+  }
+}

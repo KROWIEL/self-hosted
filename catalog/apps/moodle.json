@@ -1,0 +1,64 @@
+{
+  "slug": "moodle",
+  "name": "Moodle",
+  "description": "Moodle is the world’s most customisable and trusted eLearning solution that empowers educators to improve our world.",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "moodle",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  mariadb:\n    image: 'mariadb:11.1'\n    environment:\n      - ALLOW_EMPTY_PASSWORD=no\n      - MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}\n      - MYSQL_DATABASE=bitnami_moodle\n      - MYSQL_USER=${MARIADB_USER}\n      - MYSQL_PASSWORD=${MARIADB_PASSWORD}\n      - MARIADB_CHARACTER_SET=utf8mb4\n      - MARIADB_COLLATE=utf8mb4_unicode_ci\n    volumes:\n      - 'mariadb-data:/var/lib/mysql'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c '</dev/tcp/localhost/3306'\"\n      interval: 10s\n      timeout: 5s\n      retries: 5\n  moodle:\n    image: 'docker.io/bitnamilegacy/moodle:4.3'\n    depends_on:\n      - mariadb\n    environment:\n      - MOODLE_DATABASE_HOST=mariadb\n      - MOODLE_DATABASE_PORT_NUMBER=3306\n      - MOODLE_DATABASE_USER=${MARIADB_USER}\n      - MOODLE_DATABASE_NAME=bitnami_moodle\n      - MOODLE_DATABASE_PASSWORD=${MARIADB_PASSWORD}\n      - ALLOW_EMPTY_PASSWORD=no\n      - 'MOODLE_USERNAME=${MOODLE_USERNAME:-user}'\n      - MOODLE_PASSWORD=${MOODLE_PASSWORD}\n      - MOODLE_EMAIL=user@example.com\n      - 'MOODLE_SITE_NAME=${MOODLE_SITE_NAME:-New Site}'\n    volumes:\n      - 'moodle-data:/bitnami/moodle'\n      - 'moodledata-data:/bitnami/moodledata'\n    healthcheck:\n      test:\n        - CMD\n        - php\n        - '-r'\n        - \"exit(file_exists('/opt/bitnami/moodle/config.php') ? 0 : 1);\"\n      interval: 20s\n      timeout: 10s\n      retries: 5\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MARIADB_USER",
+      "value": "mariadb"
+    },
+    {
+      "key": "MARIADB_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MOODLE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MOODLE_USERNAME",
+      "value": "user"
+    },
+    {
+      "key": "MOODLE_SITE_NAME",
+      "value": "New Site"
+    }
+  ],
+  "meta": {
+    "about": "Learning and courses platform with one of the largest open source communities worldwide.",
+    "license": "GPL-3.0",
+    "tags": [
+      "moodle",
+      "elearning",
+      "education",
+      "lms",
+      "cms",
+      "open",
+      "source",
+      "low",
+      "code"
+    ],
+    "links": {
+      "docs": "https://moodle.org",
+      "website": "https://moodle.org/",
+      "source": "https://git.moodle.org/gw",
+      "demo": "https://moodle.org/demo/"
+    }
+  }
+}

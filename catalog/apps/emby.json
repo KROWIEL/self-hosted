@@ -1,0 +1,31 @@
+{
+  "slug": "emby",
+  "name": "Emby",
+  "description": "A media server software that allows you to organize, stream, and access your multimedia content effortlessly.",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "emby",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  emby:\n    image: 'lscr.io/linuxserver/emby:latest'\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - TZ=Europe/Madrid\n    volumes:\n      - 'emby-config:/config'\n      - 'emby-tvshows:/tvshows'\n      - 'emby-movies:/movies'\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:8096'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8096,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Home media server supporting both DLNA and DIAL (Chromecast) devices out-of-the-box.",
+    "license": "⊘ Proprietary",
+    "tags": [
+      "media",
+      "server",
+      "movies",
+      "tv",
+      "music"
+    ],
+    "links": {
+      "docs": "https://emby.media/support/articles/Home.html",
+      "website": "https://emby.media/",
+      "source": "https://emby.media/"
+    }
+  }
+}

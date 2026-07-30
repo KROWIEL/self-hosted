@@ -1,0 +1,80 @@
+{
+  "slug": "affine",
+  "name": "Affine",
+  "description": "Affine is an open-source, all-in-one workspace and OS for knowledge management, a Notion/Miro alternative.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  affine:\n    image: 'ghcr.io/toeverything/affine:stable'\n    depends_on:\n      redis:\n        condition: service_healthy\n      postgres:\n        condition: service_healthy\n    volumes:\n      - 'affine-config:/root/.affine/config'\n      - 'affine-storage:/root/.affine/storage'\n    logging:\n      driver: json-file\n      options:\n        max-size: 1000m\n    environment:\n      - AFFINE_CONFIG_PATH=/root/.affine/config\n      - REDIS_SERVER_HOST=redis\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-affine}'\n      - NODE_ENV=production\n      - AFFINE_SERVER_HOST=${APP_URL}\n      - AFFINE_SERVER_EXTERNAL_URL=${APP_URL}\n      - 'MAILER_HOST=${MAILER_HOST}'\n      - 'MAILER_PORT=${MAILER_PORT}'\n      - 'MAILER_USER=${MAILER_USER}'\n      - 'MAILER_PASSWORD=${MAILER_PASSWORD}'\n      - 'MAILER_SENDER=${MAILER_SENDER}'\n      - 'COPILOT_FAL_API_KEY=${COPILOT_FAL_API_KEY}'\n      - 'COPILOT_PERPLEXITY_API_KEY=${COPILOT_PERPLEXITY_API_KEY}'\n      - 'COPILOT_OPENAI_API_KEY=${COPILOT_OPENAI_API_KEY}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/3010' || exit 1\"\n      interval: 5s\n      timeout: 20s\n      retries: 3\n  affine_migration:\n    exclude_from_hc: true\n    image: 'ghcr.io/toeverything/affine:${AFFINE_REVISION:-stable}'\n    restart: on-failure\n    volumes:\n      - 'affine-storage:/root/.affine/storage'\n      - 'affine-config:/root/.affine/config'\n    command:\n      - sh\n      - '-c'\n      - 'node ./scripts/self-host-predeploy.js'\n    environment:\n      - REDIS_SERVER_HOST=redis\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-affine}'\n      - AFFINE_INDEXER_ENABLED=false\n    depends_on:\n      postgres:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n  redis:\n    image: redis:latest\n    volumes:\n      - 'affine-redis-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - redis-cli\n        - '--raw'\n        - incr\n        - ping\n      interval: 10s\n      timeout: 5s\n      retries: 5\n  postgres:\n    image: 'pgvector/pgvector:pg16'\n    volumes:\n      - 'affine-postgres-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U affine'\n      interval: 10s\n      timeout: 5s\n      retries: 5\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-affine}'\n      - PGDATA=/var/lib/postgresql/data/pgdata\n",
+  "defaultPort": 3010,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "affine"
+    },
+    {
+      "key": "MAILER_HOST",
+      "value": ""
+    },
+    {
+      "key": "MAILER_PORT",
+      "value": ""
+    },
+    {
+      "key": "MAILER_USER",
+      "value": ""
+    },
+    {
+      "key": "MAILER_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "MAILER_SENDER",
+      "value": ""
+    },
+    {
+      "key": "COPILOT_FAL_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "COPILOT_PERPLEXITY_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "COPILOT_OPENAI_API_KEY",
+      "secret": true
+    },
+    {
+      "key": "AFFINE_REVISION",
+      "value": "stable"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "knowledge-management",
+      "notion",
+      "miro",
+      "workspace"
+    ],
+    "links": {
+      "docs": "https://docs.affine.pro/docs/self-host-affine"
+    }
+  }
+}

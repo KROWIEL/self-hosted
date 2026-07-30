@@ -34,5 +34,18 @@
       "key": "TZ",
       "value": "UTC"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Browse, read and download eBooks using an existing Calibre database.",
+    "license": "GPL-3.0",
+    "tags": [
+      "Document Management - E-books"
+    ],
+    "stars": 17755,
+    "updatedAt": "2026-05-24",
+    "links": {
+      "website": "https://github.com/janeczku/calibre-web",
+      "source": "https://github.com/janeczku/calibre-web"
+    }
+  }
 }

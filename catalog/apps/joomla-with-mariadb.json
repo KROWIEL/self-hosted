@@ -1,0 +1,46 @@
+{
+  "slug": "joomla-with-mariadb",
+  "name": "Joomla With Mariadb",
+  "description": "Joomla! is the mobile-ready and user-friendly way to build your website. Choose from thousands of features and designs. Joomla! is free and open source.",
+  "category": "CMS",
+  "icon": "globe",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  joomla:\n    image: 'joomla:latest'\n    volumes:\n      - 'joomla_data:/var/www/html'\n    environment:\n      - JOOMLA_DB_HOST=mariadb\n      - 'JOOMLA_DB_USER=${JOOMLA_USER}'\n      - 'JOOMLA_DB_PASSWORD=${JOOMLA_PASSWORD}'\n      - 'JOOMLA_DB_NAME=${MYSQL_DATABASE:-joomla-db}'\n    depends_on:\n      mariadb:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1'\n      interval: 2s\n      timeout: 10s\n      retries: 10\n  mariadb:\n    image: 'mariadb:11'\n    volumes:\n      - 'joomla_mariadb_data:/var/lib/mysql'\n    environment:\n      - 'MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}'\n      - 'MYSQL_DATABASE=${MYSQL_DATABASE:-joomla-db}'\n      - 'MYSQL_USER=${JOOMLA_USER}'\n      - 'MYSQL_PASSWORD=${JOOMLA_PASSWORD}'\n    healthcheck:\n      test:\n        - CMD\n        - healthcheck.sh\n        - '--connect'\n        - '--innodb_initialized'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "JOOMLA_USER",
+      "value": "joomla"
+    },
+    {
+      "key": "JOOMLA_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ROOT_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "MYSQL_DATABASE",
+      "value": "joomla-db"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "cms",
+      "blog",
+      "content",
+      "management",
+      "mariadb"
+    ],
+    "links": {
+      "docs": "https://joomla.org"
+    }
+  }
+}

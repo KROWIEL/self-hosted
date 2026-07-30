@@ -23,5 +23,18 @@
       "key": "STORAGE_DIR",
       "value": "/app/server/storage"
     }
-  ]
+  ],
+  "meta": {
+    "about": "All-in-one desktop & Docker AI application with built-in RAG, AI agents, No-code agent builder, MCP compatibility, and more.",
+    "license": "MIT",
+    "tags": [
+      "Generative Artificial Intelligence (GenAI)"
+    ],
+    "stars": 63978,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://anythingllm.com/",
+      "source": "https://github.com/Mintplex-Labs/anything-llm"
+    }
+  }
 }

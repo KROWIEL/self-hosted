@@ -1,0 +1,47 @@
+This product includes software and data developed by third parties.
+
+================================================================================
+Coolify service templates
+================================================================================
+
+Portions of the app catalog under `catalog/apps/` are derived from the service
+templates published by Coolify (coollabs.io).
+
+    Source:    https://github.com/coollabsio/coolify
+    File:      templates/service-templates.json
+    Copyright: Coolify contributors
+    License:   Apache License, Version 2.0
+               https://www.apache.org/licenses/LICENSE-2.0
+
+Manifests carrying `"source": "coolify"` were generated from those templates by
+`tools/catalog/import-coolify.mjs`. The compose documents were modified: Coolify's
+generated-value placeholders (`SERVICE_FQDN_*`, `SERVICE_PASSWORD_*`,
+`SERVICE_USER_*`, `SERVICE_BASE64_*` and related forms) were rewritten into plain
+Compose variables declared through this project's `envDefaults`, image references
+were given explicit tags, and the surrounding metadata was restructured into this
+project's manifest schema. The short app descriptions are Coolify's, unmodified.
+
+Coolify is not affiliated with this project and does not endorse it.
+
+================================================================================
+awesome-selfhosted-data
+================================================================================
+
+`tools/catalog/sync.mjs` reads the software list published by the
+awesome-selfhosted project to track upstream activity, releases and licensing. No
+part of that dataset is redistributed in this repository; it is fetched at run
+time into an ignored cache directory.
+
+    Source:    https://github.com/awesome-selfhosted/awesome-selfhosted-data
+    License:   Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+               https://creativecommons.org/licenses/by-sa/3.0/
+
+================================================================================
+Third-party container images
+================================================================================
+
+The catalog references container images published by their respective upstream
+projects. Those images are downloaded directly from their registries at install
+time and are governed by their own licenses; this project neither redistributes
+nor relicenses them. Application names and logos are trademarks of their
+respective owners and are used here only to identify the software.

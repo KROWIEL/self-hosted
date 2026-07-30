@@ -1,0 +1,38 @@
+{
+  "slug": "audiobookshelf",
+  "name": "Audiobookshelf",
+  "description": "Self-hosted audiobook, ebook, and podcast server",
+  "category": "Media",
+  "icon": "media",
+  "upstream": "audiobookshelf",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  audiobookshelf:\n    image: 'ghcr.io/advplyr/audiobookshelf:2.34.0'\n    environment:\n      - 'TZ=${TIMEZONE:-America/Toronto}'\n    volumes:\n      - 'audiobookshelf-audiobooks:/audiobooks'\n      - 'audiobookshelf-podcasts:/podcasts'\n      - 'audiobookshelf-config:/config'\n      - 'audiobookshelf-metadata:/metadata'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget --quiet --tries=1 --timeout=5 http://localhost:80/ping -O /dev/null || exit 1'\n      interval: 30s\n      timeout: 10s\n      retries: 3\n      start_period: 15s\n",
+  "defaultPort": 80,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "TIMEZONE",
+      "value": "America/Toronto"
+    }
+  ],
+  "meta": {
+    "about": "Audiobook and podcast server. It streams all audio formats, keeps and syncs progress across devices. Comes with open-source apps for Android and iOS.",
+    "license": "GPL-3.0",
+    "tags": [
+      "audiobooks",
+      "ebooks",
+      "podcasts",
+      "server",
+      "self-hosted"
+    ],
+    "stars": 13728,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://www.audiobookshelf.org/",
+      "website": "https://www.audiobookshelf.org/",
+      "source": "https://github.com/advplyr/audiobookshelf"
+    }
+  }
+}

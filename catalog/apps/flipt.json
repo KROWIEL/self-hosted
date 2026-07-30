@@ -1,0 +1,32 @@
+{
+  "slug": "flipt",
+  "name": "Flipt",
+  "description": "Flipt is a fully managed feature flag solution that enables you to keep your feature flags and remote config next to your code in Git.",
+  "category": "Backend",
+  "icon": "database",
+  "upstream": "flipt",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  flipt:\n    image: 'docker.flipt.io/flipt/flipt:latest'\n    volumes:\n      - 'flipt-data:/var/opt/flipt'\n    environment:\n    healthcheck:\n      test:\n        - CMD\n        - wget\n        - '--spider'\n        - '--quiet'\n        - 'http://127.0.0.1:8080'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [],
+  "meta": {
+    "about": "Feature flag solution with support for multiple data backends (alternative to LaunchDarkly).",
+    "license": "GPL-3.0",
+    "tags": [
+      "feature flags",
+      "devops",
+      "ci",
+      "cd"
+    ],
+    "stars": 4859,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://docs.flipt.io/cloud/overview",
+      "website": "https://flipt.io",
+      "source": "https://github.com/flipt-io/flipt"
+    }
+  }
+}

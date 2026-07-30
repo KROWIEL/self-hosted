@@ -27,5 +27,18 @@
       "key": "NODE_ENV",
       "value": "production"
     }
-  ]
+  ],
+  "meta": {
+    "about": "Just a blogging platform.",
+    "license": "MIT",
+    "tags": [
+      "Blogging Platforms"
+    ],
+    "stars": 54574,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "website": "https://ghost.org/",
+      "source": "https://github.com/TryGhost/Ghost"
+    }
+  }
 }

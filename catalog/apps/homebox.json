@@ -1,0 +1,62 @@
+{
+  "slug": "homebox",
+  "name": "Homebox",
+  "description": "Homebox is the inventory and organization system built for the Home User.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  homebox:\n    image: 'ghcr.io/sysadminsmedia/homebox:latest'\n    environment:\n      - 'HBOX_OPTIONS_ALLOW_REGISTRATION=${HBOX_OPTIONS_ALLOW_REGISTRATION:-false}'\n      - 'HBOX_LOG_LEVEL=${HBOX_LOG_LEVEL:-info}'\n      - 'HBOX_LOG_FORMAT=${HBOX_LOG_FORMAT:-text}'\n      - 'HBOX_WEB_MAX_UPLOAD_SIZE=${HBOX_WEB_MAX_UPLOAD_SIZE:-10}'\n      - 'HBOX_MAILER_HOST=${HBOX_MAILER_HOST}'\n      - 'HBOX_MAILER_PORT=${HBOX_MAILER_PORT:-587}'\n      - 'HBOX_MAILER_USERNAME=${HBOX_MAILER_USERNAME}'\n      - 'HBOX_MAILER_PASSWORD=${HBOX_MAILER_PASSWORD}'\n      - 'HBOX_MAILER_FROM=${HBOX_MAILER_FROM}'\n    volumes:\n      - 'homebox-data:/data'\n    healthcheck:\n      test:\n        - CMD\n        - sh\n        - '-c'\n        - 'wget --method=GET -qO- http://localhost:7745/api/v1/status > /dev/null || exit 1'\n      interval: 30s\n      timeout: 5s\n      retries: 10\n",
+  "defaultPort": 7745,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "HBOX_OPTIONS_ALLOW_REGISTRATION",
+      "value": "false"
+    },
+    {
+      "key": "HBOX_LOG_LEVEL",
+      "value": "info"
+    },
+    {
+      "key": "HBOX_LOG_FORMAT",
+      "value": "text"
+    },
+    {
+      "key": "HBOX_WEB_MAX_UPLOAD_SIZE",
+      "value": "10"
+    },
+    {
+      "key": "HBOX_MAILER_HOST",
+      "value": ""
+    },
+    {
+      "key": "HBOX_MAILER_PORT",
+      "value": "587"
+    },
+    {
+      "key": "HBOX_MAILER_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "HBOX_MAILER_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "HBOX_MAILER_FROM",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "tags": [
+      "inventory",
+      "home",
+      "organize"
+    ],
+    "links": {
+      "docs": "https://github.com/sysadminsmedia/homebox"
+    }
+  }
+}

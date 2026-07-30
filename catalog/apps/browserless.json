@@ -1,0 +1,32 @@
+{
+  "slug": "browserless",
+  "name": "Browserless",
+  "description": "A headless Chrome browser as a service.",
+  "category": "DevTools",
+  "icon": "code",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  browserless:\n    image: ghcr.io/browserless/chromium:latest\n    environment:\n      - TOKEN=${BROWSERLESS_PASSWORD}\n    expose:\n      - 3000\n    healthcheck:\n      test:\n        - CMD\n        - curl\n        - '-f'\n        - 'http://127.0.0.1:3000/docs'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "BROWSERLESS_PASSWORD",
+      "secret": true,
+      "required": true
+    }
+  ],
+  "meta": {
+    "tags": [
+      "chrome",
+      "headless",
+      "browser",
+      "service"
+    ],
+    "links": {
+      "docs": "https://docs.browserless.io/"
+    }
+  }
+}

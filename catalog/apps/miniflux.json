@@ -30,5 +30,18 @@
       "secret": true,
       "required": true
     }
-  ]
+  ],
+  "meta": {
+    "about": "Minimalist news reader.",
+    "license": "Apache-2.0",
+    "tags": [
+      "Feed Readers"
+    ],
+    "stars": 9522,
+    "updatedAt": "2026-07-23",
+    "links": {
+      "website": "https://miniflux.app/",
+      "source": "https://github.com/miniflux/v2"
+    }
+  }
 }

@@ -1,0 +1,83 @@
+{
+  "slug": "labelstudio",
+  "name": "Labelstudio",
+  "description": "Label Studio is a multi-type data labeling and annotation tool with standardized output format",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  labelstudio:\n    image: 'heartexlabs/label-studio:latest'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    environment:\n      - 'CSRF_TRUSTED_ORIGINS=${APP_URL}'\n      - 'EXPERIMENTAL_FEATURES=${EXPERIMENTAL_FEATURES:-false}'\n      - 'DJANGO_DB=${DJANGO_DB:-default}'\n      - 'POSTGRE_NAME=${POSTGRES_DB:-labelstudio}'\n      - 'POSTGRE_USER=${POSTGRES_USER}'\n      - 'POSTGRE_PASSWORD=${POSTGRES_PASSWORD}'\n      - POSTGRE_PORT=5432\n      - POSTGRE_HOST=postgres\n      - 'LABEL_STUDIO_HOST=${APP_URL}'\n      - 'SSRF_PROTECTION_ENABLED=${SSRF_PROTECTION_ENABLED:-true}'\n      - 'LABEL_STUDIO_DISABLE_SIGNUP_WITHOUT_LINK=${LABEL_STUDIO_DISABLE_SIGNUP_WITHOUT_LINK:-true}'\n      - 'DATA_UPLOAD_MAX_NUMBER_FILES=${DATA_UPLOAD_MAX_NUMBER_FILES:-10000}'\n      - 'LABEL_STUDIO_USERNAME=${LABEL_STUDIO_USERNAME:-admin@example.com}'\n      - 'LABEL_STUDIO_PASSWORD=${LABELSTUDIO_PASSWORD}'\n      - 'LABEL_STUDIO_DISABLE_SIGNUP_WITHOUT_LINK=${LABEL_STUDIO_DISABLE_SIGNUP_WITHOUT_LINK:-true}'\n    volumes:\n      - 'labelstudio-data:/label-studio/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'curl -f http://localhost:8080/health || exit 1'\n      interval: 5s\n      timeout: 20s\n      retries: 3\n  postgres:\n    image: 'postgres:16-alpine'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-labelstudio}'\n    volumes:\n      - 'pg-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -h localhost -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 3\n",
+  "defaultPort": 8080,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "LABELSTUDIO_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "EXPERIMENTAL_FEATURES",
+      "value": "false"
+    },
+    {
+      "key": "DJANGO_DB",
+      "value": "default"
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "labelstudio"
+    },
+    {
+      "key": "SSRF_PROTECTION_ENABLED",
+      "value": "true"
+    },
+    {
+      "key": "LABEL_STUDIO_DISABLE_SIGNUP_WITHOUT_LINK",
+      "value": "true"
+    },
+    {
+      "key": "DATA_UPLOAD_MAX_NUMBER_FILES",
+      "value": "10000"
+    },
+    {
+      "key": "LABEL_STUDIO_USERNAME",
+      "value": "admin@example.com"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "workflow",
+      "orchestration",
+      "data-pipeline",
+      "python",
+      "labelstudio",
+      "ai",
+      "elasticsearch",
+      "datasets",
+      "data",
+      "machine-learning",
+      "data-science",
+      "nlp",
+      "images",
+      "vision"
+    ],
+    "links": {
+      "docs": "https://labelstud.io/guide/"
+    }
+  }
+}

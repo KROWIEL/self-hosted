@@ -1,0 +1,115 @@
+{
+  "slug": "argilla",
+  "name": "Argilla",
+  "description": "Argilla is a collaboration tool for AI engineers and domain experts who need to build high-quality datasets for their projects.",
+  "category": "AI",
+  "icon": "ai",
+  "upstream": "none",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  argilla:\n    image: 'argilla/argilla-server:v2.2.0'\n    environment:\n      - ARGILLA_HOME_PATH=/var/lib/argilla\n      - 'ARGILLA_ELASTICSEARCH=http://elasticsearch:9200'\n      - 'ARGILLA_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}'\n      - 'ARGILLA_REDIS_URL=redis://redis:6379/0'\n      - 'ARGILLA_AUTH_SECRET_KEY=${AUTHSECRET}'\n      - 'ARGILLA_ENABLE_TELEMETRY=${ARGILLA_ENABLE_TELEMETRY:-0}'\n      - 'HF_HUB_DISABLE_TELEMETRY=${HF_HUB_DISABLE_TELEMETRY:-1}'\n      - 'REINDEX_DATASETS=${REINDEX_DATASETS:-1}'\n      - 'DEFAULT_USER_ENABLED=${DEFAULT_USER_ENABLED:-true}'\n      - 'USERNAME=${ARGILLA_USERNAME:-argilla}'\n      - 'PASSWORD=${ARGILLA_PASSWORD}'\n      - 'API_KEY=${APIKEY}'\n      - 'DEFAULT_USER_PASSWORD=${ARGILLA_PASSWORD}'\n      - 'DEFAULT_USER_API_KEY=${APIKEY}'\n      - 'WORKSPACE=${WORKSPACE:-default}'\n    depends_on:\n      elasticsearch:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n      postgres:\n        condition: service_healthy\n    volumes:\n      - 'argilla-data:/var/lib/argilla'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'python -c \"import requests as r;r.get(\\\"http://localhost:6900/api/_status\\\").raise_for_status()\"'\n      interval: 10s\n      timeout: 10s\n      retries: 5\n  worker:\n    image: 'argilla/argilla-server:v2.2.0'\n    environment:\n      - ARGILLA_HOME_PATH=/var/lib/argilla\n      - 'ARGILLA_ELASTICSEARCH=http://elasticsearch:9200'\n      - 'ARGILLA_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}'\n      - 'ARGILLA_REDIS_URL=redis://redis:6379/0'\n      - 'ARGILLA_AUTH_SECRET_KEY=${AUTHSECRET}'\n      - 'ARGILLA_ENABLE_TELEMETRY=${ARGILLA_ENABLE_TELEMETRY:-0}'\n      - 'HF_HUB_DISABLE_TELEMETRY=${HF_HUB_DISABLE_TELEMETRY:-1}'\n      - 'REINDEX_DATASETS=${REINDEX_DATASETS:-1}'\n      - 'DEFAULT_USER_ENABLED=${DEFAULT_USER_ENABLED:-true}'\n      - 'USERNAME=${ARGILLA_USERNAME:-argilla}'\n      - 'PASSWORD=${ARGILLA_PASSWORD}'\n      - 'API_KEY=${APIKEY}'\n      - 'DEFAULT_USER_PASSWORD=${ARGILLA_PASSWORD}'\n      - 'DEFAULT_USER_API_KEY=${APIKEY}'\n      - 'BACKGROUND_NUM_WORKERS=${BACKGROUND_NUM_WORKERS:-1}'\n      - 'WORKSPACE=${WORKSPACE:-default}'\n    depends_on:\n      elasticsearch:\n        condition: service_healthy\n      redis:\n        condition: service_healthy\n      postgres:\n        condition: service_healthy\n    volumes:\n      - 'argilla-data:/var/lib/argilla'\n    command: \"sh -c 'python -m argilla_server worker --num-workers $${BACKGROUND_NUM_WORKERS}'\"\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - pwd\n      interval: 10s\n      timeout: 10s\n      retries: 5\n  postgres:\n    image: 'postgres:14'\n    environment:\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-argilla}'\n    volumes:\n      - 'pg-data:/var/lib/postgresql/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -h localhost -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 5s\n      retries: 3\n  redis:\n    image: 'redis:7'\n    volumes:\n      - 'redis-data:/data'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'redis-cli -h localhost -p 6379 ping'\n      interval: 5s\n      timeout: 5s\n      retries: 3\n  elasticsearch:\n    image: 'docker.elastic.co/elasticsearch/elasticsearch:8.12.2'\n    environment:\n      - 'node.name=${NODE_NAME:-elasticsearch}'\n      - 'cluster.name=${CLUSTER_NAME:-es-argilla-local}'\n      - 'discovery.type=${DISCOVERY_TYPE:-single-node}'\n      - 'ES_JAVA_OPTS=${ES_JAVA_OPTS:-\"-Xms512m -Xmx512m\"}'\n      - 'cluster.routing.allocation.disk.threshold_enabled=${CLUSTER_ROUTING_ALLOCATION_DISK_THRESHOLD_ENABLED:-false}'\n      - 'xpack.security.enabled=${XPACK_SECURITY_ENABLED:-false}'\n    ulimits:\n      memlock:\n        soft: -1\n        hard: -1\n    volumes:\n      - 'elasticsearch-data:/usr/share/elasticsearch/data/'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'curl --silent --fail http://elasticsearch:9200'\n      interval: 10s\n      timeout: 10s\n      retries: 5\n",
+  "defaultPort": 6900,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "AUTHSECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "ARGILLA_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APIKEY",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    },
+    {
+      "key": "ARGILLA_ENABLE_TELEMETRY",
+      "value": "0"
+    },
+    {
+      "key": "HF_HUB_DISABLE_TELEMETRY",
+      "value": "1"
+    },
+    {
+      "key": "REINDEX_DATASETS",
+      "value": "1"
+    },
+    {
+      "key": "DEFAULT_USER_ENABLED",
+      "value": "true"
+    },
+    {
+      "key": "ARGILLA_USERNAME",
+      "value": "argilla"
+    },
+    {
+      "key": "WORKSPACE",
+      "value": "default"
+    },
+    {
+      "key": "BACKGROUND_NUM_WORKERS",
+      "value": "1"
+    },
+    {
+      "key": "NODE_NAME",
+      "value": "elasticsearch"
+    },
+    {
+      "key": "CLUSTER_NAME",
+      "value": "es-argilla-local"
+    },
+    {
+      "key": "DISCOVERY_TYPE",
+      "value": "single-node"
+    },
+    {
+      "key": "ES_JAVA_OPTS",
+      "value": "\"-Xms512m -Xmx512m\""
+    },
+    {
+      "key": "CLUSTER_ROUTING_ALLOCATION_DISK_THRESHOLD_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "XPACK_SECURITY_ENABLED",
+      "value": "false"
+    }
+  ],
+  "meta": {
+    "tags": [
+      "workflow",
+      "orchestration",
+      "data-pipeline",
+      "python",
+      "argilla",
+      "ai",
+      "elasticsearch",
+      "datasets",
+      "data",
+      "machine-learning",
+      "data-science",
+      "nlp"
+    ],
+    "links": {
+      "docs": "https://docs.argilla.io/latest/"
+    }
+  }
+}

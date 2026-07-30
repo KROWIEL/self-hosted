@@ -1,0 +1,85 @@
+{
+  "slug": "rallly",
+  "name": "Rallly",
+  "description": "Rallly is an open-source scheduling and collaboration tool designed to make organizing events and meetings easier.",
+  "category": "Productivity",
+  "icon": "note",
+  "upstream": "rallly",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  rallly_db:\n    image: 'postgres:14.2'\n    volumes:\n      - 'rallly_db_data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'\n      - 'POSTGRES_USER=${POSTGRES_USER}'\n      - 'POSTGRES_DB=${POSTGRES_DB:-rallly}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n  rallly:\n    image: 'lukevella/rallly:latest'\n    platform: linux/amd64\n    depends_on:\n      rallly_db:\n        condition: service_healthy\n    environment:\n      - 'DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@rallly_db:5432/${POSTGRES_DB:-rallly}'\n      - 'SECRET_PASSWORD=${RALLLY_PASSWORD}'\n      - 'NEXT_PUBLIC_BASE_URL=${APP_URL}'\n      - 'ALLOWED_EMAILS=${ALLOWED_EMAILS}'\n      - 'SUPPORT_EMAIL=${SUPPORT_EMAIL:-support@example.com}'\n      - 'SMTP_HOST=${SMTP_HOST}'\n      - 'SMTP_PORT=${SMTP_PORT}'\n      - 'SMTP_SECURE=${SMTP_SECURE:-false}'\n      - 'SMTP_USER=${SMTP_USER}'\n      - 'SMTP_PWD=${SMTP_PWD}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - \"bash -c ':> /dev/tcp/127.0.0.1/3000' || exit 1\"\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "POSTGRES_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": "postgres"
+    },
+    {
+      "key": "RALLLY_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "APP_URL",
+      "required": true
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": "rallly"
+    },
+    {
+      "key": "ALLOWED_EMAILS",
+      "value": ""
+    },
+    {
+      "key": "SUPPORT_EMAIL",
+      "value": "support@example.com"
+    },
+    {
+      "key": "SMTP_HOST",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PORT",
+      "value": ""
+    },
+    {
+      "key": "SMTP_SECURE",
+      "value": "false"
+    },
+    {
+      "key": "SMTP_USER",
+      "value": ""
+    },
+    {
+      "key": "SMTP_PWD",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Create polls to vote on dates and times (alternative to Doodle).",
+    "license": "AGPL-3.0",
+    "tags": [
+      "scheduling",
+      "rallly",
+      "events",
+      "meeting",
+      "doodle"
+    ],
+    "stars": 5179,
+    "updatedAt": "2026-07-27",
+    "links": {
+      "docs": "https://support.rallly.co/self-hosting/introduction",
+      "website": "https://rallly.co",
+      "source": "https://github.com/lukevella/rallly",
+      "demo": "https://app.rallly.co"
+    }
+  }
+}

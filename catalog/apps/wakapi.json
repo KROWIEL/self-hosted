@@ -1,0 +1,129 @@
+{
+  "slug": "wakapi",
+  "name": "Wakapi",
+  "description": "A minimalist, self-hosted WakaTime-compatible backend for coding statistics",
+  "category": "Analytics",
+  "icon": "chart",
+  "upstream": "wakapi",
+  "source": "coolify",
+  "deployKind": "compose",
+  "composeFile": "docker-compose.yml",
+  "composeYaml": "services:\n  wakapi:\n    image: 'ghcr.io/muety/wakapi:latest'\n    environment:\n      - 'TZ=${TIMEZONE:-Europe/Berlin}'\n      - 'WAKAPI_SERVER_LISTEN_IPV6=\"-\"'\n      - 'WAKAPI_ENV=${WAKAPI_ENVIRONMENT:-production}'\n      - 'WAKAPI_SECURITY_PASSWORD_SALT=${PASSWORDSALT_SECRET}'\n      - 'WAKAPI_SECURITY_EXPOSE_METRICS=${WAKAPI_SECURITY_EXPOSE_METRICS:-false}'\n      - WAKAPI_DB_TYPE=postgres\n      - 'WAKAPI_DB_NAME=${WAKAPI_DB_NAME:-wakapi}'\n      - 'WAKAPI_DB_USER=${DATABASE_USER}'\n      - 'WAKAPI_DB_PASSWORD=${DATABASE_PASSWORD}'\n      - 'WAKAPI_DB_HOST=${WAKAPI_DB_HOST:-postgres}'\n      - 'WAKAPI_DB_PORT=${WAKAPI_DB_PORT:-5432}'\n      - 'WAKAPI_MAIL_ENABLED=${WAKAPI_MAIL_ENABLED:-false}'\n      - WAKAPI_MAIL_PROVIDER=smtp\n      - 'WAKAPI_MAIL_SENDER=${WAKAPI_MAIL_SENDER}'\n      - 'WAKAPI_MAIL_SMTP_HOST=${WAKAPI_MAIL_SMTP_HOST}'\n      - 'WAKAPI_MAIL_SMTP_PORT=${WAKAPI_MAIL_SMTP_PORT:-587}'\n      - 'WAKAPI_MAIL_SMTP_USER=${WAKAPI_MAIL_SMTP_USERNAME}'\n      - 'WAKAPI_MAIL_SMTP_PASS=${WAKAPI_MAIL_SMTP_PASSWORD}'\n      - 'WAKAPI_MAIL_SMTP_TLS=${WAKAPI_MAIL_SMTP_TLS:-true}'\n      - 'WAKAPI_ALLOW_SIGNUP=${WAKAPI_ALLOW_SIGNUP:-true}'\n      - 'WAKAPI_LEADERBOARD_ENABLED=${WAKAPI_LEADERBOARD_ENABLED:-true}'\n      - 'WAKAPI_DISABLE_FRONTPAGE=${WAKAPI_DISABLE_FRONTPAGE:-true}'\n      - 'WAKAPI_PUBLIC_URL=${WAKAPI_PUBLIC_URL}'\n    volumes:\n      - 'wakapi-data:/data'\n    depends_on:\n      postgres:\n        condition: service_healthy\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'wget -qO- http://127.0.0.1:3000/'\n      interval: 2s\n      timeout: 10s\n      retries: 15\n  postgres:\n    image: 'postgres:16-alpine'\n    volumes:\n      - 'wakapi-postgres-data:/var/lib/postgresql/data'\n    environment:\n      - 'POSTGRES_USER=${DATABASE_USER}'\n      - 'POSTGRES_PASSWORD=${DATABASE_PASSWORD}'\n      - 'POSTGRES_DB=${WAKAPI_DB_NAME:-wakapi}'\n      - 'POSTGRES_PORT=${WAKAPI_DB_PORT:-5432}'\n    healthcheck:\n      test:\n        - CMD-SHELL\n        - 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'\n      interval: 5s\n      timeout: 20s\n      retries: 10\n",
+  "defaultPort": 3000,
+  "recommendedVolumes": [],
+  "envDefaults": [
+    {
+      "key": "PASSWORDSALT_SECRET",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "DATABASE_USER",
+      "value": "database"
+    },
+    {
+      "key": "DATABASE_PASSWORD",
+      "secret": true,
+      "required": true
+    },
+    {
+      "key": "TIMEZONE",
+      "value": "Europe/Berlin"
+    },
+    {
+      "key": "WAKAPI_ENVIRONMENT",
+      "value": "production"
+    },
+    {
+      "key": "WAKAPI_SECURITY_EXPOSE_METRICS",
+      "value": "false"
+    },
+    {
+      "key": "WAKAPI_DB_NAME",
+      "value": "wakapi"
+    },
+    {
+      "key": "WAKAPI_DB_HOST",
+      "value": "postgres"
+    },
+    {
+      "key": "WAKAPI_DB_PORT",
+      "value": "5432"
+    },
+    {
+      "key": "WAKAPI_MAIL_ENABLED",
+      "value": "false"
+    },
+    {
+      "key": "WAKAPI_MAIL_SENDER",
+      "value": ""
+    },
+    {
+      "key": "WAKAPI_MAIL_SMTP_HOST",
+      "value": ""
+    },
+    {
+      "key": "WAKAPI_MAIL_SMTP_PORT",
+      "value": "587"
+    },
+    {
+      "key": "WAKAPI_MAIL_SMTP_USERNAME",
+      "value": ""
+    },
+    {
+      "key": "WAKAPI_MAIL_SMTP_PASSWORD",
+      "secret": true
+    },
+    {
+      "key": "WAKAPI_MAIL_SMTP_TLS",
+      "value": "true"
+    },
+    {
+      "key": "WAKAPI_ALLOW_SIGNUP",
+      "value": "true"
+    },
+    {
+      "key": "WAKAPI_LEADERBOARD_ENABLED",
+      "value": "true"
+    },
+    {
+      "key": "WAKAPI_DISABLE_FRONTPAGE",
+      "value": "true"
+    },
+    {
+      "key": "WAKAPI_PUBLIC_URL",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_USER",
+      "value": ""
+    },
+    {
+      "key": "POSTGRES_DB",
+      "value": ""
+    }
+  ],
+  "meta": {
+    "about": "Tracking tool for coding statistics, compatible with WakaTime.",
+    "license": "GPL-3.0",
+    "tags": [
+      "productivity",
+      "self-hosted",
+      "developer-tools",
+      "time-tracker",
+      "wakatime",
+      "wakatime-api",
+      "coding-statistics",
+      "statistics",
+      "timetracking",
+      "analytics"
+    ],
+    "stars": 4384,
+    "updatedAt": "2026-07-22",
+    "links": {
+      "docs": "https://wakapi.dev/",
+      "website": "https://wakapi.dev/",
+      "source": "https://github.com/muety/wakapi"
+    }
+  }
+}
