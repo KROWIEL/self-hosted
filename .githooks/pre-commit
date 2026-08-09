@@ -6,20 +6,46 @@
 # Enable once per clone:
 #   git config core.hooksPath .githooks
 #
-# Install gitleaks:
+# Uses the gitleaks binary when it is on PATH, otherwise falls back to Docker.
+# Install it natively to skip the container startup:
 #   macOS:    brew install gitleaks
 #   Windows:  scoop install gitleaks   (or winget install gitleaks.gitleaks)
 #   Linux:    see the releases page
 
-if ! command -v gitleaks >/dev/null 2>&1; then
-  echo "[pre-commit] WARNING: gitleaks is not installed — skipping secret scan."
+set -e
+
+if command -v gitleaks >/dev/null 2>&1; then
+  # `protect` was replaced by `git --staged` in gitleaks 8.19; support both so
+  # the hook works with whatever version a contributor already has.
+  if gitleaks git --help >/dev/null 2>&1; then
+    SCAN="gitleaks git --staged"
+  else
+    SCAN="gitleaks protect --staged"
+  fi
+elif docker info >/dev/null 2>&1; then
+  ROOT=$(git rev-parse --show-toplevel)
+  case "$(uname -s)" in
+    MINGW* | MSYS* | CYGWIN*)
+      # Docker Desktop wants a native path, and MSYS must not rewrite /repo.
+      ROOT=$(cygpath -w "$ROOT")
+      MSYS_NO_PATHCONV=1
+      export MSYS_NO_PATHCONV
+      ;;
+  esac
+  SCAN="docker run --rm -v $ROOT:/repo -w /repo zricethezav/gitleaks:latest git --staged"
+else
+  echo "[pre-commit] WARNING: neither gitleaks nor Docker is available — skipping secret scan."
   echo "[pre-commit] Strongly recommended: https://github.com/gitleaks/gitleaks"
   exit 0
 fi
 
 echo "[pre-commit] Scanning staged changes for secrets…"
-gitleaks protect --staged --redact --config .gitleaks.toml
-if [ $? -ne 0 ]; then
+set +e
+$SCAN --redact --no-banner --config .gitleaks.toml .
+status=$?
+set -e
+
+if [ $status -ne 0 ]; then
   echo ""
   echo "[pre-commit] BLOCKED: a potential secret was found in your staged changes."
   echo "[pre-commit] Remove it, move it to .env / a secret manager, or (if it is a"

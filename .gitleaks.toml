@@ -5,16 +5,25 @@ title = "self-hosted secret scan"
 [extend]
 useDefault = true
 
-[allowlist]
+[[allowlists]]
 description = "Example / placeholder files and non-secret public keys"
 paths = [
   '''\.env\.example$''',
-  # Public keys are not secrets (the private signing key is gitignored).
-  '''tools/license-issuer/keys/public\.pem$''',
+  # The embedded verification key is public by design; the matching private
+  # signing key lives in a separate repository and is never checked in.
   '''apps/control-plane/src/common/licensing/license\.ts$''',
+  # Fixture: a stub PEM asserting the certificate parser rejects malformed input.
+  '''services/agent/internal/certs/certs_test\.go$''',
 ]
 regexes = [
   # Obvious dev placeholders shipped in .env.example.
   '''change-me[-a-z0-9]*''',
   '''changeme[0-9]*''',
 ]
+
+[[allowlists]]
+description = "Catalog images pinned to a git SHA, which reads as a generic API key"
+condition = "AND"
+regexTarget = "line"
+paths = ['''catalog/apps/.*\.json$''']
+regexes = ['''image: '[^']+:[0-9a-f]{40}''']

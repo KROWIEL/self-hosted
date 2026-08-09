@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      # The whole history, not just the push range: a secret is just as exposed
+      # in an old commit as in a new one.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan history with gitleaks
+        run: >
+          docker run --rm -v "$PWD:/repo" -w /repo zricethezav/gitleaks:latest
+          git --redact --no-banner --config .gitleaks.toml .
+
   js:
     name: Control plane & web
     runs-on: ubuntu-latest
