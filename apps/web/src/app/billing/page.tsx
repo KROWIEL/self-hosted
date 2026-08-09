@@ -21,6 +21,9 @@ const BUY_URL: Record<Exclude<LicenseTier, 'free'>, string> = {
   pro:
     process.env.NEXT_PUBLIC_BUY_PRO_URL ??
     'https://sh.example.com/buy?tier=pro',
+  enterprise:
+    process.env.NEXT_PUBLIC_BUY_ENTERPRISE_URL ??
+    'https://sh.example.com/buy?tier=enterprise',
 };
 
 /** Pro add-on modules, in display order (mirrors ALL_MODULES in shared). */
@@ -38,11 +41,23 @@ const PRO_MODULES = [
   'email',
 ] as const;
 
-/** Tier ordering for upgrade/downgrade comparisons (free < homelab < pro). */
+/**
+ * Why the licence server turned this machine away. Anything not listed here is
+ * a network problem rather than a verdict, and reads as "offline".
+ */
+const ACTIVATION_PROBLEM: Record<string, TKey> = {
+  seat_limit: 'billing.activation.seatLimit',
+  hardware_mismatch: 'billing.activation.otherMachine',
+  hardware_required: 'billing.activation.hostHidden',
+  fleet_secret: 'billing.activation.fleetSecret',
+};
+
+/** Tier ordering for upgrade/downgrade comparisons (free < homelab < pro < enterprise). */
 const TIER_RANK: Record<LicenseTier, number> = {
   free: 0,
   homelab: 1,
   pro: 2,
+  enterprise: 3,
 };
 
 /** A single scannable capability: a short title plus an optional "why" line. */
@@ -191,7 +206,11 @@ function BillingContent() {
                 />
                 {entitlements.activation.ok
                   ? t('billing.activation.online')
-                  : t('billing.activation.offline')}
+                  : t(
+                      ACTIVATION_PROBLEM[
+                        entitlements.activation.reason ?? ''
+                      ] ?? 'billing.activation.offline',
+                    )}
                 {entitlements.activation.lastCheckAt != null && (
                   <span className="text-neutral-500">
                     · {t('billing.activation.lastCheck')}:{' '}
@@ -333,6 +352,26 @@ function BillingContent() {
           }))}
         />
       </div>
+
+      {/* Enterprise is bought by an organisation for a fleet rather than by a
+          person for a machine, so it sits apart from the three-way comparison. */}
+      <div className="mt-4">
+        <PlanCard
+          tier="enterprise"
+          price={t('billing.price.enterprise')}
+          period={t('billing.perMonth')}
+          current={entitlements.tier === 'enterprise'}
+          lowerThanCurrent={TIER_RANK.enterprise < currentRank}
+          wide
+          features={[
+            feat('billing.feat.enterprise.allPro'),
+            feat('billing.feat.enterprise.fleet'),
+            feat('billing.feat.enterprise.resell'),
+            feat('billing.feat.enterprise.transfers'),
+            feat('billing.feat.enterprise.support'),
+          ]}
+        />
+      </div>
     </>
   );
 }
@@ -381,6 +420,7 @@ function PlanCard({
   current,
   lowerThanCurrent = false,
   highlight = false,
+  wide = false,
 }: {
   tier: LicenseTier;
   price: string;
@@ -391,6 +431,8 @@ function PlanCard({
   current: boolean;
   lowerThanCurrent?: boolean;
   highlight?: boolean;
+  /** Full-width card: features read across columns instead of down one. */
+  wide?: boolean;
 }) {
   const { t } = useI18n();
   const name = t(`billing.tier.${tier}` as TKey);
@@ -411,7 +453,13 @@ function PlanCard({
         <span className="text-2xl font-semibold text-white">{price}</span>
         <span className="text-sm text-neutral-500">{period}</span>
       </div>
-      <ul className="mt-4 space-y-2.5">
+      <ul
+        className={
+          wide
+            ? 'mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3'
+            : 'mt-4 space-y-2.5'
+        }
+      >
         {features.map((f, i) => (
           <FeatureItem key={i} feature={f} />
         ))}
@@ -439,7 +487,7 @@ function PlanCard({
           href={BUY_URL[tier]}
           target="_blank"
           rel="noopener noreferrer"
-          className={`mt-5 block w-full text-center ${
+          className={`mt-5 block text-center ${wide ? 'sm:w-64' : 'w-full'} ${
             highlight ? 'btn-primary' : 'btn-ghost'
           }`}
         >

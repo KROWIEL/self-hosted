@@ -1,5 +1,6 @@
 import { createPublicKey, verify as edVerify } from 'crypto';
 import {
+  ALL_TIERS,
   Entitlements,
   FREE_ENTITLEMENTS,
   LicensePayload,
@@ -68,7 +69,7 @@ export function verifyLicenseKey(key: string): LicensePayload | null {
 
     const payload = JSON.parse(payloadBuf.toString('utf8')) as LicensePayload;
     if (!payload || typeof payload !== 'object') return null;
-    if (!['free', 'homelab', 'pro'].includes(payload.tier)) return null;
+    if (!ALL_TIERS.includes(payload.tier)) return null;
     return payload;
   } catch {
     return null;

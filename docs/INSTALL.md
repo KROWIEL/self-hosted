@@ -166,10 +166,12 @@ Agent-only variables (set on each node) live in
 |---|---|
 | `NEXT_PUBLIC_API_URL` | API base URL used by the web app |
 | `PUBLIC_API_URL` / `APP_BASE_URL` | Externally reachable URLs, needed for OIDC redirects behind a domain |
-| `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL` | Checkout links on the Billing page |
+| `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL` / `NEXT_PUBLIC_BUY_ENTERPRISE_URL` | Checkout links on the Billing page |
 | `LICENSE_KEY` | Pin a license key instead of activating it in the UI |
 | `LICENSE_PUBLIC_KEY` | Override the verification key if you issue your own licenses |
 | `LICENSE_ACTIVATION_URL` | Enable online activation (see [`LICENSING.md`](LICENSING.md)) |
+| `LICENSE_RELEASE_URL` | Where removing a key frees the machine; defaults to the activation URL with `/activate` → `/release` |
+| `LICENSE_FLEET_SECRET` | Enterprise only: the secret issued with a fleet licence, without which the key activates nothing |
 
 Generate strong secrets, e.g.:
 

@@ -990,7 +990,7 @@ interface AuthResult {
 
 // ---- Commercial licensing / entitlements (mirror @selfhosted/shared) ----
 
-export type LicenseTier = 'free' | 'homelab' | 'pro';
+export type LicenseTier = 'free' | 'homelab' | 'pro' | 'enterprise';
 
 export type LicenseModule =
   | 'reverse-tunnels'

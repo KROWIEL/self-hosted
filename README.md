@@ -143,8 +143,17 @@ per-seat metering.
 | **Free** | $0 forever | Full core (see below); **1 node**, **0 tunnels** |
 | **Home-Lab** | ~$3 / mo | Core **+** reverse tunnels **+** service cron; **3 nodes / 3 tunnels** |
 | **Pro** | ~$15 / mo | Core **+ every module** (all 11 below); unlimited nodes & tunnels |
+| **Enterprise** | ~$999 / mo | Everything Pro unlocks, licensed to a company: **one key for a fleet of up to 5000 installations** — for hosting providers running the panel for their customers, and for companies running it across an estate |
 
 <sub>*Suggested pricing — you set the final numbers in your own store. Details in [`docs/LICENSING.md`](docs/LICENSING.md).</sub>
+
+The first three are personal: one key runs on one machine at a time and moves
+with you. With online activation the seller's server recognises that machine by
+hashed marks of its hardware, so a key cannot quietly run on two — see
+[`docs/LICENSING.md`](docs/LICENSING.md), including what to mount when the panel
+runs in a container. Enterprise is the one bought by an organisation, and it is
+the only tier that seats a whole fleet on a single key; it carries a fleet
+secret instead of being tied to any machine.
 
 **The free core includes:** git / image / compose deploys, templates & Nixpacks,
 the complete app catalog, automatic HTTPS + custom PEMs, managed Postgres/MySQL with
@@ -311,8 +320,16 @@ Open-core: **ядро бесплатно навсегда**. Платные та
 | **Free** | $0 навсегда | Полное ядро (см. ниже); **1 нода**, **0 туннелей** |
 | **Home-Lab** | ~$3 / мес | Ядро **+** обратные туннели **+** service cron; **3 ноды / 3 туннеля** |
 | **Pro** | ~$15 / мес | Ядро **+ все модули** (все 11 ниже); без лимитов по нодам и туннелям |
+| **Enterprise** | ~$999 / мес | Всё то же, что в Pro, но лицензия на компанию: **один ключ на парк до 5000 установок** — для хостеров, которые дают панель своим клиентам, и для компаний со своим парком машин |
 
 <sub>*Рекомендованные цены — финальные вы задаёте в своём магазине. Подробнее в [`docs/LICENSING.md`](docs/LICENSING.md).</sub>
+
+Первые три тарифа личные: ключ работает на одной машине и переезжает вместе с
+вами. При онлайн-активации сервер продавца узнаёт эту машину по хешам признаков
+железа, поэтому тихо запустить ключ на второй не выйдет — подробности и то, что
+нужно пробросить в контейнер, в [`docs/LICENSING.md`](docs/LICENSING.md).
+Enterprise — единственный, который покупает организация, и единственный, где на
+одном ключе живёт целый парк машин; вместо привязки к железу у него секрет парка.
 
 **Бесплатное ядро включает:** деплой git / image / compose, шаблоны и Nixpacks,
 полный каталог приложений, автоматический HTTPS + свой PEM, managed

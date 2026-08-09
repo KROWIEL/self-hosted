@@ -22,6 +22,59 @@ The panel supports two modes, chosen by the operator via `.env`:
   window (`LICENSE_ACTIVATION_MAX_AGE_MS`). This enables revocation and seat
   limits. The activation server is seller-side and not distributed here.
 
+  A key is licensed to a fixed number of machines, so removing or replacing it
+  in **Billing** also tells the server this installation is done with it and the
+  place can go to another machine. That call goes to `LICENSE_RELEASE_URL`,
+  which defaults to the activation URL with `/activate` swapped for `/release`;
+  set it explicitly if the seller's endpoint sits elsewhere. It is best effort —
+  if it does not land, the customer can unbind the machine from the seller's
+  portal instead.
+
+### What the heartbeat says about this machine
+
+A licence sold for one machine has to be able to tell which one, and the
+installation's own instance id cannot answer that — it lives in this panel's
+database and travels with a copy of it. So the heartbeat also carries a few
+hashed marks of the host: the systemd machine-id, the DMI product uuid and board
+serial where readable, and a coarse profile of processor and memory
+(`apps/control-plane/src/common/licensing/hardware.ts`).
+
+Each mark is an HMAC keyed by the licence key itself. No identifier leaves the
+machine in the clear, and the same host under two different licences produces
+two unrelated sets of marks, so nothing here can be used to correlate
+installations. A seller can only ask "is this the same machine as last time".
+
+In a container none of those files describe the host, so mount the host's own
+copies read-only:
+
+```yaml
+volumes:
+  - /etc/machine-id:/host/etc/machine-id:ro
+  - /sys/class/dmi/id:/host/sys/class/dmi/id:ro
+```
+
+Without them the panel logs a warning once and activates on the instance id
+alone, which a seller is free to refuse (`hardware_required`). Running the
+control plane directly on the host needs no configuration: `/etc/machine-id` is
+world-readable and is enough on its own.
+
+An activation refused with `hardware_mismatch` means the key is in use on a
+different machine; unbind the old one in the seller's customer portal.
+
+### Fleet licences
+
+An Enterprise key covers a whole estate, so it is not pinned to any machine.
+What vouches for a machine instead is a fleet secret issued with the licence and
+deployed beside the key:
+
+```
+LICENSE_FLEET_SECRET=shf_…
+```
+
+Without it the server answers `fleet_secret` and the key unlocks nothing, which
+is what keeps a leaked company key harmless. The secret can be reissued from the
+customer portal if it escapes.
+
 ## Tiers
 
 | Tier | Price (suggested) | What it unlocks |
@@ -29,6 +82,14 @@ The panel supports two modes, chosen by the operator via `.env`:
 | **Free** | $0 forever | Full core: git / image / compose deploys, templates & Nixpacks, the **complete app catalog**, HTTPS + custom PEMs, managed DBs, volumes, logs & live metrics, projects, RBAC, 2FA (**1 node**, **0 tunnels**) |
 | **Home-Lab** | ~$3 / mo | Everything in Free **+** `reverse-tunnels` **+** `service-cron`, up to **3 nodes** and **3 tunnels** |
 | **Pro** | ~$15 / mo | Everything + **all 11 modules** below, **unlimited** nodes & tunnels |
+| **Enterprise** | ~$999 / mo | Exactly what Pro unlocks, licensed to an organisation: **one key across a fleet of up to 5000 installations**, for hosting providers running the panel for their customers and for companies running it across an estate |
+
+Free, Home-Lab and Pro are personal: one key covers one machine at a time, and
+moving it means unbinding the old one. Enterprise is the only tier that seats
+many machines on a single key. Nothing in *this* repository is aware of that
+difference — a key's tier decides what one installation may do, and how many
+installations share the key is a question for the activation server, which
+answers `seat_limit` when a licence is full.
 
 ### Quantitative limits
 
@@ -40,6 +101,7 @@ creation; mirror of `TIER_LIMITS` in `packages/shared/src/licensing.ts`):
 | **Free** | 1 | 0 (module locked) |
 | **Home-Lab** | 3 | 3 |
 | **Pro** | unlimited | unlimited |
+| **Enterprise** | unlimited | unlimited |
 
 ### Gated modules
 
@@ -63,8 +125,9 @@ the key payload).
 
 Tier → modules mapping lives in `packages/shared/src/licensing.ts`
 (`TIER_MODULES`); `Home-Lab = [reverse-tunnels, service-cron]`, `Pro = all
-modules`. Adding a new gated module is a one-line change there plus a
-`@RequiresModule('...')` on the backend and (optionally) a nav/page guard.
+modules`, `Enterprise = all modules`. Adding a new gated module is a one-line
+change there plus a `@RequiresModule('...')` on the backend and (optionally) a
+nav/page guard.
 
 ## Architecture
 
@@ -124,8 +187,9 @@ export class BackupsController { /* ... */ }
 1. Purchase a plan; you receive a license key by email.
 2. In the panel, go to **Billing → License key** (admin) and paste it — or set
    `LICENSE_KEY` in your `.env`.
-3. Point checkout links via `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL`
-   if you self-host a store.
+3. Point checkout links via `NEXT_PUBLIC_BUY_HOMELAB_URL`,
+   `NEXT_PUBLIC_BUY_PRO_URL` and `NEXT_PUBLIC_BUY_ENTERPRISE_URL` if you
+   self-host a store.
 
 The signing/issuing side (private key, key generator, store webhook) lives in the
 seller's private tooling and is intentionally not distributed here.

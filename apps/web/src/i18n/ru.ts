@@ -925,6 +925,14 @@ export const ru: Dict = {
   'billing.activation.online': 'Активировано онлайн',
   'billing.activation.offline': 'Ожидание активации — платные модули заблокированы, пока сервер лицензий недоступен',
   'billing.activation.lastCheck': 'последняя проверка',
+  'billing.activation.seatLimit':
+    'Ключ уже занят другой машиной. Удалите его там — или отвяжите ту машину в личном кабинете на сайте, где покупали, — и вставьте ключ здесь заново.',
+  'billing.activation.otherMachine':
+    'Ключ активирован на другой машине. Лицензия живёт на одной машине за раз: отвяжите старую в личном кабинете на сайте, где покупали, — и эта установка активируется на следующей попытке.',
+  'billing.activation.hostHidden':
+    'Сервер лицензий не понимает, что это за машина. Если панель работает в контейнере, пробросьте в него /etc/machine-id только на чтение в /host/etc/machine-id и перезапустите.',
+  'billing.activation.fleetSecret':
+    'Корпоративной лицензии нужен секрет парка. Пропишите на этой машине LICENSE_FLEET_SECRET из письма о покупке или перевыпустите секрет в личном кабинете.',
   'billing.unlockedModules': 'Открытые модули',
   'billing.noModules': 'Только базовые функции',
   'billing.licenseKey': 'Ключ лицензии',
@@ -950,9 +958,11 @@ export const ru: Dict = {
   'billing.price.free': '$0',
   'billing.price.homelab': '$3',
   'billing.price.pro': '$15',
+  'billing.price.enterprise': '$999',
   'billing.tier.free': 'Free',
   'billing.tier.homelab': 'Home-Lab',
   'billing.tier.pro': 'Pro',
+  'billing.tier.enterprise': 'Enterprise',
   // Тариф Free — базовый PaaS, лицензия не нужна.
   'billing.feat.free.deploy.title': 'Git, образ и Compose-деплой',
   'billing.feat.free.deploy.desc':
@@ -994,6 +1004,22 @@ export const ru: Dict = {
   'billing.feat.pro.unlimited.title': 'Неограниченные ноды и туннели',
   'billing.feat.pro.unlimited.desc':
     'Масштабируйтесь на любое число серверов и публикуйте сколько угодно сервисов — без ограничений.',
+  // Тариф Enterprise — та же панель, но лицензия компании на весь парк машин.
+  'billing.feat.enterprise.allPro.title': 'Всё из Pro',
+  'billing.feat.enterprise.allPro.desc':
+    'Все модули, неограниченные ноды и туннели — та же панель, только лицензия оформлена на компанию, а не на человека.',
+  'billing.feat.enterprise.fleet.title': 'Один ключ на 5000 машин',
+  'billing.feat.enterprise.fleet.desc':
+    'Личные тарифы лицензируют одну машину. Этот — весь парк: сколько бы панелей ни было, ключ один.',
+  'billing.feat.enterprise.resell.title': 'Панель для ваших клиентов',
+  'billing.feat.enterprise.resell.desc':
+    'Сделано для хостеров: клиенты получают панель на ваших машинах, под вашим брендом и по вашей лицензии.',
+  'billing.feat.enterprise.transfers.title': 'Машины приходят и уходят свободно',
+  'billing.feat.enterprise.transfers.desc':
+    'Привязывайте и отвязывайте установки по мере того, как их поднимают и выводят, — без пауз между переносами.',
+  'billing.feat.enterprise.support.title': 'Приоритетная поддержка',
+  'billing.feat.enterprise.support.desc':
+    'Прямая линия по внедрению и инцидентам, вне общей очереди.',
   'billing.proModulesTitle': 'Все модули Pro',
   // Ценность каждого модуля (что делает + зачем это нужно).
   'billing.moduleDesc.reverse-tunnels':

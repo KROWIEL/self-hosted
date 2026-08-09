@@ -923,6 +923,14 @@ export const en = {
   'billing.activation.online': 'Activated online',
   'billing.activation.offline': 'Awaiting activation — paid modules are locked until the license server is reachable',
   'billing.activation.lastCheck': 'last check',
+  'billing.activation.seatLimit':
+    'This key is already in use on another machine. Remove it there — or unbind that machine in the customer portal where you bought it — then paste the key here again.',
+  'billing.activation.otherMachine':
+    'This key was activated on a different machine. A licence covers one machine at a time: unbind the old one in the customer portal where you bought it, and this installation will activate on its next attempt.',
+  'billing.activation.hostHidden':
+    'The licence server cannot tell which machine this is. If the control plane runs in a container, mount /etc/machine-id read-only at /host/etc/machine-id and restart it.',
+  'billing.activation.fleetSecret':
+    'This company licence needs its fleet secret. Set LICENSE_FLEET_SECRET on this machine to the value from your purchase email, or issue a new one from the customer portal.',
   'billing.unlockedModules': 'Unlocked modules',
   'billing.noModules': 'Core features only',
   'billing.licenseKey': 'License key',
@@ -948,9 +956,11 @@ export const en = {
   'billing.price.free': '$0',
   'billing.price.homelab': '$3',
   'billing.price.pro': '$15',
+  'billing.price.enterprise': '$999',
   'billing.tier.free': 'Free',
   'billing.tier.homelab': 'Home-Lab',
   'billing.tier.pro': 'Pro',
+  'billing.tier.enterprise': 'Enterprise',
   // Free tier — the core PaaS, no license required.
   'billing.feat.free.deploy.title': 'Git, image & Compose deploys',
   'billing.feat.free.deploy.desc':
@@ -992,6 +1002,22 @@ export const en = {
   'billing.feat.pro.unlimited.title': 'Unlimited nodes & tunnels',
   'billing.feat.pro.unlimited.desc':
     'Scale across as many servers and expose as many services as you need — no caps.',
+  // Enterprise tier — the same panel, licensed to a company for a whole fleet.
+  'billing.feat.enterprise.allPro.title': 'Everything in Pro',
+  'billing.feat.enterprise.allPro.desc':
+    'Every module, unlimited nodes and tunnels — the same panel, licensed for a company instead of a person.',
+  'billing.feat.enterprise.fleet.title': 'One key for up to 5000 machines',
+  'billing.feat.enterprise.fleet.desc':
+    'The personal plans license one machine each. This one licenses a fleet, so an estate of panels runs on a single key.',
+  'billing.feat.enterprise.resell.title': 'Run it for your customers',
+  'billing.feat.enterprise.resell.desc':
+    'Built for hosting providers: your customers get the panel on your machines, under your brand, on your licence.',
+  'billing.feat.enterprise.transfers.title': 'Machines come and go freely',
+  'billing.feat.enterprise.transfers.desc':
+    'Bind and unbind installations as you build and retire them, with no waiting period between transfers.',
+  'billing.feat.enterprise.support.title': 'Priority support',
+  'billing.feat.enterprise.support.desc':
+    'A direct line for rollout questions and incidents, ahead of the normal queue.',
   'billing.proModulesTitle': 'Every Pro module',
   // Per-module value propositions (what it does + why it matters).
   'billing.moduleDesc.reverse-tunnels':

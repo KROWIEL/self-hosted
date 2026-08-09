@@ -5,12 +5,18 @@
  *
  * The model is intentionally simple and offline-verifiable: the whole
  * installation carries a single signed license (Ed25519). No license = the
- * generous Free core. A license upgrades the instance to Home-Lab or Pro and
- * may unlock individual add-on modules.
+ * generous Free core. A license upgrades the instance to Home-Lab, Pro or
+ * Enterprise and may unlock individual add-on modules.
  */
 
-/** Commercial tiers. `free` is the default when no valid license is present. */
-export type LicenseTier = 'free' | 'homelab' | 'pro';
+/**
+ * Commercial tiers. `free` is the default when no valid license is present.
+ *
+ * `enterprise` unlocks exactly what `pro` does: the difference between them is
+ * not what one installation may do but how many installations one key covers,
+ * which is a question for the activation server, not for this file.
+ */
+export type LicenseTier = 'free' | 'homelab' | 'pro' | 'enterprise';
 
 /**
  * Individually gateable add-on modules. A tier grants a set of these (see
@@ -49,6 +55,7 @@ export const TIER_MODULES: Record<LicenseTier, LicenseModule[]> = {
   free: [],
   homelab: ['reverse-tunnels', 'service-cron'],
   pro: [...ALL_MODULES],
+  enterprise: [...ALL_MODULES],
 };
 
 /**
@@ -68,6 +75,7 @@ export const TIER_LIMITS: Record<LicenseTier, TierLimits> = {
   free: { maxNodes: 1, maxTunnels: 0 },
   homelab: { maxNodes: 3, maxTunnels: 3 },
   pro: { maxNodes: null, maxTunnels: null },
+  enterprise: { maxNodes: null, maxTunnels: null },
 };
 
 /** The caps for a given tier (falls back to the Free caps for unknown tiers). */
@@ -80,11 +88,15 @@ export const TIER_RANK: Record<LicenseTier, number> = {
   free: 0,
   homelab: 1,
   pro: 2,
+  enterprise: 3,
 };
+
+/** Every known tier, low → high. */
+export const ALL_TIERS: LicenseTier[] = ['free', 'homelab', 'pro', 'enterprise'];
 
 /** The lowest tier that grants a given module (for "upgrade to X" prompts). */
 export function minTierFor(module: LicenseModule): LicenseTier {
-  const tiers: LicenseTier[] = ['free', 'homelab', 'pro'];
+  const tiers: LicenseTier[] = ALL_TIERS;
   for (const tier of tiers) {
     if (TIER_MODULES[tier].includes(module)) return tier;
   }
