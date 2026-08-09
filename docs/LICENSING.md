@@ -3,6 +3,25 @@
 This panel is **open-core**: a generous free core drives adoption, and paid tiers
 unlock add-on modules through a signed, offline-verifiable license key.
 
+> **Buyers:** activate a paid plan under **Billing → License key** (admin only), or
+> set the `LICENSE_KEY` env var. No key ⇒ the free core.
+>
+> **Note:** the seller-side license *issuer* (the private signing key + key
+> generator) is **not** part of this repository. This repo only contains the
+> offline *verifier* (a public key) — that is by design and safe to publish.
+
+## Activation modes
+
+The panel supports two modes, chosen by the operator via `.env`:
+
+- **Offline / key-only** (default, no `LICENSE_ACTIVATION_URL`): the key is
+  verified locally (signature + expiry). Works air-gapped.
+- **Online activation** (`LICENSE_ACTIVATION_URL` set): the panel sends a
+  periodic heartbeat to an activation server. Paid modules stay unlocked only
+  while a recent heartbeat succeeded; without contact they lock after the grace
+  window (`LICENSE_ACTIVATION_MAX_AGE_MS`). This enables revocation and seat
+  limits. The activation server is seller-side and not distributed here.
+
 ## Tiers
 
 | Tier | Price (suggested) | What it unlocks |
@@ -52,7 +71,7 @@ modules`. Adding a new gated module is a one-line change there plus a
 ```
 Seller side                         Customer's installation
 -----------                         -----------------------
-tools/license-issuer  --sign-->     LICENSE KEY  --paste-->  Billing page
+licensing service     --sign-->     LICENSE KEY  --paste-->  Billing page
   (private key)                                                  │
                                                                  ▼
                                              control-plane verifies (public key)
@@ -100,29 +119,13 @@ export class BackupsController { /* ... */ }
 - `app/billing/page.tsx` — current plan, key activation (admin), pricing + buy links.
 - Sidebar shows a lock on gated items that aren't unlocked.
 
-## Selling
+## Activating a paid plan (buyers)
 
-The panel is sold from Belarus, where merchant-of-record platforms (Lemon
-Squeezy / Paddle / Polar) don't onboard sellers. Instead, a self-hosted payment
-microservice (private `self-hosted-pay` repo, deployed at `sh.example.com`) handles
-checkout via a Belarusian payment provider (bePaid / Priorbank acquiring),
-issues the signed key, and emails it to the buyer.
+1. Purchase a plan; you receive a license key by email.
+2. In the panel, go to **Billing → License key** (admin) and paste it — or set
+   `LICENSE_KEY` in your `.env`.
+3. Point checkout links via `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL`
+   if you self-host a store.
 
-1. Generate a signing keypair once: `tools/license-issuer/keygen.mjs`, embed the
-   public key (see that tool's README). **Do this before production.**
-2. Host the landing + checkout on `sh.example.com` (the `self-hosted-pay` service).
-3. On a paid order, the pay service verifies the provider webhook, signs a key
-   for the purchased tier and emails it to the buyer.
-4. Point `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL` at the
-   `sh.example.com` checkout URLs for each tier.
-
-See `tools/license-issuer/README.md` for the signing details and the
-`self-hosted-pay` repo for the checkout + webhook flow.
-
-## Online activation (optional)
-
-For revocation + seat limits, run the seller-side activation server
-(`tools/license-server/`) behind HTTPS and set `LICENSE_ACTIVATION_URL` in the
-builds you distribute. The panel then heartbeats on a schedule; paid modules
-lock after `LICENSE_ACTIVATION_MAX_AGE_MS` without a successful check. Leave
-`LICENSE_ACTIVATION_URL` empty to keep the offline / key-only model.
+The signing/issuing side (private key, key generator, store webhook) lives in the
+seller's private tooling and is intentionally not distributed here.

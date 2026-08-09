@@ -18,9 +18,9 @@ import {
 
 /**
  * Default verification public key — the seller's PRODUCTION signing key. The
- * matching private key lives ONLY in the seller's signer (self-hosted-pay /
- * tools/license-issuer) and is never shipped. Override per-deployment with
- * `LICENSE_PUBLIC_KEY` (full PEM, or a single line with `\n` escapes).
+ * matching private key lives ONLY in the seller's payment/licensing service and
+ * is never shipped. Override per-deployment with `LICENSE_PUBLIC_KEY` (full PEM,
+ * or a single line with `\n` escapes).
  */
 const DEFAULT_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEArcXE4cUrEDz66l0umXQGq1dxX1QVYAFOO6JqTx6BjWs=
