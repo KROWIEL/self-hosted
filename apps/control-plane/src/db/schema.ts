@@ -252,7 +252,7 @@ export const services = pgTable('services', {
   // How long (seconds) to wait for the new color to become healthy before abort.
   healthTimeoutS: integer('health_timeout_s').notNull().default(60),
   // When set, this row is an ephemeral preview environment cloned from the
-  // referenced parent service (Pro: preview-envs). Preview services are hidden
+  // referenced parent service. Preview services are hidden
   // from normal service listings and managed via the previews API; deleting the
   // parent cascades to its previews.
   previewOf: uuid('preview_of').references((): AnyPgColumn => services.id, {
@@ -413,7 +413,7 @@ export const backupSchedules = pgTable('backup_schedules', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-/// Per-service scheduled command run inside the service container (Home-Lab: service-cron).
+/// Per-service scheduled command run inside the service container.
 export const serviceCrons = pgTable('service_crons', {
   id: uuid('id').primaryKey().defaultRandom(),
   serviceId: uuid('service_id')
@@ -488,31 +488,7 @@ export const tunnels = pgTable('tunnels', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-/// The active commercial license for this installation. A singleton by
-/// convention: setting a new key replaces any existing row. The signed `key`
-/// is the source of truth; entitlements are derived by verifying it. An env
-/// var `LICENSE_KEY` is used as a fallback when this table is empty.
-export const licenses = pgTable('licenses', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  key: text('key').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
-
-// Singleton row holding this installation's stable identity, used as the
-// activation "seat" id when reporting heartbeats to the license server.
-export const installation = pgTable('installation', {
-  id: text('id').primaryKey().default('default'),
-  instanceId: uuid('instance_id').notNull().defaultRandom(),
-  // Start of the current offline grace window (set on first run / key change).
-  // Persisted so the window survives restarts instead of resetting each boot.
-  activationBaselineAt: timestamp('activation_baseline_at'),
-  // Timestamp of the last successful activation heartbeat, so the grace window
-  // anchors to the last success rather than process start after a restart.
-  lastActivationOkAt: timestamp('last_activation_ok_at'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
-
-/// Alerting (Pro: alerts). A destination for notifications (webhook, …).
+/// Alerting. A destination for notifications (webhook, …).
 export const alertChannels = pgTable('alert_channels', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
@@ -550,7 +526,7 @@ export const alertEvents = pgTable('alert_events', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-/// Time-series host metrics (Pro: metrics-history). One row per node per sample.
+/// Time-series host metrics. One row per node per sample.
 export const metricSamples = pgTable(
   'metric_samples',
   {
@@ -568,7 +544,7 @@ export const metricSamples = pgTable(
   }),
 );
 
-/// White-label branding (Pro: white-label). Singleton row.
+/// White-label branding. Singleton row.
 export const brandingConfig = pgTable('branding_config', {
   id: text('id').primaryKey().default('default'),
   appName: text('app_name').notNull().default('Self-Hosted'),
@@ -578,7 +554,7 @@ export const brandingConfig = pgTable('branding_config', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-/// Personal API tokens (Pro: api-cli). Long-lived bearer tokens for the API/CLI.
+/// Personal API tokens. Long-lived bearer tokens for the API/CLI.
 /// Only the SHA-256 hash is stored; the raw token is shown once at creation.
 export const apiTokens = pgTable('api_tokens', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -600,7 +576,7 @@ export const apiTokens = pgTable('api_tokens', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-/// Offsite backups (Pro: offsite-backups). Singleton destination.
+/// Offsite backups. Singleton destination.
 /// `provider` selects the backend: s3 | gcs | azure | sftp (default s3).
 /// S3/GCS reuse endpoint/region/bucket/keys; Azure/SFTP store non-secret
 /// fields in `providerConfig` and secrets in `secretKeyEnc` (AES-256-GCM).
@@ -624,7 +600,7 @@ export const offsiteConfig = pgTable('offsite_config', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-/// Ephemeral preview environments (Pro: preview-envs). Each row links a cloned,
+/// Ephemeral preview environments. Each row links a cloned,
 /// disposable child service to the parent it was branched from, with an optional
 /// TTL after which a background worker tears it down.
 export const previewEnvironments = pgTable('preview_environments', {
@@ -648,7 +624,7 @@ export const previewEnvironments = pgTable('preview_environments', {
 });
 
 /// GitHub / GitLab App (or webhook + token) installs for PR-triggered previews
-/// (Pro: preview-envs). One row per provider (`github` | `gitlab`). Secrets are
+///. One row per provider (`github` | `gitlab`). Secrets are
 /// encrypted at rest (AES-256-GCM).
 export const gitAppInstallations = pgTable('git_app_installations', {
   // Stable primary key: 'github' | 'gitlab'.
@@ -708,7 +684,7 @@ export const prPreviewLinks = pgTable(
   }),
 );
 
-/// Single sign-on (Pro: sso). Singleton OIDC identity-provider configuration.
+/// Single sign-on. Singleton OIDC identity-provider configuration.
 /// The client secret is encrypted at rest (AES-256-GCM).
 export const ssoConfig = pgTable('sso_config', {
   id: text('id').primaryKey().default('default'),
@@ -740,7 +716,7 @@ export const offsiteUploads = pgTable('offsite_uploads', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-/// Outbound email (Pro: email). Singleton SMTP relay configuration used to send
+/// Outbound email. Singleton SMTP relay configuration used to send
 /// and broadcast messages. The SMTP password is encrypted at rest (AES-256-GCM).
 export const emailConfig = pgTable('email_config', {
   id: text('id').primaryKey().default('default'),
@@ -811,8 +787,6 @@ export type DbSchema = {
   backupSchedules: typeof backupSchedules;
   serviceCrons: typeof serviceCrons;
   tunnels: typeof tunnels;
-  licenses: typeof licenses;
-  installation: typeof installation;
   alertChannels: typeof alertChannels;
   alertRules: typeof alertRules;
   alertEvents: typeof alertEvents;

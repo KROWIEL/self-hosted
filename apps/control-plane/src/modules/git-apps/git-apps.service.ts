@@ -17,7 +17,7 @@ export interface ReqLike {
 
 /**
  * Admin CRUD for GitHub/GitLab App (webhook) installs used by PR-triggered
- * preview environments (Pro: preview-envs).
+ * preview environments.
  */
 @Injectable()
 export class GitAppsService {

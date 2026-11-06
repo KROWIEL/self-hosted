@@ -111,11 +111,6 @@ export const AuthErrors = {
 };
 
 export const SsoErrors = {
-  notLicensed: () =>
-    new ForbiddenException({
-      code: 'sso.notLicensed',
-      message: 'Single sign-on requires the Pro plan.',
-    }),
   notConfigured: () =>
     new BadRequestException({
       code: 'sso.notConfigured',
@@ -148,37 +143,6 @@ export const CommonErrors = {
     new ForbiddenException({
       code: 'common.adminOnly',
       message: 'This action is restricted to administrators.',
-    }),
-};
-
-export const LicenseErrors = {
-  invalidKey: () =>
-    new BadRequestException({
-      code: 'license.invalidKey',
-      message: 'The license key is invalid or malformed.',
-    }),
-  expiredKey: () =>
-    new BadRequestException({
-      code: 'license.expiredKey',
-      message: 'The license key has expired.',
-    }),
-  moduleLocked: (module: string, tier: string) =>
-    new ForbiddenException({
-      code: 'license.moduleLocked',
-      message: `This feature requires the ${tier} plan. Upgrade in Billing to unlock it.`,
-      meta: { module, tier },
-    }),
-  nodeLimit: (max: number) =>
-    new ForbiddenException({
-      code: 'license.nodeLimit',
-      message: `Your plan allows at most ${max} node(s). Upgrade in Billing to add more.`,
-      meta: { max },
-    }),
-  tunnelLimit: (max: number) =>
-    new ForbiddenException({
-      code: 'license.tunnelLimit',
-      message: `Your plan allows at most ${max} reverse tunnel(s). Upgrade in Billing to add more.`,
-      meta: { max },
     }),
 };
 

@@ -18,8 +18,16 @@ const securityHeaders = [
   },
 ];
 
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Self-contained server bundle for the Docker image. The tracing root is the
+  // monorepo root so workspace packages are included.
+  output: 'standalone',
+  experimental: {
+    outputFileTracingRoot: path.join(__dirname, '../../'),
+  },
   async headers() {
     return [
       {

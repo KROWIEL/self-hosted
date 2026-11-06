@@ -11,8 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { AlertsService } from './alerts.service';
 import { ALERT_EVENTS, ALERT_EVENT_GROUPS } from './alerts.constants';
 import {
@@ -23,11 +21,10 @@ import {
 } from './dto/alerts.dto';
 
 /**
- * Alerting configuration (Pro: alerts). Platform-level, so restricted to global
+ * Alerting configuration. Platform-level, so restricted to global
  * admins; the whole controller is gated behind the `alerts` module.
  */
-@UseGuards(JwtAuthGuard, ModuleGuard)
-@RequiresModule('alerts')
+@UseGuards(JwtAuthGuard)
 @Controller('alerts')
 export class AlertsController {
   constructor(private readonly alerts: AlertsService) {}

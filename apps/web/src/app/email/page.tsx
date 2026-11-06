@@ -13,8 +13,6 @@ import {
   setEmailConfig,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -37,8 +35,6 @@ export default function EmailPage() {
 function EmailContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('email');
 
   const [me, setMe] = useState<AuthMe | null>(null);
   const [cfg, setCfg] = useState<EmailConfig | null>(null);
@@ -103,13 +99,13 @@ function EmailContent() {
   }
 
   useEffect(() => {
-    if (!unlocked || !isAdmin) {
+    if (!isAdmin) {
       setLoading(false);
       return;
     }
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, isAdmin]);
+  }, [isAdmin]);
 
   async function onSave() {
     setBusy('save');
@@ -173,19 +169,6 @@ function EmailContent() {
     } finally {
       setBusy(null);
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader title={t('email.title')} subtitle={t('email.subtitle')} />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('email.lockedTitle')}
-          featureBody={t('email.lockedBody')}
-        />
-      </>
-    );
   }
 
   if (me && !isAdmin) {

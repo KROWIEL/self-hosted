@@ -96,6 +96,23 @@ export class NodeAgentController {
   }
 
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Get('templates.tar.gz')
+  async templates(@Query('t') token: string, @Res() res: Response) {
+    if (!(await this.nodes.consumeAssetToken(token, 'templates.tar.gz'))) {
+      res.status(403).send('forbidden');
+      return;
+    }
+    let path: string;
+    try {
+      path = await this.nodes.ensureTemplatesArchive();
+    } catch (e) {
+      res.status(500).send(e instanceof Error ? e.message : 'unavailable');
+      return;
+    }
+    res.download(path, 'templates.tar.gz');
+  }
+
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Get('install.sh')
   async installSh(@Query('t') token: string, @Res() res: Response) {
     if (!(await this.nodes.consumeAssetToken(token, 'install.sh'))) {

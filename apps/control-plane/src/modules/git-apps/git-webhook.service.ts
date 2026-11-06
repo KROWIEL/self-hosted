@@ -13,7 +13,6 @@ import {
   previewEnvironments,
   services,
 } from '../../db/schema';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { PreviewService } from '../preview/preview.service';
 import { GitAppProvider } from './dto/git-apps.dto';
 import { GitAppsService } from './git-apps.service';
@@ -54,7 +53,6 @@ export class GitWebhookService {
 
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
-    private readonly entitlements: EntitlementsService,
     private readonly gitApps: GitAppsService,
     private readonly previews: PreviewService,
   ) {}
@@ -70,10 +68,6 @@ export class GitWebhookService {
       gitlabEvent?: string;
     },
   ): Promise<WebhookResult> {
-    if (!(await this.entitlements.hasModule('preview-envs'))) {
-      return { ok: true, ignored: true, reason: 'not_licensed' };
-    }
-
     const install = await this.gitApps.getRaw(provider);
     if (!install?.enabled) {
       return { ok: true, ignored: true, reason: 'disabled' };

@@ -14,8 +14,6 @@ import {
   tunnelStatus,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -31,7 +29,6 @@ import {
   useConfirmDialog,
 } from '@/components/ui';
 import { useErrorText, useI18n } from '@/i18n';
-import Link from 'next/link';
 
 export default function TunnelsPage() {
   return (
@@ -44,14 +41,11 @@ export default function TunnelsPage() {
 function TunnelsContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has, entitlements } = useEntitlements();
   const { confirm, dialog } = useConfirmDialog();
   const [tunnels, setTunnels] = useState<Tunnel[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-
-  const unlocked = has('reverse-tunnels');
 
   function load() {
     setLoading(true);
@@ -62,10 +56,9 @@ function TunnelsContent() {
   }
 
   useEffect(() => {
-    if (unlocked) load();
-    else setLoading(false);
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked]);
+  }, []);
 
   async function onDelete(id: string) {
     if (
@@ -86,52 +79,17 @@ function TunnelsContent() {
     }
   }
 
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader title={t('tunnel.title')} subtitle={t('tunnel.subtitle')} />
-        <UpgradeNotice
-          tier="homelab"
-          featureTitle={t('tunnel.lockedTitle')}
-          featureBody={t('tunnel.lockedBody')}
-        />
-      </>
-    );
-  }
-
-  const maxTunnels = entitlements.limits.maxTunnels;
-  const atLimit = maxTunnels != null && tunnels.length >= maxTunnels;
-
   return (
     <>
       <PageHeader
         title={t('tunnel.title')}
         subtitle={t('tunnel.subtitle')}
         action={
-          <button
-            onClick={() => setCreateOpen(true)}
-            disabled={atLimit}
-            title={atLimit ? t('tunnel.limitReached', { max: maxTunnels ?? 0 }) : undefined}
-            className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <button onClick={() => setCreateOpen(true)} className="btn-primary">
             {t('tunnel.add')}
           </button>
         }
       />
-
-      {maxTunnels != null && (
-        <p className="mb-4 text-xs text-neutral-500">
-          {t('tunnel.limitHint', { count: tunnels.length, max: maxTunnels })}
-          {atLimit && (
-            <>
-              {' '}
-              <Link href="/billing" className="text-indigo-300 hover:text-indigo-200">
-                {t('tunnel.limitUpgrade')}
-              </Link>
-            </>
-          )}
-        </p>
-      )}
 
       <GuideCard
         storageKey="tunnels"

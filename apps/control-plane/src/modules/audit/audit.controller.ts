@@ -13,8 +13,6 @@ import { MemberRole } from '@selfhosted/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ProjectRole } from '../../common/rbac/project-role.decorator';
 import { ProjectRolesGuard } from '../../common/rbac/project-roles.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { AuditService } from './audit.service';
 
 @UseGuards(JwtAuthGuard, ProjectRolesGuard)
@@ -32,12 +30,10 @@ export class AuditController {
   }
 
   /**
-   * Bulk export of the platform-wide trail as CSV or JSON (Pro: audit-export).
+   * Bulk export of the platform-wide trail as CSV or JSON.
    * Global-admin only; supports action-prefix + created-at range filters.
    */
   @Get('audit/export')
-  @UseGuards(ModuleGuard)
-  @RequiresModule('audit-export')
   async export(
     @Res() res: Response,
     @Request() req: { user: { role: string } },

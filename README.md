@@ -1,384 +1,138 @@
 <div align="center">
 
-# Self-Hosted PaaS
+# Self-Hosted
 
-**Deploy apps from Git to Docker on your own servers — a modern, self-hosted alternative to Heroku/Vercel.**
+**Deploy apps from git, Docker images or Compose onto your own servers.**
+An open-source, self-hosted alternative to Heroku, Vercel and Coolify.
 
 [![CI](https://github.com/KROWIEL/self-hosted/actions/workflows/ci.yml/badge.svg)](https://github.com/KROWIEL/self-hosted/actions/workflows/ci.yml)
-[![License: Elastic 2.0](https://img.shields.io/badge/license-Elastic--2.0-f5a800.svg)](LICENSE)
-[![Made with NestJS](https://img.shields.io/badge/API-NestJS-e0234e.svg)](https://nestjs.com)
-[![Made with Next.js](https://img.shields.io/badge/UI-Next.js%2014-black.svg)](https://nextjs.org)
-[![Agent in Go](https://img.shields.io/badge/agent-Go-00add8.svg)](https://go.dev)
-[![Docker](https://img.shields.io/badge/runtime-Docker-2496ed.svg)](https://www.docker.com)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
+[![Release](https://img.shields.io/github/v/release/KROWIEL/self-hosted)](https://github.com/KROWIEL/self-hosted/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**🌐 Language:** [English](#english) · [Русский](#русский)
+[Website](https://krowiel.github.io/self-hosted/) · [Install guide](docs/INSTALL.md) · [Releases](https://github.com/KROWIEL/self-hosted/releases) · **English** · [Русский](README.ru.md)
 
 </div>
 
 ---
 
-## English
+Self-Hosted is a deployment panel you run yourself. Point it at a repository, a
+container image or a Compose file, and it builds, runs and serves your app over
+HTTPS on servers you own: one VPS, a few machines, or a home lab behind NAT.
 
-> Open-core, self-hosted platform to deploy backends and frontends into Docker —
-> from **git**, a **container image**, or **Compose**, with managed databases,
-> HTTPS (ACME or custom PEM), multi-tenant projects, RBAC, 2FA, live logs &
-> metrics, backups, an app catalog, and reverse tunnels for home-lab / NAT nodes.
+Everything is free and open source under the MIT license. There are no paid
+tiers, no license keys and no limits on servers, users or apps.
 
-### ✨ Features
+## Features
 
-- **Deploy kinds** — `git` (build from repo), `image` (run a registry image), or `compose` (Compose stack).
-- **Build modes (git)** — curated **templates**, repo **Dockerfile**, or **Nixpacks** auto-detect.
-- **App catalog** (`/catalog`) — one-click install of 250+ apps across 20 categories (Immich, Jellyfin, Gitea, Vaultwarden, Ollama…), searchable and filtered by category; the whole catalog is free on every plan. Most manifests are generated from Coolify's Apache-2.0 service templates — see [`NOTICE`](NOTICE).
-- **Managed databases** — provision Postgres/MySQL per project, with scheduled backups & restore.
-- **Persistent volumes** — attach named volumes to services for durable data.
-- **Zero-downtime releases** — blue-green deploys with health-gating.
-- **Multi-tenant projects + quotas** — CPU/RAM limits per project.
-- **RBAC** — `OWNER / ADMIN / MEMBER / VIEWER` roles, plus an append-only audit log.
-- **Accounts & security** — two-stage registration, TOTP 2FA, strict password policy, soft-forced rotation of weak passwords.
-- **Nodes** — run the Go agent on any server; local dev agent, remote self-enrollment with TLS pinning & heartbeats.
-- **Certificates** (`/certificates`) — ACME status plus custom PEM upload (encrypted at rest).
-- **Reverse tunnels** — expose NAT / home-lab nodes to the internet through a lightweight public relay *(Home-Lab / Pro)*.
-- **Service cron** — schedule commands inside running containers *(Home-Lab / Pro)*.
-- **Live logs, metrics & web exec** — real-time container logs, resource usage, and an in-browser terminal.
-- **Automatic HTTPS** — Traefik + Let's Encrypt (HTTP-01 or DNS-01 wildcard).
-- **Localized UI** — English & Russian out of the box.
+- **Three ways to deploy**: build from **git** (curated templates, your own
+  `Dockerfile`, or Nixpacks auto-detect), run a **container image**, or start a
+  **Compose** stack.
+- **App catalog**: 250+ one-click apps in 20 categories (Immich, Jellyfin,
+  Gitea, Vaultwarden, Ollama…).
+- **Managed databases**: PostgreSQL and MySQL per project, with scheduled
+  backups, restore, and off-site copies to S3, GCS, Azure Blob or SFTP.
+- **Zero-downtime releases**: blue-green deploys gated on a health check, and
+  one-click rollback to any previous image.
+- **Automatic HTTPS**: Traefik with Let's Encrypt (per-domain or wildcard via
+  DNS-01), or upload your own certificate.
+- **Many servers, one panel**: a small Go agent on each server, enrolled with a
+  single command; reverse tunnels publish servers that have no public IP.
+- **Preview environments**: per-branch and per-pull-request previews from
+  GitHub and GitLab webhooks.
+- **Teams**: multi-tenant projects with CPU/RAM quotas, `OWNER / ADMIN / MEMBER
+  / VIEWER` roles, an audit log with CSV/JSON export, and OpenID Connect single
+  sign-on.
+- **Day-to-day tools**: live build and runtime logs, metrics with history, an
+  in-browser terminal, cron jobs inside containers, alerts to webhook, Discord,
+  Slack or Telegram, API tokens, outbound email, and white-label branding.
+- **Security**: TOTP two-factor authentication, a strict password policy,
+  secrets encrypted at rest (AES-256-GCM), TLS-pinned agents, rate limiting.
+- **English and Russian UI** out of the box.
 
-### 📸 Screenshots
-
-> Full set in [`docs/screenshots/`](docs/screenshots). Captured from a local Pro
-> install with demo data.
+## Screenshots
 
 <p align="center">
   <img src="docs/screenshots/dashboard.png" alt="Projects dashboard" width="900" />
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/deploy.gif" alt="Deploying a service with live build logs" width="900" />
-</p>
-
-| Project overview | Service & build logs |
+| Project overview | Service and logs |
 |---|---|
-| ![Project with service and database](docs/screenshots/project.png) | ![Service detail with live metrics](docs/screenshots/service-logs.png) |
+| ![Project with a service and a database](docs/screenshots/project.png) | ![Service detail with live metrics](docs/screenshots/service-logs.png) |
 
-| Nodes | Members & roles |
+| Nodes | App catalog |
 |---|---|
-| ![Nodes with agent and workloads](docs/screenshots/nodes.png) | ![Project members and RBAC](docs/screenshots/members.png) |
+| ![Nodes with agent and workloads](docs/screenshots/nodes.png) | ![One-click app catalog](docs/screenshots/catalog.png) |
 
-| Templates | App catalog |
-|---|---|
-| ![Template management](docs/screenshots/templates.png) | ![One-click app catalog](docs/screenshots/catalog.png) |
+More in [`docs/screenshots/`](docs/screenshots).
 
-| Plans | Certificates |
-|---|---|
-| ![Billing plans Free Home-Lab Pro](docs/screenshots/billing.png) | ![HTTPS certificates and custom PEM](docs/screenshots/certificates.png) |
+## Install on a server
 
-| Alerts | Offsite backups |
-|---|---|
-| ![Alert channels Discord Slack Telegram](docs/screenshots/alerts.png) | ![Offsite S3 GCS Azure SFTP](docs/screenshots/offsite.png) |
+You need a Linux server (Ubuntu 22.04+ or Debian 12+ recommended, 2 GB RAM or
+more), a domain whose DNS record points at it, and ports **80**, **443** and
+**8443** open. Then run:
 
-| Git App / PR previews | Exposure (tunnels) |
-|---|---|
-| ![GitHub GitLab PR preview webhooks](docs/screenshots/git-apps.png) | ![Reverse tunnels exposure](docs/screenshots/exposure.png) |
+```bash
+curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh
+```
 
-| Metrics history | Account & 2FA |
-|---|---|
-| ![Node metrics history](docs/screenshots/metrics.png) | ![Account settings and 2FA](docs/screenshots/settings-2fa.png) |
+The script installs Docker if it is missing, asks for the panel domain and an
+email for Let's Encrypt, generates every secret, starts the panel and prints the
+administrator password. Open `https://<your domain>`, sign in, then go to
+**Nodes → Add remote node** and run the command it shows on the same server:
+that installs the agent that builds and runs your apps.
 
-### 🚀 Quick start
+To add another server, prepare it with
+`curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh -s node`
+and enroll it the same way from **Nodes**.
 
-**Prerequisites:** Docker + Docker Compose, Node.js ≥ 20, and (for building agents) Go ≥ 1.24.
+To upgrade, run the install command again; your settings and data are kept.
+The full guide, including DNS, wildcard certificates, backups and
+troubleshooting, is in [`docs/INSTALL.md`](docs/INSTALL.md).
+
+## Local development
+
+Requires Node.js 24 LTS, Docker with Compose, and Go 1.25+ for the agent.
 
 ```bash
 git clone https://github.com/KROWIEL/self-hosted.git
 cd self-hosted
-cp .env.example .env          # then edit secrets (see below)
-npm install
+./start.sh        # Windows: ./start.ps1
 ```
 
-Generate real secrets before first run:
+The launcher creates `.env` from [`.env.example`](.env.example), starts
+PostgreSQL and Redis, applies the schema, seeds an admin and runs the API on
+`:3001` and the UI on http://localhost:3000. See
+[`docs/INSTALL.md`](docs/INSTALL.md#local-development) for the manual steps.
 
-```bash
-# 32-byte base64 key for AES-256-GCM (secrets at rest)
-openssl rand -base64 32       # -> ENCRYPTION_KEY
-openssl rand -base64 48       # -> JWT_SECRET / JWT_REFRESH_SECRET
-```
-
-Boot the stack (Windows PowerShell):
-
-```powershell
-./start.ps1
-```
-
-…or manually:
-
-```bash
-docker compose up -d postgres redis   # infra
-npm run db:push                        # apply schema
-npm run db:seed                        # seed the first admin
-npm run dev:cp                         # control-plane API  -> :3001
-npm run dev:web                        # web UI            -> :3000
-```
-
-Open **http://localhost:3000** and sign in with the seeded admin.
-
-### 📚 Documentation
+## Documentation
 
 | Guide | What's inside |
 |---|---|
-| [`docs/INSTALL.md`](docs/INSTALL.md) | Prerequisites, local setup, every `.env` variable, production deployment, operations, troubleshooting |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Control plane + agent design, core concepts, roles, repository layout, security model |
-| [`docs/LICENSING.md`](docs/LICENSING.md) | Tiers, gated modules, how license keys are verified |
+| [`docs/INSTALL.md`](docs/INSTALL.md) | Server install, adding servers, configuration, upgrades, backups, local development, troubleshooting |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the panel, the agent and Traefik fit together; repository layout; security model |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | What is shipped and what is planned |
+| [`CHANGELOG.md`](CHANGELOG.md) | Release notes |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to build, test and send changes |
 
-### 🧩 Tiers & pricing
+## Architecture
 
-Open-core: the **core is free forever**. Paid tiers unlock add-on modules via a
-single signed license key — activate it under **Billing → License key** (admin)
-or set `LICENSE_KEY`. One key upgrades the whole instance; the core has no
-per-seat metering.
-
-| Tier | Price* | What you get |
-|------|--------|--------------|
-| **Free** | $0 forever | Full core (see below); **1 node**, **0 tunnels** |
-| **Home-Lab** | ~$3 / mo | Core **+** reverse tunnels **+** service cron; **3 nodes / 3 tunnels** |
-| **Pro** | ~$15 / mo | Core **+ every module** (all 11 below); unlimited nodes & tunnels |
-| **Enterprise** | ~$999 / mo | Everything Pro unlocks, licensed to a company: **one key for a fleet of up to 5000 installations** — for hosting providers running the panel for their customers, and for companies running it across an estate |
-
-<sub>*Suggested pricing — you set the final numbers in your own store. Details in [`docs/LICENSING.md`](docs/LICENSING.md).</sub>
-
-The first three are personal: one key runs on one machine at a time and moves
-with you. With online activation the seller's server recognises that machine by
-hashed marks of its hardware, so a key cannot quietly run on two — see
-[`docs/LICENSING.md`](docs/LICENSING.md), including what to mount when the panel
-runs in a container. Enterprise is the one bought by an organisation, and it is
-the only tier that seats a whole fleet on a single key; it carries a fleet
-secret instead of being tied to any machine.
-
-**The free core includes:** git / image / compose deploys, templates & Nixpacks,
-the complete app catalog, automatic HTTPS + custom PEMs, managed Postgres/MySQL with
-backups, persistent volumes, multi-tenant projects & quotas, RBAC, 2FA, live
-logs / metrics / web-exec, and a localized (EN/RU) UI.
-
-#### Add-on modules
-
-| Module | From tier | What it does |
-|--------|-----------|--------------|
-| **Reverse tunnels** (`reverse-tunnels`) | Home-Lab | Expose services on NAT / home-lab nodes to the internet through a lightweight public relay. |
-| **Service cron** (`service-cron`) | Home-Lab | Schedule commands inside a running service container (cron expressions). |
-| **Preview environments** (`preview-envs`) | Pro | Disposable branch previews with optional subdomain and TTL cleanup. **Git Apps** (`/git-apps`) — GitHub/GitLab PR webhooks create/update previews. |
-| **Off-site backups** (`offsite-backups`) | Pro | Mirror managed-database backups to **S3**, **GCS**, **Azure Blob**, or **SFTP** (encrypted credentials). |
-| **Alerts** (`alerts`) | Pro | Channels: **webhook**, **Discord**, **Slack**, **Telegram** — for node-offline, deploy/backup failures and resource thresholds. |
-| **Metrics history** (`metrics-history`) | Pro | Collect and chart historical CPU / RAM / disk usage per node. |
-| **SSO / OIDC** (`sso`) | Pro | OpenID Connect single sign-on (Google, Entra, Okta, Keycloak…) with a domain allow-list and just-in-time user provisioning. |
-| **Audit export** (`audit-export`) | Pro | Organization-wide audit log with filters and CSV / JSON export. |
-| **API & CLI tokens** (`api-cli`) | Pro | Personal access tokens (PATs) for programmatic access to the API / CLI. |
-| **White-label** (`white-label`) | Pro | Customize the app name, logo, accent color and attribution. |
-| **Email** (`email`) | Pro | Send and broadcast messages to your users over your own SMTP provider — outbound relay, not an inbound mail server. |
-
-<sub>Home-Lab unlocks reverse tunnels + service cron. Pro unlocks everything.</sub>
-
-### 🏗️ Architecture
-
-- **`apps/control-plane`** — NestJS API (auth, RBAC, deploy orchestration, licensing, audit).
-- **`apps/web`** — Next.js 14 dashboard (localized).
-- **`services/agent`** — Go daemon per node (builds, runs containers, health, logs, tunnels).
-- **`packages/shared`** — shared TypeScript contracts.
-- **Infra** — PostgreSQL, Redis (BullMQ), Traefik via `docker-compose.yml`.
+- **`apps/control-plane`**: NestJS API (auth, RBAC, deploy orchestration, audit).
+- **`apps/web`**: Next.js 14 dashboard.
+- **`services/agent`**: Go daemon on each server (builds, containers, health checks, logs, tunnels).
+- **`packages/shared`**: TypeScript types shared by the API and the UI.
+- **Infrastructure**: PostgreSQL, Redis (BullMQ) and Traefik.
 
 Details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-### 🔐 Security
+## Contributing
 
-Practical hardening (not a third-party audit claim):
+Issues and pull requests are welcome. Read [`CONTRIBUTING.md`](CONTRIBUTING.md)
+first; security problems go through [`SECURITY.md`](SECURITY.md), not public
+issues.
 
-- Secrets (PATs, env secrets, custom TLS PEMs, tokens) encrypted at rest (AES-256-GCM).
-- JWT sessions, TOTP 2FA, strict password policy.
-- Per-project RBAC + append-only audit log.
-- TLS pinning for remote agents.
+## License
 
-Never commit your `.env` or private keys — see the bundled `gitleaks` pre-commit hook (`git config core.hooksPath .githooks`).
-
-### 🤝 Contributing
-
-Issues and PRs are welcome. By contributing you agree your changes are licensed under the Elastic License 2.0.
-
-### 📄 License
-
-Source-available under the [Elastic License 2.0](LICENSE): use, copy, modify and self-host freely. You may **not** provide the software to third parties as a managed/hosted service, and you may **not** remove or circumvent the license-key functionality. A commercial license key unlocks paid modules — see [`docs/LICENSING.md`](docs/LICENSING.md).
-
----
-
-## Русский
-
-> Open-core платформа для self-hosting: деплой бэкендов и фронтендов в Docker —
-> из **git**, **образа** или **Compose**, с managed-базами, HTTPS (ACME или
-> свой PEM), мульти-тенант проектами, RBAC, 2FA, live-логами и метриками,
-> бэкапами, каталогом приложений и обратными туннелями для home-lab / NAT-нод.
-
-### ✨ Возможности
-
-- **Типы деплоя** — `git` (сборка из репо), `image` (образ из registry) или `compose` (Compose-стек).
-- **Режимы сборки (git)** — **шаблоны**, **Dockerfile** репозитория или **Nixpacks**.
-- **Каталог приложений** (`/catalog`) — 250+ приложений в 20 категориях, установка в один клик; весь каталог бесплатен на любом тарифе.
-- **Managed-базы** — Postgres/MySQL на проект, с бэкапами по расписанию и восстановлением.
-- **Постоянные тома** — именованные volumes для данных сервисов.
-- **Zero-downtime релизы** — blue-green деплой с проверкой health.
-- **Мульти-тенант проекты + квоты** — лимиты CPU/RAM на проект.
-- **RBAC** — роли `OWNER / ADMIN / MEMBER / VIEWER` и append-only аудит-лог.
-- **Аккаунты и безопасность** — двухэтапная регистрация, TOTP 2FA, строгая парольная политика, мягкое принуждение к смене слабых паролей.
-- **Ноды** — Go-агент на любом сервере; локальный dev-агент и удалённое самоподключение с TLS-пиннингом и heartbeat.
-- **Сертификаты** (`/certificates`) — статус ACME и загрузка своего PEM (шифрование at rest).
-- **Обратные туннели** — публикация NAT / home-lab нод в интернет через лёгкий публичный релей *(Home-Lab / Pro)*.
-- **Service cron** — расписание команд внутри контейнеров *(Home-Lab / Pro)*.
-- **Live-логи, метрики и web-exec** — логи контейнеров в реальном времени, потребление ресурсов и терминал в браузере.
-- **Автоматический HTTPS** — Traefik + Let's Encrypt (HTTP-01 или DNS-01 wildcard).
-- **Локализация** — английский и русский «из коробки».
-
-### 📸 Скриншоты
-
-> Полный набор — в [`docs/screenshots/`](docs/screenshots).
-
-<p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Дашборд проектов" width="900" />
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/deploy.gif" alt="Деплой сервиса с живыми логами сборки" width="900" />
-</p>
-
-| Проект | Сервис и логи |
-|---|---|
-| ![Проект с сервисом и базой](docs/screenshots/project.png) | ![Сервис с метриками](docs/screenshots/service-logs.png) |
-
-| Ноды | Участники и роли |
-|---|---|
-| ![Ноды с агентом](docs/screenshots/nodes.png) | ![Участники проекта и RBAC](docs/screenshots/members.png) |
-
-| Шаблоны | Каталог приложений |
-|---|---|
-| ![Управление шаблонами](docs/screenshots/templates.png) | ![Каталог приложений](docs/screenshots/catalog.png) |
-
-| Тарифы | Сертификаты |
-|---|---|
-| ![Тарифы Free Home-Lab Pro](docs/screenshots/billing.png) | ![HTTPS-сертификаты и свой PEM](docs/screenshots/certificates.png) |
-
-### 🚀 Быстрый старт
-
-**Требования:** Docker + Docker Compose, Node.js ≥ 20 и (для сборки агентов) Go ≥ 1.24.
-
-```bash
-git clone https://github.com/KROWIEL/self-hosted.git
-cd self-hosted
-cp .env.example .env          # затем впишите секреты (см. ниже)
-npm install
-```
-
-Сгенерируйте реальные секреты перед первым запуском:
-
-```bash
-openssl rand -base64 32       # -> ENCRYPTION_KEY (32 байта)
-openssl rand -base64 48       # -> JWT_SECRET / JWT_REFRESH_SECRET
-```
-
-Запуск (Windows PowerShell):
-
-```powershell
-./start.ps1
-```
-
-…или вручную:
-
-```bash
-docker compose up -d postgres redis   # инфраструктура
-npm run db:push                        # схема БД
-npm run db:seed                        # первый администратор
-npm run dev:cp                         # API control-plane  -> :3001
-npm run dev:web                        # веб-интерфейс       -> :3000
-```
-
-Откройте **http://localhost:3000** и войдите под созданным админом.
-
-### 📚 Документация
-
-| Документ | О чём |
-|---|---|
-| [`docs/INSTALL.md`](docs/INSTALL.md) | Требования, локальная установка, все переменные `.env`, продакшен-развёртывание, эксплуатация, диагностика |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Устройство control plane + агент, ключевые сущности, роли, структура репозитория, модель безопасности |
-| [`docs/LICENSING.md`](docs/LICENSING.md) | Тарифы, платные модули, проверка ключей лицензии |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Что уже готово и что планируется |
-
-### 🧩 Тарифы и цены
-
-Open-core: **ядро бесплатно навсегда**. Платные тарифы открывают дополнительные
-модули по одному подписанному ключу лицензии — активируйте его в **Тарифы →
-Ключ лицензии** (админ) или задайте `LICENSE_KEY`. Один ключ повышает тариф
-всего инстанса; в ядре нет поштучного учёта мест.
-
-| Тариф | Цена* | Что вы получаете |
-|-------|-------|------------------|
-| **Free** | $0 навсегда | Полное ядро (см. ниже); **1 нода**, **0 туннелей** |
-| **Home-Lab** | ~$3 / мес | Ядро **+** обратные туннели **+** service cron; **3 ноды / 3 туннеля** |
-| **Pro** | ~$15 / мес | Ядро **+ все модули** (все 11 ниже); без лимитов по нодам и туннелям |
-| **Enterprise** | ~$999 / мес | Всё то же, что в Pro, но лицензия на компанию: **один ключ на парк до 5000 установок** — для хостеров, которые дают панель своим клиентам, и для компаний со своим парком машин |
-
-<sub>*Рекомендованные цены — финальные вы задаёте в своём магазине. Подробнее в [`docs/LICENSING.md`](docs/LICENSING.md).</sub>
-
-Первые три тарифа личные: ключ работает на одной машине и переезжает вместе с
-вами. При онлайн-активации сервер продавца узнаёт эту машину по хешам признаков
-железа, поэтому тихо запустить ключ на второй не выйдет — подробности и то, что
-нужно пробросить в контейнер, в [`docs/LICENSING.md`](docs/LICENSING.md).
-Enterprise — единственный, который покупает организация, и единственный, где на
-одном ключе живёт целый парк машин; вместо привязки к железу у него секрет парка.
-
-**Бесплатное ядро включает:** деплой git / image / compose, шаблоны и Nixpacks,
-полный каталог приложений, автоматический HTTPS + свой PEM, managed
-Postgres/MySQL с бэкапами, постоянные тома, мульти-тенант проекты и квоты, RBAC,
-2FA, live-логи / метрики / web-exec и локализованный (EN/RU) интерфейс.
-
-#### Дополнительные модули
-
-| Модуль | С тарифа | Что делает |
-|--------|----------|------------|
-| **Обратные туннели** (`reverse-tunnels`) | Home-Lab | Публикация сервисов на NAT / home-lab нодах в интернет через лёгкий публичный релей. |
-| **Service cron** (`service-cron`) | Home-Lab | Расписание команд внутри контейнера сервиса (cron-выражения). |
-| **Превью-среды** (`preview-envs`) | Pro | Одноразовые превью веток с опциональным поддоменом и TTL. **Git Apps** (`/git-apps`) — webhook GitHub/GitLab для PR-превью. |
-| **Офсайт-бэкапы** (`offsite-backups`) | Pro | Зеркалирование бэкапов managed-БД в **S3**, **GCS**, **Azure Blob** или **SFTP** (шифрованные доступы). |
-| **Алерты** (`alerts`) | Pro | Каналы: **webhook**, **Discord**, **Slack**, **Telegram** — падение ноды, сбой деплоя/бэкапа, пороги ресурсов. |
-| **История метрик** (`metrics-history`) | Pro | Сбор и графики истории CPU / RAM / диска по каждой ноде. |
-| **SSO / OIDC** (`sso`) | Pro | Единый вход через OpenID Connect (Google, Entra, Okta, Keycloak…) с allow-list доменов и автосозданием пользователей. |
-| **Экспорт аудита** (`audit-export`) | Pro | Общеорганизационный аудит-лог с фильтрами и экспортом в CSV / JSON. |
-| **API и CLI токены** (`api-cli`) | Pro | Персональные токены доступа (PAT) для программного доступа к API / CLI. |
-| **White-label** (`white-label`) | Pro | Настройка названия приложения, логотипа, акцентного цвета и атрибуции. |
-| **Почта** (`email`) | Pro | Отправка и рассылка сообщений пользователям через ваш SMTP-провайдер — исходящий релей, а не входящий почтовый сервер. |
-
-<sub>Home-Lab открывает обратные туннели + service cron. Pro открывает всё.</sub>
-
-### 🏗️ Архитектура
-
-- **`apps/control-plane`** — API на NestJS (auth, RBAC, оркестрация деплоя, лицензирование, аудит).
-- **`apps/web`** — дашборд на Next.js 14 (локализованный).
-- **`services/agent`** — Go-демон на каждой ноде (сборка, запуск контейнеров, health, логи, туннели).
-- **`packages/shared`** — общие TypeScript-контракты.
-- **Инфраструктура** — PostgreSQL, Redis (BullMQ), Traefik через `docker-compose.yml`.
-
-Подробнее — в [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
-### 🔐 Безопасность
-
-Практическое усиление (без заявления о стороннем аудите):
-
-- Секреты (PAT, env-секреты, свои TLS PEM, токены) шифруются at rest (AES-256-GCM).
-- JWT-сессии, TOTP 2FA, строгая парольная политика.
-- RBAC на проект + append-only аудит-лог.
-- TLS-пиннинг для удалённых агентов.
-
-Никогда не коммитьте `.env` и приватные ключи — используйте встроенный `gitleaks` pre-commit хук (`git config core.hooksPath .githooks`).
-
-### 🤝 Вклад
-
-Issues и PR приветствуются. Внося вклад, вы соглашаетесь лицензировать изменения под Elastic License 2.0.
-
-### 📄 Лицензия
-
-Source-available под [Elastic License 2.0](LICENSE): свободно используйте, копируйте, изменяйте и разворачивайте у себя. **Нельзя** предоставлять ПО третьим лицам как управляемый/хостинговый сервис и **нельзя** удалять или обходить механизм проверки ключа лицензии. Коммерческий ключ лицензии открывает платные модули — см. [`docs/LICENSING.md`](docs/LICENSING.md).
+[MIT](LICENSE). Use it, copy it, change it, sell it or host it for others; just
+keep the copyright notice. Most app catalog manifests are derived from Coolify's
+Apache-2.0 service templates, see [`NOTICE`](NOTICE).

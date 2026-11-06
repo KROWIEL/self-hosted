@@ -1,0 +1,342 @@
+:root {
+  --steel: #e6ebef;
+  --paper: #f6f8f9;
+  --ink: #15212c;
+  --muted: #4a5a68;
+  --container: #1d5a9e;
+  --signal: #f3c623;
+  --rule: #c9d3db;
+  --display: "Archivo", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --wide: 72rem;
+  --text: 40rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--steel);
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 var(--display);
+}
+
+a {
+  color: var(--container);
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--container);
+  outline-offset: 3px;
+}
+
+.wrap {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.skip {
+  position: absolute;
+  left: -999px;
+}
+
+.skip:focus {
+  left: 1rem;
+  top: 1rem;
+  background: var(--paper);
+  padding: 0.5rem 0.75rem;
+  z-index: 10;
+}
+
+/* Header */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+.brand {
+  font-weight: 800;
+  font-stretch: 112%;
+  font-size: 1.125rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  font-size: 0.9375rem;
+}
+
+/* Hero */
+.hero {
+  padding-top: 3.5rem;
+  padding-bottom: 2.5rem;
+}
+
+.hero h1 {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(2.6rem, 7vw, 5.25rem);
+  line-height: 0.98;
+  font-weight: 800;
+  font-stretch: 118%;
+  letter-spacing: -0.015em;
+}
+
+.lede {
+  max-width: var(--text);
+  margin: 1.5rem 0 0;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+/* The install command: the one loud element on the page. */
+.command {
+  margin-top: 2.5rem;
+  background: var(--signal);
+  color: var(--ink);
+  border-radius: 4px;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.command code {
+  flex: 1;
+  min-width: 0;
+  padding: 1.25rem 1.5rem;
+  font: 500 clamp(0.85rem, 1.6vw, 1.15rem)/1.5 var(--mono);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.command button,
+.cmd button {
+  flex: none;
+  border: 0;
+  border-left: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: 700 0.9375rem var(--display);
+  padding: 0 1.5rem;
+  cursor: pointer;
+}
+
+.command button:hover {
+  background: var(--ink);
+  color: var(--signal);
+}
+
+.command-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.shot {
+  margin: 3.5rem 0 0;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  box-shadow: 0 24px 48px -28px rgba(21, 33, 44, 0.45);
+}
+
+/* Sections */
+section {
+  padding-top: 4.5rem;
+  padding-bottom: 1rem;
+}
+
+h2 {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  line-height: 1.1;
+  font-weight: 800;
+  font-stretch: 112%;
+}
+
+h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+section > p,
+.steps p,
+.faq p {
+  max-width: var(--text);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 2rem 3rem;
+  margin: 0;
+}
+
+.features dt {
+  font-weight: 700;
+  border-top: 3px solid var(--container);
+  padding-top: 0.75rem;
+}
+
+.features dd {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.features div {
+  min-width: 0;
+}
+
+.steps {
+  list-style: none;
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2.25rem;
+}
+
+.steps > li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 0 1rem;
+}
+
+.steps > li::before {
+  content: counter(step);
+  font-weight: 800;
+  font-stretch: 118%;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--container);
+}
+
+.steps p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.cmd {
+  margin: 0.75rem 0 0;
+  max-width: 52rem;
+  display: flex;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cmd code {
+  flex: 1;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  font: 400 0.875rem/1.55 var(--mono);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.cmd button {
+  color: var(--paper);
+  border-left-color: #33424f;
+  font-size: 0.875rem;
+  padding: 0 1rem;
+}
+
+.cmd button:hover {
+  background: var(--signal);
+  color: var(--ink);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+p > code,
+li > code,
+dd > code {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+}
+
+.faq details {
+  max-width: 48rem;
+  border-top: 1px solid var(--rule);
+  padding: 1rem 0;
+}
+
+.faq details:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.faq summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.faq p {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+}
+
+footer {
+  margin-top: 5rem;
+  padding: 2rem 0 3rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+footer p {
+  margin: 0.25rem 0;
+}
+
+@media (max-width: 40rem) {
+  .command {
+    flex-direction: column;
+  }
+
+  .command button {
+    border-left: 0;
+    border-top: 2px solid var(--ink);
+    padding: 0.75rem;
+  }
+
+  .steps > li {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+  }
+
+  .steps > li::before {
+    font-size: 1.5rem;
+  }
+}

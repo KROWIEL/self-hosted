@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-Hosted: deploy apps to servers you own</title>
+  <meta name="description" content="Open-source deployment panel. Build apps from git, Docker images or Compose and run them over HTTPS on your own servers. MIT-licensed, installs with one command.">
+  <link rel="alternate" hreflang="ru" href="ru/">
+  <link rel="alternate" hreflang="en" href="./">
+  <meta property="og:title" content="Self-Hosted">
+  <meta property="og:description" content="Deploy apps from git, Docker images or Compose onto servers you own. Free and MIT-licensed.">
+  <meta property="og:image" content="screenshots/dashboard.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="wrap top">
+    <a class="brand" href="./">Self-Hosted</a>
+    <nav aria-label="Main">
+      <a href="#install">Install</a>
+      <a href="https://github.com/KROWIEL/self-hosted/blob/main/docs/INSTALL.md">Docs</a>
+      <a href="https://github.com/KROWIEL/self-hosted">GitHub</a>
+      <a href="ru/" hreflang="ru" lang="ru">Русский</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="wrap hero">
+      <h1>Deploy apps to servers you own</h1>
+      <p class="lede">Self-Hosted builds your apps from git, Docker images or Compose files and runs them over HTTPS on your own machines. One panel for one VPS or a whole rack, free and MIT-licensed.</p>
+
+      <div class="command">
+        <code>curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh</code>
+        <button type="button" data-copy data-copied="Copied" data-failed="Copy failed">Copy</button>
+      </div>
+      <p class="command-note">Run it on a Linux server with a domain pointing at it. It installs Docker if needed and prints your admin password.</p>
+
+      <figure class="shot">
+        <img src="screenshots/dashboard.png" width="1600" height="1000" alt="The projects dashboard with running services, node capacity and recent deployments">
+      </figure>
+    </div>
+
+    <section class="wrap" aria-labelledby="features">
+      <h2 id="features">What it does</h2>
+      <dl class="features">
+        <div>
+          <dt>Deploy from anywhere</dt>
+          <dd>Build a git repository with a template, its own <code>Dockerfile</code> or Nixpacks, run a registry image, or start a Compose stack.</dd>
+        </div>
+        <div>
+          <dt>250+ apps in one click</dt>
+          <dd>Immich, Jellyfin, Gitea, Vaultwarden, Ollama and more from the built-in catalog.</dd>
+        </div>
+        <div>
+          <dt>Databases with backups</dt>
+          <dd>PostgreSQL and MySQL per project, scheduled backups, restore, and copies to S3, GCS, Azure or SFTP.</dd>
+        </div>
+        <div>
+          <dt>Releases without downtime</dt>
+          <dd>Blue-green deploys wait for a health check, and any previous image is one click away.</dd>
+        </div>
+        <div>
+          <dt>HTTPS on every domain</dt>
+          <dd>Let's Encrypt certificates per domain or as a wildcard, or upload your own.</dd>
+        </div>
+        <div>
+          <dt>Many servers, one panel</dt>
+          <dd>A small agent on each machine, added with one command. Servers behind NAT go online through a reverse tunnel.</dd>
+        </div>
+        <div>
+          <dt>Previews for every pull request</dt>
+          <dd>GitHub and GitLab webhooks spin up a disposable environment per branch or PR.</dd>
+        </div>
+        <div>
+          <dt>Built for teams</dt>
+          <dd>Projects with CPU and RAM quotas, four roles, an audit log, single sign-on and two-factor sign-in.</dd>
+        </div>
+        <div>
+          <dt>Everything you watch</dt>
+          <dd>Live logs, metrics history, a terminal in the browser, and alerts to Discord, Slack, Telegram or a webhook.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="wrap" id="install" aria-labelledby="install-title">
+      <h2 id="install-title">Install on your server</h2>
+      <p>You need a Linux server with 2&nbsp;GB of RAM or more (Ubuntu 22.04+ or Debian 12+ recommended), root access, and ports 80, 443 and 8443 open.</p>
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>Point a domain at the server</h3>
+            <p>Create an <code>A</code> record such as <code>panel.example.com</code> with the server's IP. The certificate is requested on first start, so do this first.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Run the installer</h3>
+            <p>It asks for the domain and an email for Let's Encrypt, generates every secret, starts the panel and prints the administrator password.</p>
+            <div class="cmd">
+              <code>curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh</code>
+              <button type="button" data-copy data-copied="Copied" data-failed="Copy failed">Copy</button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Connect the server as a node</h3>
+            <p>Sign in, open <strong>Nodes → Add remote node</strong>, enter the server's IP and run the command the panel shows. The agent it installs builds and runs your apps.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Deploy</h3>
+            <p>Create a project, add a service from git, an image or the catalog, attach a domain and press deploy.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="wrap" aria-labelledby="more">
+      <h2 id="more">More servers and upgrades</h2>
+      <p>Prepare each extra server with the node mode, then add it from <strong>Nodes</strong> the same way:</p>
+      <div class="cmd">
+        <code>curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh -s node</code>
+        <button type="button" data-copy data-copied="Copied" data-failed="Copy failed">Copy</button>
+      </div>
+      <p>To upgrade, run the install command again. Settings and data stay in <code>/opt/selfhosted</code>, and database migrations run on start. The <a href="https://github.com/KROWIEL/self-hosted/blob/main/docs/INSTALL.md">install guide</a> covers wildcard certificates, backups and troubleshooting.</p>
+    </section>
+
+    <section class="wrap faq" aria-labelledby="faq">
+      <h2 id="faq">Questions</h2>
+      <details>
+        <summary>Is it really free?</summary>
+        <p>Yes. The code is MIT-licensed: use it, change it, sell it or host it for others. There are no paid plans, license keys or limits on servers and users.</p>
+      </details>
+      <details>
+        <summary>Do I need Kubernetes?</summary>
+        <p>No. Every server runs plain Docker with a small agent. Traefik on each server handles HTTPS.</p>
+      </details>
+      <details>
+        <summary>Can I run it at home behind NAT?</summary>
+        <p>Yes. Rent the smallest public VPS you can find and use <strong>Exposure</strong> in the panel: it relays ports 80 and 443 from the VPS to your home server.</p>
+      </details>
+      <details>
+        <summary>Which architectures are supported?</summary>
+        <p>Linux on x86-64 and ARM64, for both the panel and the agent.</p>
+      </details>
+      <details>
+        <summary>How do I report a bug or a vulnerability?</summary>
+        <p>Bugs go to <a href="https://github.com/KROWIEL/self-hosted/issues">GitHub issues</a>. Vulnerabilities go through a <a href="https://github.com/KROWIEL/self-hosted/security/advisories/new">private security advisory</a>.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>Self-Hosted is open source under the <a href="https://github.com/KROWIEL/self-hosted/blob/main/LICENSE">MIT license</a>.</p>
+    <p><a href="https://github.com/KROWIEL/self-hosted">Source</a>, <a href="https://github.com/KROWIEL/self-hosted/releases">releases</a> and <a href="https://github.com/KROWIEL/self-hosted/blob/main/CHANGELOG.md">changelog</a> on GitHub.</p>
+  </footer>
+  <script src="copy.js" defer></script>
+</body>
+</html>

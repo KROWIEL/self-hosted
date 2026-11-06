@@ -15,8 +15,6 @@ import {
   testOffsite,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -145,8 +143,6 @@ function formatBytes(n: number | null): string {
 function OffsiteContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('offsite-backups');
 
   const [me, setMe] = useState<AuthMe | null>(null);
   const [cfg, setCfg] = useState<OffsiteConfig | null>(null);
@@ -187,13 +183,13 @@ function OffsiteContent() {
   }
 
   useEffect(() => {
-    if (!unlocked || !isAdmin) {
+    if (!isAdmin) {
       setLoading(false);
       return;
     }
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, isAdmin]);
+  }, [isAdmin]);
 
   async function onSave() {
     setBusy('save');
@@ -254,22 +250,6 @@ function OffsiteContent() {
     } finally {
       setBusy(null);
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader
-          title={t('offsite.title')}
-          subtitle={t('offsite.subtitle')}
-        />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('offsite.lockedTitle')}
-          featureBody={t('offsite.lockedBody')}
-        />
-      </>
-    );
   }
 
   if (me && !isAdmin) {

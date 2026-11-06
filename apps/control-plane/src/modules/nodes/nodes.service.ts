@@ -26,8 +26,7 @@ import {
 } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import { AssetTokenService } from '../../common/asset-token/asset-token.service';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
-import { LicenseErrors, NodeErrors } from '../../common/errors/app-errors';
+import { NodeErrors } from '../../common/errors/app-errors';
 import { AgentClient } from './agent.client';
 
 interface CreateNodeInput {
@@ -66,7 +65,6 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
     private readonly crypto: CryptoService,
     private readonly assets: AssetTokenService,
     private readonly agent: AgentClient,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   onModuleInit() {
@@ -88,19 +86,7 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
     return this.db.select().from(nodes).orderBy(nodes.createdAt);
   }
 
-  /**
-   * Enforce the tier's node cap before creating another node. `null` = unlimited
-   * (Pro). Counts every node (local + remote) since the cap is per installation.
-   */
-  private async assertNodeQuota(): Promise<void> {
-    const { maxNodes } = await this.entitlements.limits();
-    if (maxNodes == null) return;
-    const existing = await this.db.select({ id: nodes.id }).from(nodes);
-    if (existing.length >= maxNodes) throw LicenseErrors.nodeLimit(maxNodes);
-  }
-
   async create(input: CreateNodeInput) {
-    await this.assertNodeQuota();
     const daemonToken = randomBytes(32).toString('hex');
     const hostCpu = os.cpus().length * 100;
     const hostMemMb = Math.floor(os.totalmem() / 1024 / 1024);
@@ -125,7 +111,6 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
    * one-time join token the operator passes to the install command.
    */
   async createRemote(input: { name: string; fqdn: string; agentPort?: number }) {
-    await this.assertNodeQuota();
     // Placeholder token; replaced by a real one when the agent enrolls.
     const placeholder = randomBytes(32).toString('hex');
     const [node] = await this.db
@@ -290,9 +275,10 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
       ]),
     );
     const shUrl = `${base}/api/v1/node-agent/install.sh?t=${at}`;
+    const templatesUrl = `${base}/api/v1/node-agent/templates.tar.gz?t=${at}`;
     const env =
       `PANEL_URL=${base} JOIN_TOKEN=${joinToken} ` +
-      `AGENT_PORT=${node.agentPort}`;
+      `AGENT_PORT=${node.agentPort} TEMPLATES_URL="${templatesUrl}"`;
     const linux =
       `curl -fsSL "${shUrl}" -o install.sh && ` +
       `sudo ${env} BIN_URL="${binUrls['linux-amd64']}" sh install.sh`;
@@ -351,6 +337,26 @@ export class NodesService implements OnModuleInit, OnModuleDestroy {
         `Failed to build agent (is Go installed?): ${
           e instanceof Error ? e.message : String(e)
         }`,
+      );
+    }
+    return out;
+  }
+
+  /**
+   * Archive of the build templates (Dockerfiles) a node needs for template
+   * builds. Release images ship it prebuilt; a source checkout packs it on
+   * first request.
+   */
+  async ensureTemplatesArchive(): Promise<string> {
+    const distDir = resolve(process.cwd(), '../../services/agent-dist/dist');
+    const out = join(distDir, 'templates.tar.gz');
+    if (existsSync(out)) return out;
+    await mkdir(distDir, { recursive: true }).catch(() => undefined);
+    try {
+      await execFileAsync('tar', ['-czf', out, '-C', resolve(process.cwd(), '../..'), 'templates']);
+    } catch (e) {
+      throw new BadRequestException(
+        `Failed to pack templates: ${e instanceof Error ? e.message : String(e)}`,
       );
     }
     return out;

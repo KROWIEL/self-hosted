@@ -98,8 +98,6 @@ export const ru: Dict = {
   'nav.email': 'Почта',
   'nav.invites': 'Приглашения',
   'nav.settings': 'Настройки',
-  'nav.billing': 'Тарифы',
-  'nav.locked': 'Требуется апгрейд',
   'nav.openMenu': 'Открыть меню',
   'nav.closeMenu': 'Закрыть меню',
   'nav.collapse': 'Скрыть панель',
@@ -131,7 +129,6 @@ export const ru: Dict = {
   'register.subtitleInvite': 'Шаг 1 из 2 — приглашённый аккаунт',
   'register.inviteReady':
     'Приглашение принято — создайте аккаунт, чтобы продолжить.',
-  'register.passwordHint': 'Минимум 8 символов.',
   'register.continue': 'Продолжить',
   'register.creating': 'Создание…',
   'register.haveAccount': 'Уже есть аккаунт?',
@@ -163,7 +160,7 @@ export const ru: Dict = {
   'settings.saving': 'Сохранение…',
   'settings.profileSaved': 'Профиль обновлён',
   'settings.passwordTitle': 'Пароль',
-  'settings.passwordHint': 'Минимум 8 символов.',
+  'settings.passwordHint': 'Придумайте надёжный пароль, выполнив все правила ниже.',
   'settings.currentPassword': 'Текущий пароль',
   'settings.newPassword': 'Новый пароль',
   'settings.confirmPassword': 'Повторите новый пароль',
@@ -242,15 +239,6 @@ export const ru: Dict = {
     'Лимит памяти превышает ёмкость платформы.',
   'error.nodes.agentUnreachable':
     'Агент на ноде «{node}» недоступен. Убедитесь, что он запущен (Ноды → Запустить агента).',
-  'error.license.invalidKey': 'Ключ лицензии недействителен или повреждён.',
-  'error.license.expiredKey': 'Срок действия ключа лицензии истёк.',
-  'error.license.moduleLocked':
-    'Эта функция доступна в тарифе {tier}. Откройте её в разделе «Тарифы».',
-  'error.license.nodeLimit':
-    'Ваш тариф допускает не более {max} нод(ы). Повысьте тариф в разделе «Тарифы».',
-  'error.license.tunnelLimit':
-    'Ваш тариф допускает не более {max} туннел(я/ей). Повысьте тариф в разделе «Тарифы».',
-  'error.sso.notLicensed': 'Единый вход доступен в тарифе Pro.',
   'error.sso.notConfigured':
     'Единый вход не настроен. Обратитесь к администратору.',
   'error.email.notConfigured':
@@ -339,9 +327,6 @@ export const ru: Dict = {
   'nodes.notEnrolled': 'ожидает подключения',
   'nodes.adding': 'Добавление…',
   'nodes.empty': 'Ноды ещё не зарегистрированы.',
-  'nodes.limitHint': 'Использовано {count} из {max} нод по вашему тарифу.',
-  'nodes.limitReached': 'Ваш тариф допускает не более {max} нод(ы).',
-  'nodes.limitUpgrade': 'Повысить тариф.',
   'nodes.start': 'Запустить агент',
   'nodes.stop': 'Остановить агент',
   'nodes.startConfirm': 'Запустить агент этой ноды?',
@@ -416,7 +401,7 @@ export const ru: Dict = {
   // App catalog
   'catalog.title': 'Каталог приложений',
   'catalog.subtitle':
-    'Приложения в один клик. Весь каталог бесплатен на любом тарифе.',
+    'Приложения в один клик.',
   'catalog.install': 'Установить',
   'catalog.installing': 'Установка…',
   'catalog.pickProject': 'Проект',
@@ -694,9 +679,6 @@ export const ru: Dict = {
   'service.cron': 'Расписание задач',
   'service.cronHint':
     'Запускайте команду внутри контейнера сервиса по cron. Сервис должен быть запущен.',
-  'service.cronLockedTitle': 'Cron на сервис — модуль Home-Lab',
-  'service.cronLockedBody':
-    'Планируйте повторяющиеся команды в запущенных контейнерах — скрипты обслуживания, прогрев кэша и другое. Обновитесь до Home-Lab или Pro, чтобы разблокировать.',
   'service.cronName': 'Имя',
   'service.cronNamePlaceholder': 'напр. ночная очистка',
   'service.cronExpr': 'Cron',
@@ -831,9 +813,6 @@ export const ru: Dict = {
   'tunnel.title': 'Публикация',
   'tunnel.subtitle':
     'Опубликуйте панель через лёгкий публичный VDS-реле. VDS только перекладывает трафик на ваш локальный прокси — без Docker и без настройки под каждое приложение.',
-  'tunnel.lockedTitle': 'Обратные туннели — платный модуль',
-  'tunnel.lockedBody':
-    'Публикуйте ноды за NAT / домашние серверы в интернет через публичный релей — killer-фича для self-hosting за серым IP. Откройте её в тарифе Home-Lab (или Pro).',
   'tunnel.aboutTitle': 'Что такое обратный туннель?',
   'tunnel.aboutBody':
     'Если нода за серым/NAT IP, из интернета она недоступна. Обратный туннель решает это: небольшой клиент с вашей стороны исходящим соединением подключается к серверу туннеля на дешёвом публичном VDS, а тот перекладывает публичные порты (например, 443) обратно на ваш Traefik. Посетители попадают на VDS, трафик уходит на вашу ноду.',
@@ -850,9 +829,6 @@ export const ru: Dict = {
   'tunnel.adding': 'Добавление…',
   'tunnel.empty':
     'Туннелей пока нет. Добавьте, чтобы опубликовать панель через публичный VDS.',
-  'tunnel.limitHint': 'Использовано {count} из {max} туннелей по вашему тарифу.',
-  'tunnel.limitReached': 'Ваш тариф допускает не более {max} туннел(я/ей).',
-  'tunnel.limitUpgrade': 'Повысить тариф.',
   'tunnel.namePlaceholder': 'Название (напр. дом → vds)',
   'tunnel.serverHostPlaceholder': 'Хост или IP публичного VDS',
   'tunnel.controlPortPlaceholder': 'Порт управления',
@@ -912,153 +888,11 @@ export const ru: Dict = {
   'type.BACKEND': 'Бэкенд',
   'type.FRONTEND': 'Фронтенд',
 
-  // Billing / licensing
-  'billing.subtitle':
-    'Управление тарифом этой установки. Free — базовый PaaS; Home-Lab и Pro открывают туннели, cron и дополнительные модули.',
-  'billing.currentPlan': 'Текущий тариф',
-  'billing.active': 'Активна',
-  'billing.free': 'Бесплатно',
-  'billing.inactive': 'Не активна',
-  'billing.expires': 'Действует до',
-  'billing.perpetual': 'Бессрочно',
-  'billing.expiresSoon': 'Истекает через {days} дн. — продлите, чтобы сохранить платные функции.',
-  'billing.activation.online': 'Активировано онлайн',
-  'billing.activation.offline': 'Ожидание активации — платные модули заблокированы, пока сервер лицензий недоступен',
-  'billing.activation.lastCheck': 'последняя проверка',
-  'billing.activation.seatLimit':
-    'Ключ уже занят другой машиной. Удалите его там — или отвяжите ту машину в личном кабинете на сайте, где покупали, — и вставьте ключ здесь заново.',
-  'billing.activation.otherMachine':
-    'Ключ активирован на другой машине. Лицензия живёт на одной машине за раз: отвяжите старую в личном кабинете на сайте, где покупали, — и эта установка активируется на следующей попытке.',
-  'billing.activation.hostHidden':
-    'Сервер лицензий не понимает, что это за машина. Если панель работает в контейнере, пробросьте в него /etc/machine-id только на чтение в /host/etc/machine-id и перезапустите.',
-  'billing.activation.fleetSecret':
-    'Корпоративной лицензии нужен секрет парка. Пропишите на этой машине LICENSE_FLEET_SECRET из письма о покупке или перевыпустите секрет в личном кабинете.',
-  'billing.unlockedModules': 'Открытые модули',
-  'billing.noModules': 'Только базовые функции',
-  'billing.licenseKey': 'Ключ лицензии',
-  'billing.licenseKeyHint':
-    'Вставьте ключ лицензии из письма о покупке, чтобы активировать платный тариф на этой установке.',
-  'billing.licenseKeyPlaceholder': 'вставьте ключ лицензии…',
-  'billing.activate': 'Активировать лицензию',
-  'billing.activating': 'Активация…',
-  'billing.remove': 'Удалить лицензию',
-  'billing.activated': 'Лицензия активирована.',
-  'billing.removed': 'Лицензия удалена. Возврат к Free.',
-  'billing.adminOnly':
-    'Активировать или менять ключ лицензии может только администратор.',
-  'billing.plansTitle': 'Тарифы',
-  'billing.yourPlan': 'Ваш тариф',
-  'billing.buy': 'Оформить',
-  'billing.downgradeHint':
-    'У вас уже подключён более старший тариф. Чтобы перейти на более дешёвый, сначала отключите текущую подписку.',
-  'billing.viewPlans': 'Смотреть тарифы',
-  'billing.requiresPlan': 'Требуется тариф {plan}',
-  'billing.forever': 'навсегда',
-  'billing.perMonth': '/мес',
-  'billing.price.free': '$0',
-  'billing.price.homelab': '$3',
-  'billing.price.pro': '$15',
-  'billing.price.enterprise': '$999',
-  'billing.tier.free': 'Free',
-  'billing.tier.homelab': 'Home-Lab',
-  'billing.tier.pro': 'Pro',
-  'billing.tier.enterprise': 'Enterprise',
-  // Тариф Free — базовый PaaS, лицензия не нужна.
-  'billing.feat.free.deploy.title': 'Git, образ и Compose-деплой',
-  'billing.feat.free.deploy.desc':
-    'Клонируйте и собирайте из Git (шаблон, Dockerfile в репо или Nixpacks), запускайте готовый образ или поднимайте Docker Compose — с live-логами сборки.',
-  'billing.feat.free.catalog.title': 'Полный каталог приложений',
-  'billing.feat.free.catalog.desc':
-    'Установка в один клик любого приложения каталога (Jellyfin, Vaultwarden, Paperless-ngx, Open WebUI, Gitea и др.) с томами и пресетами env — без всякого тарифа.',
-  'billing.feat.free.volumes.title': 'Постоянные тома',
-  'billing.feat.free.volumes.desc':
-    'Подключайте именованные тома к сервисам, чтобы данные переживали редеплои, и делайте бэкапы томов из панели.',
-  'billing.feat.free.https.title': 'HTTPS и сертификаты',
-  'billing.feat.free.https.desc':
-    'Автоматический Let’s Encrypt через Traefik, страница сертификатов со статусом TLS по доменам и опциональная загрузка своего PEM.',
-  'billing.feat.free.databases.title': 'Managed-базы данных',
-  'billing.feat.free.databases.desc':
-    'Разворачивайте PostgreSQL или MySQL для каждого проекта — с бэкапами по расписанию и восстановлением в один клик.',
-  'billing.feat.free.observability.title': 'Логи и live-метрики',
-  'billing.feat.free.observability.desc':
-    'Смотрите логи контейнеров в реальном времени и следите за CPU, RAM и диском по каждому сервису и ноде.',
-  'billing.feat.free.access.title': 'Проекты, RBAC и 2FA',
-  'billing.feat.free.access.desc':
-    'Разбивайте работу на проекты, разграничивайте доступ по ролям и защищайте аккаунты двухфакторной аутентификацией.',
-  'billing.feat.free.node.title': '1 нода включена',
-  'billing.feat.free.node.desc':
-    'Запускайте всю платформу на одном сервере — идеально для личного проекта или знакомства.',
-  // Тариф Home-Lab — ядро Free плюс reverse-туннели и cron.
-  'billing.feat.homelab.allFree.title': 'Всё из Free',
-  'billing.feat.homelab.allFree.desc':
-    'Полное бесплатное ядро плюс возможности для домашней лаборатории ниже.',
-  'billing.feat.homelab.tunnels.title': 'Защищённые reverse-туннели',
-  'billing.feat.homelab.cron.title': 'Cron-задачи на сервис',
-  'billing.feat.homelab.limits.title': '3 ноды + 3 туннеля',
-  'billing.feat.homelab.limits.desc':
-    'Подключайте до трёх серверов и публикуйте до трёх туннелируемых сервисов — достаточно для полноценной домашней лаборатории на нескольких машинах.',
-  // Тариф Pro — всё, без ограничений, все модули.
-  'billing.feat.pro.allHomelab.title': 'Всё из Free и Home-Lab',
-  'billing.feat.pro.allHomelab.desc':
-    'Reverse-туннели, cron на сервис плюс все модули Pro ниже.',
-  'billing.feat.pro.unlimited.title': 'Неограниченные ноды и туннели',
-  'billing.feat.pro.unlimited.desc':
-    'Масштабируйтесь на любое число серверов и публикуйте сколько угодно сервисов — без ограничений.',
-  // Тариф Enterprise — та же панель, но лицензия компании на весь парк машин.
-  'billing.feat.enterprise.allPro.title': 'Всё из Pro',
-  'billing.feat.enterprise.allPro.desc':
-    'Все модули, неограниченные ноды и туннели — та же панель, только лицензия оформлена на компанию, а не на человека.',
-  'billing.feat.enterprise.fleet.title': 'Один ключ на 5000 машин',
-  'billing.feat.enterprise.fleet.desc':
-    'Личные тарифы лицензируют одну машину. Этот — весь парк: сколько бы панелей ни было, ключ один.',
-  'billing.feat.enterprise.resell.title': 'Панель для ваших клиентов',
-  'billing.feat.enterprise.resell.desc':
-    'Сделано для хостеров: клиенты получают панель на ваших машинах, под вашим брендом и по вашей лицензии.',
-  'billing.feat.enterprise.transfers.title': 'Машины приходят и уходят свободно',
-  'billing.feat.enterprise.transfers.desc':
-    'Привязывайте и отвязывайте установки по мере того, как их поднимают и выводят, — без пауз между переносами.',
-  'billing.feat.enterprise.support.title': 'Приоритетная поддержка',
-  'billing.feat.enterprise.support.desc':
-    'Прямая линия по внедрению и инцидентам, вне общей очереди.',
-  'billing.proModulesTitle': 'Все модули Pro',
   // Ценность каждого модуля (что делает + зачем это нужно).
-  'billing.moduleDesc.reverse-tunnels':
-    'Публикуйте сервисы за NAT или в домашней/локальной сети в интернет через лёгкий публичный релей — без проброса портов, статического IP и настройки роутера.',
-  'billing.moduleDesc.service-cron':
-    'Планируйте повторяющиеся команды внутри запущенного контейнера сервиса (бэкапы, прогрев кэша, скрипты обслуживания) со статусом последнего запуска в панели.',
-  'billing.moduleDesc.preview-envs':
-    'Поднимайте одноразовые preview из любой ветки и автоматически создавайте/обновляйте/удаляйте их по webhook GitHub или GitLab для pull request — с опциональными комментариями в PR.',
-  'billing.moduleDesc.offsite-backups':
-    'Зеркалируйте бэкапы в S3, GCS (S3-совместимый), Azure Blob или SFTP с шифрованием доступов — данные уцелеют, даже если нода потеряна.',
-  'billing.moduleDesc.alerts':
-    'Каналы Discord, Slack, Telegram и произвольный webhook для падения нод, неудачных деплоев/бэкапов и порогов ресурсов — узнавайте об инцидентах раньше пользователей.',
-  'billing.moduleDesc.metrics-history':
-    'Периодически собирайте и храните CPU, RAM и диск по каждой ноде с историческими графиками для планирования ёмкости и диагностики.',
-  'billing.moduleDesc.sso':
-    'Позвольте команде входить через ваш провайдер идентификации по OpenID Connect — со списком разрешённых доменов и автоматическим созданием пользователей.',
-  'billing.moduleDesc.audit-export':
-    'Просматривайте журнал действий по всей организации и выгружайте его в CSV или JSON для комплаенса и разбора инцидентов.',
-  'billing.moduleDesc.api-cli':
-    'Выпускайте персональные токены доступа для автоматизации платформы из скриптов, CI/CD-пайплайнов и CLI.',
-  'billing.moduleDesc.white-label':
-    'Оформите панель под свой бренд: имя приложения, логотип, акцентный цвет и атрибуция в интерфейсе и на странице входа.',
-  'billing.moduleDesc.email':
-    'Подключите свой SMTP-провайдер, чтобы панель рассылала письма — задайте отправителя, отправляйте тестовые сообщения, уведомляйте всех пользователей или выбранных получателей и смотрите журнал доставки.',
-  'billing.module.reverse-tunnels': 'Reverse-tunnels',
-  'billing.module.service-cron': 'Cron на сервис',
-  'billing.module.preview-envs': 'Preview-окружения',
-  'billing.module.offsite-backups': 'Офсайт-бэкапы',
-  'billing.module.alerts': 'Алерты',
-  'billing.module.metrics-history': 'История метрик',
-  'billing.module.sso': 'SSO / OIDC',
-  'billing.module.audit-export': 'Экспорт аудита',
 
-  // Страница журнала аудита (Pro: audit-export)
+  // Страница журнала аудита
   'audit.subtitle':
     'Журнал действий по всей организации с экспортом в CSV/JSON.',
-  'audit.lockedTitle': 'Экспорт аудита — модуль Pro',
-  'audit.lockedBody':
-    'Просматривайте журнал действий по всей организации и выгружайте его в CSV или JSON для комплаенса и разбора инцидентов. Оформите Pro, чтобы разблокировать.',
   'audit.adminOnly': 'Журнал аудита доступен только администраторам.',
   'audit.exportTitle': 'Экспорт',
   'audit.exportHint':
@@ -1077,17 +911,11 @@ export const ru: Dict = {
   'audit.colTarget': 'Объект',
   'audit.colIp': 'IP',
   'audit.colStatus': 'Статус',
-  'billing.module.api-cli': 'API и CLI',
-  'billing.module.white-label': 'White-label',
-  'billing.module.email': 'Почтовый сервис',
 
-  // Оповещения (Pro: alerts)
+  // Оповещения
   'alerts.title': 'Оповещения',
   'alerts.subtitle':
     'Уведомления об инцидентах с нодами, деплоями, сервисами, базами, бэкапами и туннелями.',
-  'alerts.lockedTitle': 'Оповещения — функция Pro',
-  'alerts.lockedBody':
-    'Свяжите отслеживаемые события с Discord, Slack, Telegram или своим webhook и получайте уведомления автоматически.',
   'alerts.adminOnly': 'Управлять оповещениями могут только администраторы.',
   'alerts.channelsTitle': 'Каналы',
   'alerts.channelsHint':
@@ -1139,7 +967,6 @@ export const ru: Dict = {
   'alerts.grp.databases': 'Базы данных',
   'alerts.grp.backups': 'Бэкапы',
   'alerts.grp.networking': 'Сеть',
-  'alerts.grp.licensing': 'Лицензия',
   // Названия событий.
   'alerts.ev.nodeOffline': 'Нода офлайн',
   'alerts.ev.nodeOnline': 'Нода восстановлена',
@@ -1158,7 +985,6 @@ export const ru: Dict = {
   'alerts.ev.offsiteFailed': 'Ошибка выгрузки в облако',
   'alerts.ev.tunnelOffline': 'Туннель недоступен',
   'alerts.ev.tunnelOnline': 'Туннель восстановлен',
-  'alerts.ev.licenseExpiring': 'Лицензия истекает',
   'alerts.eventsTitle': 'Недавние оповещения',
   'alerts.noEvents': 'Оповещений пока не было.',
   'alerts.colTime': 'Время',
@@ -1168,13 +994,10 @@ export const ru: Dict = {
   'alerts.statusSent': 'Отправлено',
   'alerts.statusFailed': 'Ошибка',
 
-  // Внешние бэкапы (Pro: offsite-backups)
+  // Внешние бэкапы
   'offsite.title': 'Внешние бэкапы',
   'offsite.subtitle':
     'Дублируйте локальные бэкапы в S3, GCS, Azure Blob или по SFTP.',
-  'offsite.lockedTitle': 'Внешние бэкапы — функция Pro',
-  'offsite.lockedBody':
-    'Автоматически копируйте каждый успешный бэкап во внешнее хранилище (AWS S3, GCS, Azure Blob, SFTP, MinIO, R2, B2).',
   'offsite.adminOnly': 'Управлять внешними бэкапами могут только администраторы.',
   'offsite.destTitle': 'Назначение',
   'offsite.destHint':
@@ -1226,12 +1049,9 @@ export const ru: Dict = {
   'offsite.statusUploaded': 'Выгружено',
   'offsite.statusFailed': 'Ошибка',
 
-  // Личные API-токены (Pro: api-cli)
+  // Личные API-токены
   'apiTokens.title': 'API-токены',
   'apiTokens.subtitle': 'Личные токены для API и CLI.',
-  'apiTokens.lockedTitle': 'Доступ к API и CLI — функция Pro',
-  'apiTokens.lockedBody':
-    'Создавайте личные токены доступа, чтобы автоматизировать панель или использовать её из CI/CD. Токен наследует ваши права.',
   'apiTokens.createTitle': 'Создать токен',
   'apiTokens.name': 'Название',
   'apiTokens.namePlaceholder': 'напр. CI pipeline',
@@ -1266,14 +1086,11 @@ export const ru: Dict = {
   'apiTokens.confirmRevoke':
     'Отозвать токен? Любой скрипт, который его использует, перестанет работать.',
 
-  // White-label (Pro: white-label)
+  // White-label
   'brand.poweredBy': 'Работает на Self-Hosted',
   'whiteLabel.title': 'White-label',
   'whiteLabel.subtitle':
     'Оформите панель под свой бренд: название, логотип и цвет.',
-  'whiteLabel.lockedTitle': 'White-label — функция Pro',
-  'whiteLabel.lockedBody':
-    'Замените название приложения, логотип и акцентный цвет, а также уберите отметку «Работает на».',
   'whiteLabel.adminOnly': 'Менять брендинг могут только администраторы.',
   'whiteLabel.appName': 'Название приложения',
   'whiteLabel.accentColor': 'Акцентный цвет',
@@ -1288,13 +1105,10 @@ export const ru: Dict = {
   'whiteLabel.reloadHint':
     'Название, логотип, фавикон и акцентный цвет применяются во всём приложении сразу.',
 
-  // История метрик (Pro: metrics-history)
+  // История метрик
   'metricsHistory.title': 'Метрики',
   'metricsHistory.subtitle':
     'История загрузки CPU, памяти и диска по каждой ноде.',
-  'metricsHistory.lockedTitle': 'История метрик — функция Pro',
-  'metricsHistory.lockedBody':
-    'Собирайте и стройте графики загрузки CPU, памяти и диска по каждой ноде во времени.',
   'metricsHistory.empty':
     'Данных пока нет — первый замер собирается примерно за минуту.',
   'metricsHistory.collecting':
@@ -1335,12 +1149,9 @@ export const ru: Dict = {
   'email.aboutBody':
     'Отправляйте и рассылайте сообщения пользователям через ваш SMTP-провайдер (Mailgun, SendGrid, Amazon SES, Postmark или любой SMTP-релей). Это только исходящая почта — сообщения передаются через настроенного вами провайдера; это не входящий почтовый сервер. Укажите настройки SMTP, отправьте тест и составьте письмо для всех пользователей или выбранного списка.',
 
-  // Почтовый сервис (Pro: email)
+  // Почтовый сервис
   'email.title': 'Почта',
   'email.subtitle': 'Отправка и рассылка сообщений пользователям через SMTP.',
-  'email.lockedTitle': 'Почта — функция Pro',
-  'email.lockedBody':
-    'Подключите SMTP-провайдера, чтобы отправлять транзакционные письма и рассылать объявления пользователям и команде.',
   'email.adminOnly': 'Настраивать и отправлять почту могут только администраторы.',
   'email.smtpTitle': 'Настройки SMTP',
   'email.smtpHint':
@@ -1381,13 +1192,10 @@ export const ru: Dict = {
   'email.statusSent': 'Отправлено',
   'email.statusFailed': 'Ошибка',
 
-  // Единый вход (Pro: sso)
+  // Единый вход
   'sso.title': 'Единый вход (SSO)',
   'sso.subtitle':
     'Разрешите вход через ваш провайдер OpenID Connect.',
-  'sso.lockedTitle': 'Единый вход — функция Pro',
-  'sso.lockedBody':
-    'Подключите Google, Microsoft Entra, Okta, Keycloak или любой провайдер OpenID Connect, чтобы команда входила под своими учётными записями.',
   'sso.adminOnly': 'Настраивать единый вход могут только администраторы.',
   'sso.enabled': 'Включить единый вход',
   'sso.enabledHint':
@@ -1410,7 +1218,6 @@ export const ru: Dict = {
   'sso.error.backToLogin': 'Вернуться ко входу',
   'sso.error.invalid_request':
     'Запрос на вход был неполным. Попробуйте ещё раз.',
-  'sso.error.not_licensed': 'Единый вход доступен в тарифе Pro.',
   'sso.error.not_configured': 'Единый вход не настроен.',
   'sso.error.bad_state':
     'Ссылка для входа истекла или недействительна. Попробуйте ещё раз.',
@@ -1506,13 +1313,10 @@ export const ru: Dict = {
   'certs.savingTls': 'Сохранение…',
   'certs.tlsSaved': 'Предпочтения TLS сохранены.',
 
-  // Превью-среды (Pro: preview-envs)
+  // Превью-среды
   'previews.title': 'Превью-среды',
   'previews.subtitle':
     'Разверните одноразовую копию сервиса из любой ветки с отдельным URL.',
-  'previews.lockedTitle': 'Превью-среды — функция Pro',
-  'previews.lockedBody':
-    'Разворачивайте любую ветку как изолированную самоудаляющуюся среду с собственным поддоменом — удобно для ревью пул-реквестов.',
   'previews.newTitle': 'Новая превью-среда',
   'previews.service': 'Сервис',
   'previews.servicePlaceholder': 'Выберите сервис…',
@@ -1536,13 +1340,10 @@ export const ru: Dict = {
   'previews.delete': 'Удалить',
   'previews.pr': 'PR',
 
-  // Git App / PR-triggered previews (Pro: preview-envs)
+  // Git App / PR-triggered previews
   'gitApps.title': 'Git App / PR-превью',
   'gitApps.subtitle':
     'Подключите webhook GitHub или GitLab, чтобы pull request автоматически поднимали preview-окружения.',
-  'gitApps.lockedTitle': 'Git App превью — функция Pro',
-  'gitApps.lockedBody':
-    'Preview по PR требуют тариф Pro (модуль preview-envs).',
   'gitApps.adminOnly':
     'Настраивать интеграцию Git App могут только администраторы.',
   'gitApps.github': 'GitHub',

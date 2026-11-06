@@ -13,14 +13,11 @@ import { MemberRole } from '@selfhosted/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ProjectRole } from '../../common/rbac/project-role.decorator';
 import { ProjectRolesGuard } from '../../common/rbac/project-roles.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { Actor } from '../members/members.service';
 import { PreviewService } from './preview.service';
 import { CreatePreviewDto } from './dto/preview.dto';
 
-@UseGuards(JwtAuthGuard, ProjectRolesGuard, ModuleGuard)
-@RequiresModule('preview-envs')
+@UseGuards(JwtAuthGuard, ProjectRolesGuard)
 @Controller()
 export class PreviewController {
   constructor(private readonly preview: PreviewService) {}

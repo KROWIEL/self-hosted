@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService, refreshJtiTtlMs } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { CryptoService } from '../../common/crypto/crypto.service';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 
 const redisStore = new Map<string, string>();
 const setCalls: Array<{ key: string; nx: boolean }> = [];
@@ -83,7 +82,6 @@ describe('AuthService.refresh jti reuse detection', () => {
       users as unknown as UsersService,
       jwt as unknown as JwtService,
       {} as CryptoService,
-      { get: jest.fn() } as unknown as EntitlementsService,
       { consume: jest.fn() } as never,
     );
   });

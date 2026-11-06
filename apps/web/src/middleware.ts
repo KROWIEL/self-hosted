@@ -15,8 +15,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * Derive the API origins (http(s) + matching ws(s)) from NEXT_PUBLIC_API_URL so
  * both fetch() calls and the interactive-exec WebSocket are allowed by
  * connect-src. Falls back to the app default (localhost:3001) when unset — the
- * same default used by src/lib/api.ts. Uses the identical origin/ws derivation
- * as next.config.js. Returns [] only when the URL is unparseable.
+ * same default used by src/lib/api.ts. Returns [] for a path-only value such
+ * as "/api/v1": the API then shares the panel's origin, which 'self' covers.
  */
 function apiConnectSrc(): string[] {
   const raw = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-Hosted: деплой приложений на свои серверы</title>
+  <meta name="description" content="Открытая панель деплоя. Собирает приложения из git, Docker-образов или Compose и запускает их по HTTPS на ваших серверах. Лицензия MIT, установка одной командой.">
+  <link rel="alternate" hreflang="en" href="../">
+  <link rel="alternate" hreflang="ru" href="./">
+  <meta property="og:title" content="Self-Hosted">
+  <meta property="og:description" content="Деплой приложений из git, Docker-образов или Compose на ваши серверы. Бесплатно, лицензия MIT.">
+  <meta property="og:image" content="../screenshots/dashboard.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <a class="skip" href="#main">К содержимому</a>
+  <header class="wrap top">
+    <a class="brand" href="./">Self-Hosted</a>
+    <nav aria-label="Основное меню">
+      <a href="#install">Установка</a>
+      <a href="https://github.com/KROWIEL/self-hosted/blob/main/docs/INSTALL.ru.md">Документация</a>
+      <a href="https://github.com/KROWIEL/self-hosted">GitHub</a>
+      <a href="../" hreflang="en" lang="en">English</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="wrap hero">
+      <h1>Деплой приложений на свои серверы</h1>
+      <p class="lede">Self-Hosted собирает приложения из git, Docker-образов или Compose-файлов и запускает их по HTTPS на ваших машинах. Одна панель и для одного VPS, и для целой стойки. Бесплатно, лицензия MIT.</p>
+
+      <div class="command">
+        <code>curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh</code>
+        <button type="button" data-copy data-copied="Скопировано" data-failed="Не удалось">Копировать</button>
+      </div>
+      <p class="command-note">Выполните на Linux-сервере, на который указывает домен. Скрипт при необходимости поставит Docker и выведет пароль администратора.</p>
+
+      <figure class="shot">
+        <img src="../screenshots/dashboard.png" width="1600" height="1000" alt="Дашборд проектов с работающими сервисами, ресурсами нод и последними деплоями">
+      </figure>
+    </div>
+
+    <section class="wrap" aria-labelledby="features">
+      <h2 id="features">Что умеет</h2>
+      <dl class="features">
+        <div>
+          <dt>Деплой из любого источника</dt>
+          <dd>Сборка git-репозитория по шаблону, его <code>Dockerfile</code> или через Nixpacks, запуск образа из registry или Compose-стека.</dd>
+        </div>
+        <div>
+          <dt>250+ приложений в один клик</dt>
+          <dd>Immich, Jellyfin, Gitea, Vaultwarden, Ollama и другие из встроенного каталога.</dd>
+        </div>
+        <div>
+          <dt>Базы данных с бэкапами</dt>
+          <dd>PostgreSQL и MySQL на проект, бэкапы по расписанию, восстановление и копии в S3, GCS, Azure или SFTP.</dd>
+        </div>
+        <div>
+          <dt>Релизы без простоя</dt>
+          <dd>Blue-green деплой ждёт проверки health, а любой предыдущий образ возвращается одним кликом.</dd>
+        </div>
+        <div>
+          <dt>HTTPS на каждом домене</dt>
+          <dd>Сертификаты Let's Encrypt на домен или wildcard, либо ваши собственные.</dd>
+        </div>
+        <div>
+          <dt>Много серверов, одна панель</dt>
+          <dd>Небольшой агент на каждой машине, подключается одной командой. Серверы за NAT выходят в сеть через обратный туннель.</dd>
+        </div>
+        <div>
+          <dt>Превью для каждого pull request</dt>
+          <dd>Вебхуки GitHub и GitLab поднимают временное окружение на ветку или PR.</dd>
+        </div>
+        <div>
+          <dt>Для команд</dt>
+          <dd>Проекты с квотами CPU и RAM, четыре роли, журнал аудита, единый вход и двухфакторная аутентификация.</dd>
+        </div>
+        <div>
+          <dt>Всё под наблюдением</dt>
+          <dd>Живые логи, история метрик, терминал в браузере и оповещения в Discord, Slack, Telegram или webhook.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="wrap" id="install" aria-labelledby="install-title">
+      <h2 id="install-title">Установка на сервер</h2>
+      <p>Нужен Linux-сервер от 2&nbsp;ГБ ОЗУ (рекомендуются Ubuntu 22.04+ или Debian 12+), права root и открытые порты 80, 443 и 8443.</p>
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>Направьте домен на сервер</h3>
+            <p>Создайте запись <code>A</code>, например <code>panel.example.com</code>, с IP сервера. Сертификат запрашивается при первом запуске, поэтому сделайте это заранее.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Запустите установщик</h3>
+            <p>Он спросит домен и email для Let's Encrypt, сгенерирует все секреты, запустит панель и выведет пароль администратора.</p>
+            <div class="cmd">
+              <code>curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh</code>
+              <button type="button" data-copy data-copied="Скопировано" data-failed="Не удалось">Копировать</button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Подключите сервер как ноду</h3>
+            <p>Войдите, откройте <strong>Ноды → Добавить удалённую ноду</strong>, укажите IP сервера и выполните показанную команду. Установленный ею агент собирает и запускает ваши приложения.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Деплойте</h3>
+            <p>Создайте проект, добавьте сервис из git, образа или каталога, привяжите домен и запустите деплой.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="wrap" aria-labelledby="more">
+      <h2 id="more">Другие серверы и обновления</h2>
+      <p>Каждый дополнительный сервер подготовьте в режиме ноды, затем подключите его через <strong>Ноды</strong> так же:</p>
+      <div class="cmd">
+        <code>curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh -s node</code>
+        <button type="button" data-copy data-copied="Скопировано" data-failed="Не удалось">Копировать</button>
+      </div>
+      <p>Для обновления запустите команду установки ещё раз. Настройки и данные остаются в <code>/opt/selfhosted</code>, миграции базы применяются при старте. В <a href="https://github.com/KROWIEL/self-hosted/blob/main/docs/INSTALL.ru.md">инструкции по установке</a> есть wildcard-сертификаты, бэкапы и решение проблем.</p>
+    </section>
+
+    <section class="wrap faq" aria-labelledby="faq">
+      <h2 id="faq">Вопросы</h2>
+      <details>
+        <summary>Это правда бесплатно?</summary>
+        <p>Да. Код под лицензией MIT: используйте, изменяйте, продавайте и хостите для других. Нет платных тарифов, ключей лицензии и ограничений по серверам и пользователям.</p>
+      </details>
+      <details>
+        <summary>Нужен ли Kubernetes?</summary>
+        <p>Нет. На каждом сервере обычный Docker и небольшой агент. HTTPS на каждом сервере обслуживает Traefik.</p>
+      </details>
+      <details>
+        <summary>Можно запустить дома за NAT?</summary>
+        <p>Да. Возьмите самый маленький VPS с белым IP и используйте раздел <strong>Публикация</strong> в панели: он пробрасывает порты 80 и 443 с VPS на домашний сервер.</p>
+      </details>
+      <details>
+        <summary>Какие архитектуры поддерживаются?</summary>
+        <p>Linux на x86-64 и ARM64, и для панели, и для агента.</p>
+      </details>
+      <details>
+        <summary>Как сообщить об ошибке или уязвимости?</summary>
+        <p>Ошибки — в <a href="https://github.com/KROWIEL/self-hosted/issues">GitHub issues</a>. Уязвимости — через <a href="https://github.com/KROWIEL/self-hosted/security/advisories/new">закрытое security advisory</a>.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>Self-Hosted — открытый проект под <a href="https://github.com/KROWIEL/self-hosted/blob/main/LICENSE">лицензией MIT</a>.</p>
+    <p><a href="https://github.com/KROWIEL/self-hosted">Исходный код</a>, <a href="https://github.com/KROWIEL/self-hosted/releases">релизы</a> и <a href="https://github.com/KROWIEL/self-hosted/blob/main/CHANGELOG.md">список изменений</a> на GitHub.</p>
+  </footer>
+  <script src="../copy.js" defer></script>
+</body>
+</html>

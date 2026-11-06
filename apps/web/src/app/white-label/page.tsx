@@ -10,8 +10,6 @@ import {
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
 import { refreshBranding, isSafeLogoUrl, safeLogoUrl } from '@/components/branding';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -33,8 +31,6 @@ export default function WhiteLabelPage() {
 function WhiteLabelContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('white-label');
 
   const [me, setMe] = useState<AuthMe | null>(null);
   const [form, setForm] = useState<BrandingConfig>({
@@ -56,7 +52,7 @@ function WhiteLabelContent() {
   }, []);
 
   useEffect(() => {
-    if (!unlocked || !isAdmin) return;
+    if (!isAdmin) return;
     getBrandingConfig()
       .then((c) =>
         setForm({
@@ -68,7 +64,7 @@ function WhiteLabelContent() {
       )
       .catch((e) => setError(errorText(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, isAdmin]);
+  }, [isAdmin]);
 
   async function onSave() {
     const logoUrl = form.logoUrl.trim();
@@ -96,22 +92,6 @@ function WhiteLabelContent() {
     } finally {
       setBusy(false);
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader
-          title={t('whiteLabel.title')}
-          subtitle={t('whiteLabel.subtitle')}
-        />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('whiteLabel.lockedTitle')}
-          featureBody={t('whiteLabel.lockedBody')}
-        />
-      </>
-    );
   }
 
   if (me && !isAdmin) {

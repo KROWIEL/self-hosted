@@ -162,6 +162,13 @@
       "when": 1785436063318,
       "tag": "0022_nappy_ultragirl",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793921891661,
+      "tag": "0023_drop_licensing",
+      "breakpoints": true
     }
   ]
 }

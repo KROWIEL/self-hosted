@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PowerAction } from '@selfhosted/shared';
-import { Agent } from 'undici';
+import { Agent, fetch as undiciFetch } from 'undici';
 import { connect as tlsConnect } from 'node:tls';
 import { nodes } from '../../db/schema';
 import { NodeErrors } from '../../common/errors/app-errors';
@@ -263,9 +263,8 @@ export class AgentClient {
       },
     });
     this.dispatchers.set(key, agent);
-    // The `undici` package's Agent type differs nominally from the Dispatcher
-    // baked into Node's global fetch (undici-types); they are compatible at
-    // runtime, so bridge the type here.
+    // Typed as the global fetch's dispatcher so call sites keep using the
+    // standard RequestInit; doFetch hands it to undici's own fetch.
     return agent as unknown as FetchDispatcher;
   }
 
@@ -280,8 +279,18 @@ export class AgentClient {
     init: Parameters<typeof fetch>[1],
   ): Promise<Response> {
     try {
-      return await fetch(input, init);
-    } catch {
+      // The pinned-TLS Agent comes from the `undici` package, and Node's global
+      // fetch rejects dispatchers from a different undici major
+      // ("invalid onRequestStart method"), so use the package's fetch too.
+      return (await undiciFetch(
+        input,
+        init as unknown as Parameters<typeof undiciFetch>[1],
+      )) as unknown as Response;
+    } catch (e) {
+      const cause = e instanceof Error ? (e.cause ?? e) : e;
+      this.logger.warn(
+        `Agent ${node.name} request failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+      );
       throw NodeErrors.agentUnreachable(node.name);
     }
   }

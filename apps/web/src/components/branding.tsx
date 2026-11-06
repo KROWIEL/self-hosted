@@ -39,7 +39,7 @@ export function refreshBranding(): Promise<BrandingEffective> {
   return fetchBranding(true);
 }
 
-/** Reads license-aware branding (app name / logo / accent). Falls back to the
+/** Reads branding (app name / logo / accent). Falls back to the
  * default brand while loading or on error. */
 export function useBranding(): BrandingEffective {
   const [branding, setBranding] = useState<BrandingEffective>(cache ?? DEFAULT);

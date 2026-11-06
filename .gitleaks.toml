@@ -9,9 +9,6 @@ useDefault = true
 description = "Example / placeholder files and non-secret public keys"
 paths = [
   '''\.env\.example$''',
-  # The embedded verification key is public by design; the matching private
-  # signing key lives in a separate repository and is never checked in.
-  '''apps/control-plane/src/common/licensing/license\.ts$''',
   # Fixture: a stub PEM asserting the certificate parser rejects malformed input.
   '''services/agent/internal/certs/certs_test\.go$''',
 ]

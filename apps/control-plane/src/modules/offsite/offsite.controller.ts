@@ -10,17 +10,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { OffsiteService } from './offsite.service';
 import { SetOffsiteConfigDto } from './dto/offsite.dto';
 
 /**
- * Offsite backup destination management (Pro: offsite-backups). Platform-level,
+ * Offsite backup destination management. Platform-level,
  * so admin-only; the whole controller is gated behind the module.
  */
-@UseGuards(JwtAuthGuard, ModuleGuard)
-@RequiresModule('offsite-backups')
+@UseGuards(JwtAuthGuard)
 @Controller('offsite')
 export class OffsiteController {
   constructor(private readonly offsite: OffsiteService) {}

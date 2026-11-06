@@ -1,13 +1,10 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { MetricsService } from './metrics.service';
 
 // Cross-node metric history is platform-admin only.
-@UseGuards(JwtAuthGuard, AdminGuard, ModuleGuard)
-@RequiresModule('metrics-history')
+@UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('metrics')
 export class MetricsController {
   constructor(private readonly metrics: MetricsService) {}

@@ -3,7 +3,6 @@ import { createHash, randomBytes } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { DRIZZLE, Database } from '../../db/database.module';
 import { apiTokens, users } from '../../db/schema';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import {
   API_TOKEN_PREFIX,
   ApiTokenScope,
@@ -28,7 +27,6 @@ export interface AuthedToken {
 export class ApiTokenService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   private hash(raw: string): string {
@@ -98,8 +96,7 @@ export class ApiTokenService {
 
   /**
    * Resolves the user + granted scopes behind a raw PAT, or null if it's
-   * invalid, expired, or the `api-cli` module isn't licensed (so tokens die
-   * with a downgrade).
+   * invalid or expired.
    */
   async validateRaw(raw: string): Promise<AuthedToken | null> {
     if (!raw.startsWith(API_TOKEN_PREFIX)) return null;
@@ -110,8 +107,6 @@ export class ApiTokenService {
       .limit(1);
     if (!row) return null;
     if (row.expiresAt && row.expiresAt.getTime() < Date.now()) return null;
-    if (!(await this.entitlements.hasModule('api-cli'))) return null;
-
     const [user] = await this.db
       .select({ id: users.id, email: users.email, role: users.role })
       .from(users)

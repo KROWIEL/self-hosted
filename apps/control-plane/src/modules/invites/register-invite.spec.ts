@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from '../auth/auth.service';
 import { UsersService } from '../users/users.service';
 import { CryptoService } from '../../common/crypto/crypto.service';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { InvitesService } from './invites.service';
 
 jest.mock('ioredis', () => {
@@ -53,7 +52,6 @@ describe('AuthService.register with invites', () => {
       users as unknown as UsersService,
       jwt as unknown as JwtService,
       {} as CryptoService,
-      { get: jest.fn() } as unknown as EntitlementsService,
       invites as unknown as InvitesService,
     );
   });

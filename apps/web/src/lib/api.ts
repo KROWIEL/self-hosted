@@ -1,5 +1,12 @@
+const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+
+// A path-only value ("/api/v1") means the API shares the panel's origin. It is
+// made absolute in the browser because WebSocket URLs and the copy-paste
+// snippets shown in the UI need a full URL.
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+  RAW_API_URL.startsWith('/') && typeof window !== 'undefined'
+    ? `${window.location.origin}${RAW_API_URL}`
+    : RAW_API_URL;
 
 // ---- Domain types (mirror the control plane responses) ----
 
@@ -135,7 +142,7 @@ export const listProjectAudit = (projectId: string) =>
 
 export const listAudit = () => api<AuditLog[]>('/audit');
 
-/** Downloads the platform-wide audit trail as CSV/JSON (Pro: audit-export). */
+/** Downloads the platform-wide audit trail as CSV/JSON. */
 export async function exportAudit(
   format: 'csv' | 'json',
   opts: { action?: string; from?: string; to?: string; limit?: number } = {},
@@ -170,7 +177,7 @@ export async function exportAudit(
   URL.revokeObjectURL(url);
 }
 
-// ---- Alerts (Pro: alerts) ----
+// ---- Alerts ----
 
 export interface AlertChannel {
   id: string;
@@ -267,7 +274,7 @@ export const deleteAlertRule = (id: string) =>
 
 export const listAlertEvents = () => api<AlertEvent[]>('/alerts/events');
 
-// ---- Offsite backups (Pro: offsite-backups) ----
+// ---- Offsite backups ----
 
 export type OffsiteProvider = 's3' | 'gcs' | 'azure' | 'sftp';
 
@@ -398,7 +405,7 @@ export const setTlsSettings = (body: TlsSettingsInput) =>
     body: JSON.stringify(body),
   });
 
-// ---- Email (Pro: email) ----
+// ---- Email ----
 
 export interface EmailConfig {
   enabled: boolean;
@@ -459,7 +466,7 @@ export const sendEmailMessage = (body: {
   });
 export const listEmailMessages = () => api<EmailMessage[]>('/email/messages');
 
-// ---- Personal API tokens (Pro: api-cli) ----
+// ---- Personal API tokens ----
 
 export type ApiTokenScope = 'read' | 'full' | 'admin';
 
@@ -513,7 +520,7 @@ export const createInvite = (body: {
 export const revokeInvite = (id: string) =>
   api<{ ok: true }>(`/invites/${id}`, { method: 'DELETE' });
 
-// ---- White-label branding (Pro: white-label) ----
+// ---- White-label branding ----
 
 export interface BrandingEffective {
   appName: string;
@@ -529,7 +536,7 @@ export interface BrandingConfig {
   hidePoweredBy: boolean;
 }
 
-/** Public, license-aware branding (safe to call before login). */
+/** Public branding (safe to call before login). */
 export const getBranding = () => api<BrandingEffective>('/branding');
 export const getBrandingConfig = () =>
   api<BrandingConfig>('/branding/config');
@@ -539,7 +546,7 @@ export const setBranding = (body: Partial<BrandingConfig>) =>
     body: JSON.stringify(body),
   });
 
-// ---- Metrics history (Pro: metrics-history) ----
+// ---- Metrics history ----
 
 export interface MetricPoint {
   ts: string;
@@ -551,7 +558,7 @@ export interface MetricPoint {
 export const getNodeMetrics = (nodeId: string, hours: number) =>
   api<MetricPoint[]>(`/metrics/nodes/${nodeId}?hours=${hours}`);
 
-// ---- Single sign-on / OIDC (Pro: sso) ----
+// ---- Single sign-on / OIDC ----
 
 /** Public login-page status: whether the SSO button should be shown. */
 export interface SsoStatus {
@@ -583,7 +590,7 @@ export interface SsoConfigInput {
   buttonLabel?: string;
 }
 
-/** Public, license-aware SSO status (safe to call before login). */
+/** Public SSO status (safe to call before login). */
 export const getSsoStatus = () => api<SsoStatus>('/auth/sso/status');
 
 export const getSsoConfig = () => api<SsoConfig>('/auth/sso/config');
@@ -597,7 +604,7 @@ export const setSsoConfig = (body: SsoConfigInput) =>
 /** Top-level URL to begin the OIDC flow (browser navigates here directly). */
 export const ssoStartUrl = () => `${API_URL}/auth/sso/start`;
 
-// ---- Preview environments (Pro: preview-envs) ----
+// ---- Preview environments ----
 
 export interface PreviewEnv {
   id: string;
@@ -645,7 +652,7 @@ export const redeployPreview = (id: string) =>
 export const deletePreview = (id: string) =>
   api<{ ok: boolean }>(`/previews/${id}`, { method: 'DELETE' });
 
-// ---- Git App / PR webhooks (Pro: preview-envs) ----
+// ---- Git App / PR webhooks ----
 
 export type GitAppProvider = 'github' | 'gitlab';
 
@@ -988,56 +995,6 @@ interface AuthResult {
   mustChangePassword?: boolean;
 }
 
-// ---- Commercial licensing / entitlements (mirror @selfhosted/shared) ----
-
-export type LicenseTier = 'free' | 'homelab' | 'pro' | 'enterprise';
-
-export type LicenseModule =
-  | 'reverse-tunnels'
-  | 'service-cron'
-  | 'preview-envs'
-  | 'offsite-backups'
-  | 'alerts'
-  | 'metrics-history'
-  | 'sso'
-  | 'audit-export'
-  | 'api-cli'
-  | 'white-label'
-  | 'email';
-
-export interface ActivationStatus {
-  required: boolean;
-  ok: boolean;
-  lastCheckAt: number | null;
-  reason?: string;
-}
-
-export interface TierLimits {
-  /** Max nodes; `null` = unlimited. */
-  maxNodes: number | null;
-  /** Max reverse tunnels; `null` = unlimited. */
-  maxTunnels: number | null;
-}
-
-export interface Entitlements {
-  tier: LicenseTier;
-  modules: LicenseModule[];
-  limits: TierLimits;
-  expiresAt: number | null;
-  licensed: boolean;
-  subject?: string;
-  name?: string;
-  activation?: ActivationStatus;
-}
-
-export const FREE_ENTITLEMENTS: Entitlements = {
-  tier: 'free',
-  modules: [],
-  limits: { maxNodes: 1, maxTunnels: 0 },
-  expiresAt: null,
-  licensed: false,
-};
-
 export interface AuthMe {
   id: string;
   email: string;
@@ -1048,7 +1005,6 @@ export interface AuthMe {
   onboardedAt: string | null;
   needsOnboarding: boolean;
   mustChangePassword: boolean;
-  entitlements: Entitlements;
 }
 
 export interface TwoFactorSetup {
@@ -1557,7 +1513,7 @@ export const rollbackDeployment = (deploymentId: string) =>
 export const getWebhook = (id: string) =>
   api<{ token: string; path: string }>(`/services/${id}/webhook`);
 
-// ---- Per-service cron (Home-Lab: service-cron) ----
+// ---- Per-service cron ----
 
 export interface ServiceCron {
   id: string;
@@ -1887,19 +1843,3 @@ export const tunnelStatus = (id: string) =>
   api<TunnelStatus>(`/tunnels/${id}/status`);
 export const tunnelInstall = (id: string) =>
   api<TunnelInstall>(`/tunnels/${id}/install`);
-
-// ---- Licensing / billing ----
-
-/** Current effective entitlements for this installation. */
-export const getLicense = () => api<Entitlements>('/license');
-
-/** Activate / replace the installation license key (admin only). */
-export const setLicense = (key: string) =>
-  api<Entitlements>('/license', {
-    method: 'PUT',
-    body: JSON.stringify({ key }),
-  });
-
-/** Remove the stored license key, reverting to Free (admin only). */
-export const clearLicense = () =>
-  api<Entitlements>('/license', { method: 'DELETE' });

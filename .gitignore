@@ -47,3 +47,6 @@ Thumbs.db
 
 # Docker volumes (local)
 .docker-data/
+
+# Assembled by the Pages workflow
+site/screenshots/

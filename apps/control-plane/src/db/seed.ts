@@ -95,12 +95,11 @@ async function main() {
   const email = process.env.ADMIN_EMAIL ?? 'admin@example.com';
   const password = process.env.ADMIN_PASSWORD ?? 'changeme123';
 
-  const existing = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email))
-    .limit(1);
-  if (existing.length === 0) {
+  // Only on an empty database: the seed runs on every start, and an admin who
+  // later changes their email must not get a second account with the
+  // bootstrap password.
+  const anyUser = await db.select({ id: users.id }).from(users).limit(1);
+  if (anyUser.length === 0) {
     await db.insert(users).values({
       email,
       password: await bcrypt.hash(password, 12),
@@ -108,7 +107,7 @@ async function main() {
     });
     console.log(`Admin user created: ${email}`);
   } else {
-    console.log(`Admin user already exists: ${email}`);
+    console.log('Users already exist; skipping the bootstrap admin.');
   }
 
   const builtInTemplates: (typeof templates.$inferInsert)[] = [

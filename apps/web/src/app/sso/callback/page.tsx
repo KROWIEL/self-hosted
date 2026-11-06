@@ -8,7 +8,6 @@ import { TKey, useI18n } from '@/i18n';
 /** Error codes we have a localized message for; anything else is generic. */
 const KNOWN_ERRORS = new Set([
   'invalid_request',
-  'not_licensed',
   'not_configured',
   'bad_state',
   'no_email',

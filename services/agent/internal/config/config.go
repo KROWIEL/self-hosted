@@ -35,7 +35,8 @@ func insecureHTTP() bool {
 // Version is the agent build version reported to the control plane. 0.3.0+
 // verifies short-lived HS256 request tokens and supports daemon-token rotation;
 // the control plane uses this version to decide when to mint signed tokens.
-const Version = "0.3.0"
+// Release builds set it from the tag with -ldflags "-X …/config.Version=x.y.z".
+var Version = "1.0.0"
 
 // Config holds agent runtime configuration sourced from environment.
 type Config struct {

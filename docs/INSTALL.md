@@ -1,332 +1,298 @@
-# Installation & operations
+# Installation and operations
 
-Everything needed to run the panel locally, configure it, and deploy it to
-production. For how the pieces fit together see
+**English** · [Русский](INSTALL.ru.md)
+
+How to run Self-Hosted on your own server, add more servers, keep it updated,
+and work on it locally. For how the pieces fit together see
 [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-- [Prerequisites](#prerequisites)
-- [Quick start (local, one command)](#quick-start-local-one-command)
-- [Manual setup (local dev)](#manual-setup-local-dev)
-- [Running a local node/agent](#running-a-local-nodeagent)
+- [How it is laid out](#how-it-is-laid-out)
+- [Requirements](#requirements)
+- [Install the panel](#install-the-panel)
+- [Connect the server as a node](#connect-the-server-as-a-node)
+- [Add more servers](#add-more-servers)
+- [Deploy your first app](#deploy-your-first-app)
 - [Configuration](#configuration)
-- [Production deployment](#production-deployment)
-- [Operations](#operations)
-- [Default ports](#default-ports)
+- [Upgrades](#upgrades)
+- [Backups](#backups)
+- [Uninstall](#uninstall)
+- [Local development](#local-development)
+- [Ports](#ports)
 - [Troubleshooting](#troubleshooting)
 
 ---
 
-## Prerequisites
+## How it is laid out
 
-- **Node.js >= 20** — control plane + web
-- **Docker** (with the `docker compose` plugin) — infrastructure + workloads
-- **Go >= 1.24** — only needed to build/run the agent (e.g. the local node)
+- **The panel** runs in Docker on one server: the API, the web UI,
+  PostgreSQL, Redis and Traefik. It lives in `/opt/selfhosted`.
+- **The node agent** runs on every server that hosts apps, including the panel
+  server itself, as the `selfhosted-agent` systemd service. It builds images,
+  runs containers and reports health and metrics back to the panel.
+- **Traefik** on each server terminates HTTPS and routes your domains to the
+  containers on that server.
 
----
+## Requirements
 
-## Quick start (local, one command)
+- A Linux server with a public IP. Ubuntu 22.04+ or Debian 12+ is recommended;
+  any distribution with systemd and Docker works. 2 GB RAM is the minimum for
+  the panel plus a few small apps; builds like more.
+- A domain for the panel, e.g. `panel.example.com`, with an `A` (or `AAAA`)
+  record pointing at the server. Create it before installing, because the
+  certificate is requested on first start.
+- Open ports: **80** and **443** for HTTP(S), and **8443** for the node agent
+  (it only needs to be reachable from the panel server).
+- Root access (`sudo`). Docker is installed for you if it is missing.
 
-The repo ships launcher scripts that set up `.env`, install dependencies, start
-Postgres + Redis, push the DB schema, seed the admin user, and run both dev
-servers.
-
-**Windows (PowerShell):**
-
-```powershell
-./start.ps1
-```
-
-If scripts are blocked, run once:
-`Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`
-
-**Linux / macOS:**
+## Install the panel
 
 ```bash
-./start.sh
+curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh
 ```
 
-Then open **http://localhost:3000** and sign in with the seeded admin
-credentials (`ADMIN_EMAIL` / `ADMIN_PASSWORD` from your `.env`, default
-`admin@example.com` / `changeme123`).
+The script:
 
-> The seeded admin skips onboarding. New accounts created via **Register** go
-> through the two-stage flow (account → personal data + 2FA). If the seeded
-> password does not meet the strong-password policy, you'll be prompted to
-> change it after sign-in.
+1. installs Docker (via `get.docker.com`) if it is not there;
+2. downloads `docker-compose.yml` and `traefik.yml` of the latest release into
+   `/opt/selfhosted`;
+3. asks for the panel domain and an email for Let's Encrypt;
+4. writes `/opt/selfhosted/.env` (mode `600`) with freshly generated database
+   password, JWT, webhook and encryption keys and an administrator password;
+5. pulls the images from GitHub Container Registry and starts the stack;
+6. prints the administrator email and password.
 
-Re-run flags (skip parts on subsequent runs):
+You can answer the questions in advance, for example in automation:
 
-| Windows | Linux/macOS | Effect |
+```bash
+curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh \
+  | sudo PANEL_DOMAIN=panel.example.com ACME_EMAIL=you@example.com sh
+```
+
+| Variable | Default | Meaning |
 |---|---|---|
-| `-SkipInfra` | `--skip-infra` | Don't touch Docker (DB/Redis already running) |
-| `-SkipInstall` | `--skip-install` | Don't run `npm install` |
-| `-SkipSetup` | `--skip-setup` | Don't push schema / seed admin |
+| `PANEL_DOMAIN` | asked | Domain of the panel |
+| `ACME_EMAIL` | asked | Email for Let's Encrypt |
+| `ADMIN_EMAIL` | `ACME_EMAIL` | Login of the first administrator |
+| `SELFHOSTED_VERSION` | latest release | Release tag to install, e.g. `v1.0.0` |
+| `INSTALL_DIR` | `/opt/selfhosted` | Where the stack and its `.env` live |
 
----
+Open `https://<panel domain>` and sign in. Change the administrator password
+under **Settings** and turn on two-factor authentication.
 
-## Manual setup (local dev)
+> Prefer not to pipe a script into a shell? Download
+> [`install.sh`](../deploy/install.sh) from the release, read it, then run
+> `sudo sh install.sh`. Release assets come with a `SHA256SUMS` file.
+
+## Connect the server as a node
+
+The panel does not run apps by itself; the node agent does. On the same server:
+
+1. In the panel open **Nodes → Add remote node**.
+2. Enter a name and the server's public IP or domain. Keep agent port `8443`.
+3. Copy the command shown and run it on the server. It downloads the agent from
+   your panel, installs it as the `selfhosted-agent` systemd service, and
+   enrolls it with a one-time token over TLS.
+
+The node turns **Online** within a few seconds. Check the agent with
+`systemctl status selfhosted-agent` and `journalctl -u selfhosted-agent -f`.
+
+## Add more servers
+
+Each additional server needs its own Traefik, so domains of apps placed there
+are served by that server:
 
 ```bash
-# 1. Environment
-cp .env.example .env        # then edit secrets
-
-# 2. Infrastructure (Postgres, Redis, Traefik)
-docker compose up -d postgres redis
-
-# 3. Install JS dependencies (workspaces)
-npm install
-
-# 4. Build shared types
-npm run build --workspace @selfhosted/shared
-
-# 5. Database: push schema + seed the admin user
-npm run db:push
-npm run db:seed
-
-# 6. Run the control plane and web (separate terminals)
-npm run dev:cp     # API  → http://localhost:3001/api/v1
-npm run dev:web    # UI   → http://localhost:3000
-
-# 7. (Optional) build the agent
-cd services/agent && go build ./...
+curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh -s node
 ```
 
-### Running a local node/agent
+This installs Docker and Traefik into `/opt/selfhosted` (no panel). Then add the
+server from **Nodes → Add remote node** exactly as above, using its own IP.
+Point the DNS records of apps you deploy there at that server's IP.
 
-For a single-machine setup, the control plane can spawn a local agent for you.
-Set in `.env`:
+**Servers without a public IP** (home lab, NAT): use **Exposure** in the panel.
+It sets up a small tunnel relay on any cheap public VPS and forwards ports
+80/443 from it to the server at home. The panel generates the install commands
+for both sides.
 
-```
-LOCAL_AGENT_ENABLED=1
-AGENT_INSECURE_HTTP=1     # local agent runs over plain HTTP
-```
+## Deploy your first app
 
-Then create a node in the UI (**Nodes → Add node**) and press **Start agent**.
-The control plane runs the agent binary with the node's daemon token.
-
-> Note: after updating agent code, **Stop agent → Start agent** to pick up the
-> changes.
-
----
+1. If the repository is private, add a token under **Git access**.
+2. **Projects → Create project**. You become its `OWNER`.
+3. In the project, **Create service**: pick git, image, Compose, or an app from
+   the **App catalog**, and the node to run it on.
+4. Add a domain to the service and point its DNS record at the node's IP.
+5. Deploy and watch the build log. Traefik requests the certificate on the first
+   HTTPS visit.
 
 ## Configuration
 
-Copy [`.env.example`](../.env.example) to `.env` — it is the annotated source of
-truth and documents every variable, including the optional ones omitted here.
-The settings you are most likely to touch:
+All settings live in `/opt/selfhosted/.env`. After editing it, apply with
+`cd /opt/selfhosted && sudo docker compose up -d`.
 
-### Control plane
-
-| Variable | Purpose |
+| Variable | Meaning |
 |---|---|
-| `CP_PORT` | Control-plane API port (default `3001`) |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `REDIS_URL` | Redis connection (BullMQ build queue) |
-| `JWT_SECRET` / `JWT_REFRESH_SECRET` | Panel session signing keys. Startup fails on a missing, short, or placeholder value |
-| `JWT_EXPIRES_IN` / `JWT_REFRESH_EXPIRES_IN` | Access/refresh token lifetimes |
-| `WEBHOOK_SECRET` | Signs deploy-webhook tokens; kept separate from the JWT secrets so either can be rotated alone |
-| `ENCRYPTION_KEY` | 32-byte base64 key for AES-256-GCM secrets at rest |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | First-run admin seeded by `db:seed` |
-| `ALLOW_OPEN_REGISTRATION` | `1` to allow anonymous sign-up (off by default) |
-| `DAEMON_TOKEN_ROTATION_DAYS` | Auto-rotate node daemon tokens (default 30; `0` disables) |
+| `PANEL_DOMAIN` | Domain of the panel. Changing it also needs a DNS update |
+| `ACME_EMAIL` | Email for Let's Encrypt |
+| `POSTGRES_PASSWORD` | Panel database password. Do not change it after the first start without changing it in PostgreSQL too |
+| `JWT_SECRET`, `JWT_REFRESH_SECRET` | Session signing keys. Rotating them signs everyone out |
+| `WEBHOOK_SECRET` | Signs deploy webhook URLs. Rotating it invalidates existing webhook URLs |
+| `ENCRYPTION_KEY` | Encrypts secrets at rest. **Never change or lose it**: encrypted data cannot be read without it |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First administrator, created only when the database has no users |
+| `ALLOW_OPEN_REGISTRATION` | `1` lets anyone register. Off by default; invite users instead |
+| `DAEMON_TOKEN_ROTATION_DAYS` | How often node tokens rotate (default `30`, `0` disables) |
+| `THROTTLE_LIMIT`, `THROTTLE_AUTH_LIMIT` | Requests per minute per IP, overall and for sign-in |
 
-### Rate limiting
+The annotated [`.env.example`](../.env.example) lists every variable.
 
-Per client IP, with production defaults; `NODE_ENV=development` relaxes them
-automatically so hot reloads and several open tabs don't trip the limiter.
+Mail (SMTP), single sign-on (OIDC), alerts, off-site backup targets and
+branding are configured in the panel, not in `.env`.
 
-| Variable | Default | Applies to |
-|---|---|---|
-| `THROTTLE_TTL_MS` | `60000` | Window all limits are measured over |
-| `THROTTLE_LIMIT` | `120` | Global cap on every route |
-| `THROTTLE_AUTH_LIMIT` | `5` | Login, 2FA enable/disable |
-| `THROTTLE_REFRESH_LIMIT` | `10` | `POST /auth/refresh` |
+### Wildcard certificates
 
-Behind a reverse proxy that hides client IPs, or with many users on one NAT,
-`THROTTLE_LIMIT` is the one to raise.
+By default each domain gets its own certificate over HTTP-01. For one
+`*.example.com` certificate through DNS-01 with Cloudflare:
 
-### Agents & TLS
+1. Create a Cloudflare API token with `Zone:DNS:Edit` for the zone.
+2. In `/opt/selfhosted/.env` set `CLOUDFLARE_DNS_API_TOKEN=<token>` and
+   `ACME_WILDCARD_CERTS=1`, then `sudo docker compose up -d`.
+3. In `/etc/selfhosted-agent.env` on each node add `ACME_WILDCARD_CERTS=1`, then
+   `sudo systemctl restart selfhosted-agent` and redeploy the services.
 
-| Variable | Purpose |
-|---|---|
-| `AGENT_JWT_PRIVATE_KEY_PATH` | Private key the panel uses to sign agent JWTs |
-| `AGENT_INSECURE_HTTP` | `1` to reach a local agent over plain HTTP (dev only) |
-| `LOCAL_AGENT_ENABLED` | `1` to let the panel spawn a local agent (dev only) |
-| `ACME_EMAIL` | Email for Let's Encrypt registration |
-| `ACME_WILDCARD_CERTS` / `CLOUDFLARE_DNS_API_TOKEN` | Wildcard TLS via DNS-01 |
+Other DNS providers supported by Traefik work too: set `ACME_DNS_PROVIDER` and
+that provider's variables in the `traefik` service.
 
-Agent-only variables (set on each node) live in
-[`services/agent/.env.example`](../services/agent/.env.example): `AGENT_PORT`,
-`AGENT_DAEMON_TOKEN`, `AGENT_WORKDIR`, `AGENT_NETWORK`, `AGENT_TEMPLATES_DIR`,
-`AGENT_NIXPACKS_BIN` and friends.
+### Custom certificates
 
-### Web & licensing
+Upload a PEM certificate and key under **Certificates**. The agent writes them
+to `/var/lib/selfhosted-agent/traefik`, which Traefik reads. Redeploy the
+service afterwards.
 
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | API base URL used by the web app |
-| `PUBLIC_API_URL` / `APP_BASE_URL` | Externally reachable URLs, needed for OIDC redirects behind a domain |
-| `NEXT_PUBLIC_BUY_HOMELAB_URL` / `NEXT_PUBLIC_BUY_PRO_URL` / `NEXT_PUBLIC_BUY_ENTERPRISE_URL` | Checkout links on the Billing page |
-| `LICENSE_KEY` | Pin a license key instead of activating it in the UI |
-| `LICENSE_PUBLIC_KEY` | Override the verification key if you issue your own licenses |
-| `LICENSE_ACTIVATION_URL` | Enable online activation (see [`LICENSING.md`](LICENSING.md)) |
-| `LICENSE_RELEASE_URL` | Where removing a key frees the machine; defaults to the activation URL with `/activate` → `/release` |
-| `LICENSE_FLEET_SECRET` | Enterprise only: the secret issued with a fleet licence, without which the key activates nothing |
+## Upgrades
 
-Generate strong secrets, e.g.:
+Run the install command again:
 
 ```bash
-openssl rand -base64 32     # ENCRYPTION_KEY, WEBHOOK_SECRET
-openssl rand -base64 48     # JWT_SECRET, JWT_REFRESH_SECRET
+curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh
 ```
 
----
+It keeps `.env`, pulls the new release and restarts the containers; database
+migrations run on start. To install a specific version, set
+`SELFHOSTED_VERSION=v1.2.3`. Read the [changelog](../CHANGELOG.md) first.
 
-## Production deployment
+To update the agent on a server, open the node in **Nodes**, press **Install
+command** and run the command again. An enrolled agent keeps its identity; only
+the binary and build templates are replaced.
 
-This guide covers a single control-plane host plus one or more worker nodes.
+## Backups
 
-### 1. Prepare the control-plane host
-
-Requirements: Docker + `docker compose`, Node.js >= 20, a domain, and open
-ports **80/443** (Traefik).
+Managed databases of your apps are backed up from the panel (the database page
+in a project, with copies under **Offsite backups**: S3, GCS, Azure Blob or SFTP). The panel itself keeps its state in
+PostgreSQL; back it up together with `.env`:
 
 ```bash
-git clone https://github.com/KROWIEL/self-hosted.git && cd self-hosted
-cp .env.example .env
+cd /opt/selfhosted
+sudo docker compose exec -T postgres pg_dump -U selfhosted selfhosted | gzip > panel-$(date +%F).sql.gz
+sudo cp .env panel-env.backup        # holds ENCRYPTION_KEY; store it safely
 ```
 
-Harden `.env` for production:
-
-- Set unique `JWT_SECRET`, `JWT_REFRESH_SECRET`, `WEBHOOK_SECRET`, and a fresh
-  `ENCRYPTION_KEY`.
-- Set a strong `ADMIN_PASSWORD` (that satisfies the password policy).
-- Set `ACME_EMAIL` to a real address.
-- Leave `AGENT_INSECURE_HTTP=0` and `LOCAL_AGENT_ENABLED=0`.
-- Generate the agent JWT keypair referenced by `AGENT_JWT_PRIVATE_KEY_PATH`.
-
-### 2. Start infrastructure (Postgres, Redis, Traefik)
+Restore on a new server. Put the old `.env` in place first, so the new database
+is created with the same password and the encryption key matches:
 
 ```bash
-docker compose up -d
+sudo mkdir -p /opt/selfhosted && sudo cp panel-env.backup /opt/selfhosted/.env
+curl -fsSL https://raw.githubusercontent.com/KROWIEL/self-hosted/main/deploy/install.sh | sudo sh
+cd /opt/selfhosted
+sudo docker compose stop api
+sudo docker compose exec -T postgres psql -U selfhosted -d postgres \
+  -c 'DROP DATABASE selfhosted' -c 'CREATE DATABASE selfhosted'
+gunzip -c panel-YYYY-MM-DD.sql.gz | sudo docker compose exec -T postgres psql -U selfhosted selfhosted
+sudo docker compose up -d
 ```
 
-Traefik terminates TLS and routes deployed services by hostname. Certificates
-are issued automatically:
-
-- **HTTP-01 (default):** add a wildcard DNS record `*.yourdomain.com → host IP`.
-  A cert is issued per subdomain on first HTTPS visit.
-- **DNS-01 wildcard:** set `ACME_WILDCARD_CERTS=1` and `CLOUDFLARE_DNS_API_TOKEN`
-  (Zone:DNS:Edit) to get a single `*.yourdomain.com` certificate.
-
-### 3. Build and run the control plane + web
+## Uninstall
 
 ```bash
+cd /opt/selfhosted && sudo docker compose down        # add -v to delete all data
+sudo systemctl disable --now selfhosted-agent
+sudo rm -rf /etc/systemd/system/selfhosted-agent.service /etc/selfhosted-agent.env \
+  /usr/local/bin/selfhosted-agent /var/lib/selfhosted-agent /opt/selfhosted-agent
+```
+
+Containers of deployed apps are left running; remove them from the panel before
+uninstalling, or with `docker ps` and `docker rm -f`.
+
+## Local development
+
+Requires Node.js 24 LTS, Docker with Compose and, for the agent, Go 1.25+.
+
+The launchers set up `.env`, install dependencies, start PostgreSQL and Redis,
+push the schema, seed the admin and run both dev servers:
+
+```bash
+./start.sh          # Linux / macOS
+./start.ps1         # Windows PowerShell
+```
+
+If PowerShell blocks scripts, run
+`Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` once.
+Re-run flags skip steps: `--skip-infra` / `-SkipInfra`, `--skip-install` /
+`-SkipInstall`, `--skip-setup` / `-SkipSetup`.
+
+Open http://localhost:3000 and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+from `.env`. A weak seeded password is accepted once, then you are asked to
+change it.
+
+Manual steps:
+
+```bash
+cp .env.example .env                          # then set real secrets
+docker compose up -d postgres redis
 npm install
-npm run build                       # builds shared, control-plane, web
-npm run db:push                     # apply schema
-npm run db:seed                     # seed the admin (first run only)
-
-# Start the API and UI (use a process manager, e.g. pm2/systemd)
-node apps/control-plane/dist/main.js          # API  (CP_PORT, default 3001)
-npm run start --workspace @selfhosted/web     # UI   (port 3000)
+npm run build --workspace @selfhosted/shared
+npm run db:migrate
+npm run db:seed
+npm run dev:cp                                # API → http://localhost:3001/api/v1
+npm run dev:web                               # UI  → http://localhost:3000
 ```
 
-Put the web UI (3000) and API (3001) behind your reverse proxy / Traefik with
-your panel domain and TLS. Point `NEXT_PUBLIC_API_URL` at the public API URL.
+**A local node.** With `LOCAL_AGENT_ENABLED=1` and `AGENT_INSECURE_HTTP=1` in
+`.env`, create a node with **Nodes → Local agent** and press **Start agent**;
+the API builds and runs the agent with `go`. After changing agent code press
+**Stop agent → Start agent**.
 
-### 4. Register a worker node and install the agent
+**Images.** `docker build --target api .` and `docker build --target web .`
+build the same images the release publishes.
 
-On each server that will run workloads:
+**Tests.** `npm test --workspace @selfhosted/control-plane` for the API,
+`go test ./...` in `services/agent`, and `npm run catalog:validate` for the app
+catalog.
 
-1. In the panel: **Nodes → Add node**, enter the host/IP and agent port
-   (default `8443`). Copy the one-time **daemon token** shown after creation.
-2. On the node, install Docker and the agent:
+## Ports
 
-```bash
-# Build the agent (or copy a prebuilt binary)
-cd services/agent && go build -o /usr/local/bin/self-hosted-agent ./cmd/agent
-
-# Configure it
-cp .env.example /etc/self-hosted-agent.env    # then edit
-#   AGENT_DAEMON_TOKEN=<paste the token from the panel>
-#   AGENT_NETWORK=selfhosted-edge             # shared network with Traefik
-#   AGENT_WORKDIR=/var/lib/self-hosted/builds
-
-# Run it (use systemd for production)
-env $(cat /etc/self-hosted-agent.env | xargs) self-hosted-agent
-```
-
-3. Back in the panel the node shows **Running** with live metrics (including
-   host CPU load / RAM / disk). You can now create services on it.
-
-### 5. Deploy your first app
-
-1. **Git access → Add** a PAT if the repo is private.
-2. **Projects → Create project** (set its CPU/RAM quota). You become its `OWNER`.
-3. (Optional) **Members** → invite teammates with a role.
-4. Inside the project: **Create service**, choose the repo, branch and template.
-5. Deploy. Watch build logs stream in; on success the service goes live.
-6. (Optional) attach a domain to route public traffic via Traefik with HTTPS.
-
-### 6. Exposing a NATed node (optional)
-
-If a node has no public IP, use **Exposure/Tunnels** to relay traffic through a
-public VDS. The panel generates install assets (see `services/tunnel-dist`) for
-the relay side.
-
----
-
-## Operations
-
-- **Zero-downtime deploys:** new containers are health-checked before Traefik
-  switches traffic; the old container is removed after promotion.
-- **Rollback:** open a service → Deployments → redeploy a previous image.
-- **Members:** project admins/owners manage members and roles from the project
-  page; the owner role is reserved for the creator.
-- **Audit:** review mutating actions per project (admins/owner) or platform-wide
-  (global admin).
-- **Templates:** platform admins create/edit/delete templates and organize them
-  into categories.
-- **Backups:** managed databases support scheduled backups and one-click
-  restore from the service/database view.
-- **Disk cleanup:** on a node card press **Clean up** to reclaim space
-  (`docker system prune` + build cache; optionally all unused images/volumes).
-  Deleting a service or project also removes its containers/images on the node.
-- **App catalog:** manifests in [`catalog/apps`](../catalog/apps) are validated
-  and tracked against upstream by [`tools/catalog`](../tools/catalog/README.md).
-
----
-
-## Default ports
-
-| Service | Port |
-|---|---|
-| Web UI | `3000` |
-| Control-plane API | `3001` (`/api/v1`) |
-| Agent | `8443` |
-| Traefik | `80`, `443` |
-| PostgreSQL | `5432` |
-| Redis | `6379` |
-
----
+| Service | Port | Exposed |
+|---|---|---|
+| Traefik | `80`, `443` | Public |
+| Node agent | `8443` | To the panel server |
+| API | `3001` (`/api/v1`) | Behind Traefik only |
+| Web UI | `3000` | Behind Traefik only |
+| PostgreSQL | `5432` | Internal only |
+| Redis | `6379` | Internal only |
 
 ## Troubleshooting
 
-- **Node shows "Running" but unreachable:** the control plane can't reach the
-  agent host:port. Check the agent process, firewall, and (dev) that
-  `AGENT_INSECURE_HTTP` matches the agent's scheme.
-- **"Clean up" button does nothing / 404:** a locally spawned agent is running
-  old code. **Stop agent → Start agent** to recompile.
-- **Certificates not issued:** verify DNS points to the host and ports 80/443
-  are reachable; for wildcard certs check `CLOUDFLARE_DNS_API_TOKEN`.
-- **Can't sign in after 2FA setup:** enter the current 6-digit code from your
-  authenticator app; ensure the device clock is accurate (TOTP is time-based).
-- **Forced to the settings page after login:** your password no longer meets the
-  policy — set a stronger one to continue (login itself is never blocked).
-- **"Requires … role on this project" errors:** you lack the required project
-  role; ask an `ADMIN`/`OWNER` to grant it under **Members**.
-- **"Too many requests":** the rate limiter kicked in — raise `THROTTLE_LIMIT`
-  if legitimate traffic shares one IP.
-- **Next.js dev assets 404 after a build:** stop `next dev`, delete
-  `apps/web/.next`, then restart the dev server.
+- **The panel page does not open or the certificate is invalid.** Check that the
+  DNS record points at the server and ports 80/443 are open, then read
+  `sudo docker compose logs traefik`. Let's Encrypt rate-limits repeated
+  failures, so fix DNS before retrying.
+- **The API keeps restarting.** `sudo docker compose logs api`. A missing or
+  placeholder secret in `.env` stops the start on purpose.
+- **A node stays offline.** The panel must reach the agent on port 8443: check
+  `systemctl status selfhosted-agent`, the firewall (`ufw allow 8443/tcp`), and
+  the IP or domain entered for the node.
+- **An app's domain does not open.** Its DNS record must point at the node the
+  app runs on, and that node needs Traefik (`install.sh node`).
+- **"Too many requests".** Raise `THROTTLE_LIMIT` if many users share one IP.
+- **Signed in, but sent to Settings.** Your password no longer meets the policy;
+  set a stronger one.
+- **2FA code rejected.** TOTP is time-based: check the clock on your phone and
+  on the server.

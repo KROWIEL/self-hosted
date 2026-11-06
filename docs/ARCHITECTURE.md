@@ -10,7 +10,7 @@ servers, each running a small Go daemon that owns Docker locally.
 | **Agent** | `services/agent` | Go + Docker CLI | Runs on each node: build, run, health checks, logs, metrics, host stats, prune |
 | **Templates** | `templates/` | Dockerfile | Stack build/run recipes per supported stack |
 | **Shared** | `packages/shared` | TypeScript | Shared types/enums between control plane and web |
-| **Tunnel** | `services/tunnel-dist` | Xray | Reverse-tunnel relay assets for exposing NATed nodes |
+| **Tunnel** | `services/agent/cmd/tunnel-*`, `services/tunnel-dist` | Go | Reverse-tunnel relay and client for exposing NATed nodes |
 
 ```
                  ┌────────────┐        HTTPS         ┌───────────────┐
@@ -23,6 +23,25 @@ servers, each running a small Go daemon that owns Docker locally.
              (HTTPS)                                          └─ Docker
 ```
 
+## Production layout
+
+[`deploy/install.sh`](../deploy/install.sh) runs the panel from two images
+published to GHCR on every release, built from the root
+[`Dockerfile`](../Dockerfile):
+
+- `self-hosted-api` — the NestJS API. On start it applies database migrations,
+  seeds built-in templates and the catalog, then serves `/api/v1`. It also hands
+  out the prebuilt agent and tunnel binaries and the build templates that a new
+  node downloads during enrollment.
+- `self-hosted-web` — the Next.js UI in standalone mode. It calls the API on the
+  same origin (`/api/v1`), so one domain serves both.
+
+Traefik routes `Host(panel) && PathPrefix(/api)` to the API and everything else
+on that host to the UI. Deployed apps join the `selfhosted-edge` Docker network
+on their node and get routed by Traefik labels the agent sets. The agent itself
+runs on the host as a systemd service, not in a container, because it drives
+the host's Docker daemon and build directories.
+
 ## Core concepts
 
 | Concept | Meaning |
@@ -32,7 +51,7 @@ servers, each running a small Go daemon that owns Docker locally.
 | `Member` | A user attached to a project with a role (`OWNER`/`ADMIN`/`MEMBER`/`VIEWER`) |
 | `Service` | A deployable unit (`deployKind`: git / image / compose) |
 | `Template` | A stack definition describing how to build & run a git service |
-| `Catalog app` | A curated installable app (image/compose/git), free on every tier |
+| `Catalog app` | A curated installable app (image/compose/git) |
 | `Domain` | A hostname routed to a service via Traefik |
 | `Managed database` | A PostgreSQL/MySQL container owned by a project |
 | `Tunnel` | A reverse tunnel exposing a NATed node via a public relay |
@@ -81,18 +100,17 @@ catalog/apps/      One-click app manifests (one JSON file per app)
 templates/         Dockerfile templates per stack
 tools/
   catalog/         Validates app manifests, tracks them against upstream
-docs/              Install guide, architecture, licensing, roadmap, screenshots
+deploy/            Production compose files and the one-command installer
+docs/              Install guide, architecture, roadmap, screenshots
+site/              Project website (GitHub Pages)
+Dockerfile         Panel images (targets: api, web)
 docker-compose.yml Local infrastructure: Postgres + Redis + Traefik
 start.ps1 / start.sh  One-command local launchers (Windows / Linux-macOS)
 ```
 
-The seller-side licensing and payment service is **not** part of this
-repository; the panel only carries the offline verifier. See
-[`LICENSING.md`](LICENSING.md).
-
 ## Security model
 
-Practical hardening in the free core (not a claim of third-party audit):
+Practical hardening (not a claim of a third-party audit):
 
 - **Authentication:** email + password, optional TOTP 2FA, JWT access/refresh
   tokens. Passwords are hashed with bcrypt.
@@ -112,7 +130,7 @@ Practical hardening in the free core (not a claim of third-party audit):
   on a schedule. Remote agents use TLS pinning where configured.
 - **Rate limiting:** per-IP throttling on every route, with tighter caps on
   sign-in and token refresh.
-- **Webhook signatures:** GitHub/GitLab PR webhooks (Pro / `preview-envs`) verify
+- **Webhook signatures:** GitHub/GitLab PR webhooks verify
   shared secrets before creating preview environments.
 - **Localized, coded errors:** the API returns stable error `code`s that the UI
   maps to localized messages, so users never see raw internal strings.

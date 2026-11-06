@@ -10,8 +10,6 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { GitAppsService, ReqLike } from './git-apps.service';
 import {
   GIT_APP_PROVIDERS,
@@ -26,8 +24,7 @@ function parseProvider(raw: string): GitAppProvider {
   throw new NotFoundException(`Unknown git provider: ${raw}`);
 }
 
-@UseGuards(JwtAuthGuard, AdminGuard, ModuleGuard)
-@RequiresModule('preview-envs')
+@UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('git-apps')
 export class GitAppsController {
   constructor(private readonly gitApps: GitAppsService) {}

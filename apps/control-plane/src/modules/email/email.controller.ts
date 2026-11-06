@@ -9,17 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { EmailService } from './email.service';
 import { SendMessageDto, SendTestDto, SetEmailConfigDto } from './dto/email.dto';
 
 /**
- * Outbound email management (Pro: email). Platform-level, so admin-only; the
+ * Outbound email management. Platform-level, so admin-only; the
  * whole controller is gated behind the module.
  */
-@UseGuards(JwtAuthGuard, ModuleGuard)
-@RequiresModule('email')
+@UseGuards(JwtAuthGuard)
 @Controller('email')
 export class EmailController {
   constructor(private readonly email: EmailService) {}

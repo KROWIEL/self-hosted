@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE, Database } from '../../db/database.module';
 import { brandingConfig } from '../../db/schema';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { SetBrandingDto } from './dto/branding.dto';
 
 const DEFAULT_NAME = 'Self-Hosted';
@@ -11,7 +10,6 @@ const DEFAULT_NAME = 'Self-Hosted';
 export class BrandingService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   private async row() {
@@ -23,17 +21,15 @@ export class BrandingService {
     return r ?? null;
   }
 
-  /** Public, license-aware branding used by the UI. Reverts to defaults when
-   * the white-label module isn't licensed. */
+  /** Public branding used by the UI. */
   async effective() {
-    const entitled = await this.entitlements.hasModule('white-label');
-    const r = entitled ? await this.row() : null;
+    const r = await this.row();
     const appName = r?.appName?.trim() ? r.appName : DEFAULT_NAME;
     return {
       appName,
       logoUrl: r?.logoUrl ?? '',
       accentColor: r?.accentColor ?? '',
-      // Attribution shows once rebranded, unless the customer pays to hide it.
+      // Attribution shows once rebranded, unless the operator hides it.
       showPoweredBy: !!r && !r.hidePoweredBy && appName !== DEFAULT_NAME,
     };
   }

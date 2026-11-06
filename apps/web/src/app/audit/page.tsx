@@ -9,8 +9,6 @@ import {
   listAudit,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -33,8 +31,6 @@ export default function AuditPage() {
 function AuditContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('audit-export');
 
   const [me, setMe] = useState<AuthMe | null>(null);
   const [rows, setRows] = useState<AuditLog[]>([]);
@@ -52,7 +48,7 @@ function AuditContent() {
   const isAdmin = me?.role === 'ADMIN';
 
   useEffect(() => {
-    if (!unlocked || !isAdmin) {
+    if (!isAdmin) {
       setLoading(false);
       return;
     }
@@ -62,7 +58,7 @@ function AuditContent() {
       .catch((e) => setError(errorText(e)))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, isAdmin]);
+  }, [isAdmin]);
 
   async function onExport(format: 'csv' | 'json') {
     setBusy(format);
@@ -82,19 +78,6 @@ function AuditContent() {
     } finally {
       setBusy(null);
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader title={t('audit.title')} subtitle={t('audit.subtitle')} />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('audit.lockedTitle')}
-          featureBody={t('audit.lockedBody')}
-        />
-      </>
-    );
   }
 
   if (me && !isAdmin) {

@@ -9,8 +9,6 @@ import {
   setSsoConfig,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -32,8 +30,6 @@ export default function SsoPage() {
 function SsoContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('sso');
 
   const [me, setMe] = useState<AuthMe | null>(null);
   const [cfg, setCfg] = useState<SsoConfig | null>(null);
@@ -51,12 +47,12 @@ function SsoContent() {
   }, []);
 
   useEffect(() => {
-    if (!unlocked || !isAdmin) return;
+    if (!isAdmin) return;
     getSsoConfig()
       .then(setCfg)
       .catch((e) => setError(errorText(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, isAdmin]);
+  }, [isAdmin]);
 
   async function onSave() {
     if (!cfg) return;
@@ -81,19 +77,6 @@ function SsoContent() {
     } finally {
       setBusy(false);
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader title={t('sso.title')} subtitle={t('sso.subtitle')} />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('sso.lockedTitle')}
-          featureBody={t('sso.lockedBody')}
-        />
-      </>
-    );
   }
 
   if (me && !isAdmin) {

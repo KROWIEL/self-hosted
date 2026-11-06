@@ -9,7 +9,6 @@ import {
 } from './common/http/throttle.config';
 import { DatabaseModule } from './db/database.module';
 import { CryptoModule } from './common/crypto/crypto.module';
-import { LicensingModule } from './common/licensing/licensing.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { InvitesModule } from './modules/invites/invites.module';
@@ -52,7 +51,6 @@ import { CertificatesModule } from './modules/certificates/certificates.module';
     ]),
     DatabaseModule,
     CryptoModule,
-    LicensingModule,
     AuthModule,
     UsersModule,
     InvitesModule,

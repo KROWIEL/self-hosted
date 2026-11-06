@@ -17,8 +17,6 @@ import { DRIZZLE, Database } from '../../db/database.module';
 import { tunnels } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import { AssetTokenService } from '../../common/asset-token/asset-token.service';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
-import { LicenseErrors } from '../../common/errors/app-errors';
 import { TunnelRunnerService } from './tunnel-runner.service';
 import { CreateTunnelDto, UpdateTunnelDto } from './dto/tunnel.dto';
 
@@ -42,7 +40,6 @@ export class TunnelsService implements OnApplicationBootstrap {
     private readonly crypto: CryptoService,
     private readonly assets: AssetTokenService,
     private readonly runner: TunnelRunnerService,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   /** Restart tunnels that were enabled before the panel shut down. */
@@ -81,20 +78,7 @@ export class TunnelsService implements OnApplicationBootstrap {
     return rows.map((r) => this.view(r));
   }
 
-  /**
-   * Enforce the tier's reverse-tunnel cap before creating another one. `null` =
-   * unlimited (Pro). The controller already gates the module (Home-Lab / Pro);
-   * this additionally caps Home-Lab to a fixed number of tunnels.
-   */
-  private async assertTunnelQuota(): Promise<void> {
-    const { maxTunnels } = await this.entitlements.limits();
-    if (maxTunnels == null) return;
-    const existing = await this.db.select({ id: tunnels.id }).from(tunnels);
-    if (existing.length >= maxTunnels) throw LicenseErrors.tunnelLimit(maxTunnels);
-  }
-
   async create(dto: CreateTunnelDto) {
-    await this.assertTunnelQuota();
     const token = randomBytes(24).toString('hex');
     const [row] = await this.db
       .insert(tunnels)
@@ -204,7 +188,7 @@ export class TunnelsService implements OnApplicationBootstrap {
     const base = origin.replace(/\/$/, '');
     const ctrl = `:${row.controlPort}`;
     // Assets (relay binary + install scripts) are gated behind a short-lived,
-    // tamper-proof token so only a licensed operator who opened this page can
+    // tamper-proof token so only an operator who opened this page can
     // fetch them — without requiring a panel login on the fresh VDS.
     const at = this.assets.mint('tunnel-asset');
     const binUrls = Object.fromEntries(

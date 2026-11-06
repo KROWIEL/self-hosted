@@ -8,7 +8,6 @@ import {
 import { Queue, Worker } from 'bullmq';
 import { DRIZZLE, Database } from '../../db/database.module';
 import { nodes } from '../../db/schema';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { createRedisConnection } from '../services/deploy.constants';
 import { MetricsService } from './metrics.service';
 import {
@@ -19,8 +18,7 @@ import {
 
 /**
  * Periodically samples every node's host metrics into the time-series table and
- * prunes old data. Runs as a BullMQ repeatable job; no-ops unless the
- * `metrics-history` module is licensed.
+ * prunes old data. Runs as a BullMQ repeatable job.
  */
 @Injectable()
 export class MetricsCollector implements OnModuleInit, OnModuleDestroy {
@@ -37,7 +35,6 @@ export class MetricsCollector implements OnModuleInit, OnModuleDestroy {
     @Inject(DRIZZLE) private readonly db: Database,
     @Inject(METRICS_QUEUE) private readonly queue: Queue<MetricsJobData>,
     private readonly metrics: MetricsService,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   async onModuleInit() {
@@ -76,7 +73,6 @@ export class MetricsCollector implements OnModuleInit, OnModuleDestroy {
   }
 
   private async run() {
-    if (!(await this.entitlements.hasModule('metrics-history'))) return;
     const rows = await this.db.select().from(nodes);
     for (const node of rows) {
       try {

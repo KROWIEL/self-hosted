@@ -50,6 +50,3 @@ export enum PowerAction {
 
 /** How a service is deployed onto a node. */
 export type DeployKind = 'git' | 'image' | 'compose';
-
-/** Lowest commercial tier that can install a catalog app. */
-export type CatalogTier = 'free' | 'homelab';

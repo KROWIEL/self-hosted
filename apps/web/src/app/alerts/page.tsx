@@ -22,8 +22,6 @@ import {
   updateAlertRule,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -67,7 +65,6 @@ const EVENT_LABELS: Record<string, TKey> = {
   'offsite.failed': 'alerts.ev.offsiteFailed',
   'tunnel.offline': 'alerts.ev.tunnelOffline',
   'tunnel.online': 'alerts.ev.tunnelOnline',
-  'license.expiring': 'alerts.ev.licenseExpiring',
 };
 
 const GROUP_LABELS: Record<string, TKey> = {
@@ -77,7 +74,6 @@ const GROUP_LABELS: Record<string, TKey> = {
   databases: 'alerts.grp.databases',
   backups: 'alerts.grp.backups',
   networking: 'alerts.grp.networking',
-  licensing: 'alerts.grp.licensing',
 };
 
 const DEFAULT_EVENT = 'node.offline';
@@ -93,8 +89,6 @@ export default function AlertsPage() {
 function AlertsContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('alerts');
 
   const [me, setMe] = useState<AuthMe | null>(null);
   const [channels, setChannels] = useState<AlertChannel[]>([]);
@@ -149,13 +143,13 @@ function AlertsContent() {
   }
 
   useEffect(() => {
-    if (!unlocked || !isAdmin) {
+    if (!isAdmin) {
       setLoading(false);
       return;
     }
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, isAdmin]);
+  }, [isAdmin]);
 
   function eventLabel(ev: string): string {
     return EVENT_LABELS[ev] ? t(EVENT_LABELS[ev]) : ev;
@@ -280,19 +274,6 @@ function AlertsContent() {
     } catch (e) {
       setError(errorText(e));
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader title={t('alerts.title')} subtitle={t('alerts.subtitle')} />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('alerts.lockedTitle')}
-          featureBody={t('alerts.lockedBody')}
-        />
-      </>
-    );
   }
 
   if (me && !isAdmin) {

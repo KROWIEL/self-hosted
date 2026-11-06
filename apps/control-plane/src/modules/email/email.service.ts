@@ -26,7 +26,7 @@ function parseAddresses(raw: string): string[] {
 }
 
 /**
- * Outbound email (Pro: email). A thin SMTP relay client that lets the panel send
+ * Outbound email. A thin SMTP relay client that lets the panel send
  * and broadcast messages to users. This is intentionally send-only — there is no
  * inbound/receiving mail server. Credentials are encrypted at rest and never
  * returned to the UI.

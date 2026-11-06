@@ -20,7 +20,6 @@ import {
   services,
   tunnels,
 } from '../../db/schema';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { createRedisConnection } from '../services/deploy.constants';
 import { AlertsService } from './alerts.service';
 import {
@@ -32,7 +31,7 @@ import {
 /**
  * Periodically evaluates alert conditions and dispatches notifications. Runs as
  * a BullMQ repeatable job so it survives restarts and doesn't duplicate across
- * workers. Skips entirely when the `alerts` module isn't licensed.
+ * workers.
  *
  * Every event is derived by polling existing state (no per-feature wiring), and
  * de-duplicated so each incident notifies exactly once (see `AlertsService`).
@@ -53,13 +52,11 @@ export class AlertsEvaluator implements OnModuleInit, OnModuleDestroy {
   private readonly diskPct = numFromEnv('ALERTS_DISK_PCT', 90);
   private readonly resourceFreshMs = numFromEnv('ALERTS_RESOURCE_FRESH_MS', 15 * 60_000);
   private readonly resourceRearmMs = numFromEnv('ALERTS_RESOURCE_REARM_MS', 60 * 60_000);
-  private readonly licenseWarnMs = numFromEnv('ALERTS_LICENSE_EXPIRY_MS', 14 * 24 * 60 * 60_000);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     @Inject(ALERTS_QUEUE) private readonly queue: Queue<AlertsJobData>,
     private readonly alerts: AlertsService,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   async onModuleInit() {
@@ -92,8 +89,6 @@ export class AlertsEvaluator implements OnModuleInit, OnModuleDestroy {
   }
 
   async evaluate() {
-    if (!(await this.entitlements.hasModule('alerts'))) return;
-
     const rules = await this.db
       .select()
       .from(alertRules)
@@ -127,7 +122,6 @@ export class AlertsEvaluator implements OnModuleInit, OnModuleDestroy {
       [active.has('offsite.failed'), () => this.offsiteFailed(since)],
       [active.has('tunnel.offline'), () => this.tunnelOffline()],
       [active.has('tunnel.online'), () => this.tunnelOnline()],
-      [active.has('license.expiring'), () => this.licenseExpiring(now)],
     ];
 
     for (const [enabled, run] of checks) {
@@ -411,23 +405,6 @@ export class AlertsEvaluator implements OnModuleInit, OnModuleDestroy {
         `Reverse tunnel ${t.name} (${t.serverHost}) is back online.`,
       );
     }
-  }
-
-  // ---- Licensing ----
-
-  private async licenseExpiring(now: number) {
-    const ent = await this.entitlements.get();
-    if (!ent.licensed || !ent.expiresAt) return;
-    const expMs = ent.expiresAt * 1000;
-    if (expMs <= now) return; // already expired (handled by degrading to Free)
-    if (expMs - now > this.licenseWarnMs) return;
-    const day = Math.ceil((expMs - now) / (24 * 60 * 60_000));
-    await this.alerts.dispatch(
-      'license.expiring',
-      `license.expiring:${ent.expiresAt}`,
-      'License expiring soon',
-      `Your ${ent.tier} license expires on ${new Date(expMs).toISOString()} (~${day} day(s) left). Renew to keep paid modules unlocked.`,
-    );
   }
 
   // ---- Helpers ----

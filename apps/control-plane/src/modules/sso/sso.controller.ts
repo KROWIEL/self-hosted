@@ -11,8 +11,6 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { SsoService, ReqLike } from './sso.service';
 import { SetSsoConfigDto } from './dto/sso.dto';
 import { setSessionCookies } from '../../common/http/cookies';
@@ -83,16 +81,14 @@ export class SsoController {
   }
 
   @Get('config')
-  @UseGuards(JwtAuthGuard, ModuleGuard)
-  @RequiresModule('sso')
+  @UseGuards(JwtAuthGuard)
   getConfig(@Req() req: ReqLike & { user?: { role?: string } }) {
     this.assertAdmin(req);
     return this.sso.getConfig(req);
   }
 
   @Put('config')
-  @UseGuards(JwtAuthGuard, ModuleGuard)
-  @RequiresModule('sso')
+  @UseGuards(JwtAuthGuard)
   async setConfig(
     @Req() req: ReqLike & { user?: { role?: string } },
     @Body() dto: SetSsoConfigDto,

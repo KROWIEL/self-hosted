@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { setupExecProxy } from './exec-proxy';
@@ -24,7 +25,17 @@ async function bootstrap() {
   validateEnv();
 
   // rawBody: true so GitHub webhook HMAC can verify against the exact bytes.
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
+
+  // Behind a reverse proxy every request arrives from the proxy's address, so
+  // per-IP rate limits would be shared by all clients. TRUST_PROXY is the
+  // number of proxy hops in front of the API (1 for the bundled Traefik).
+  const proxyHops = Number(process.env.TRUST_PROXY ?? 0);
+  if (Number.isInteger(proxyHops) && proxyHops > 0) {
+    app.set('trust proxy', proxyHops);
+  }
 
   // Baseline security headers on the API. Defaults are fine for a JSON API.
   app.use(helmet());

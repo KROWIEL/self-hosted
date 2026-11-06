@@ -30,7 +30,6 @@ import {
   updateNodeCapacity,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
 import {
   Card,
   EmptyState,
@@ -61,7 +60,6 @@ export default function NodesPage() {
 function NodesContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { entitlements } = useEntitlements();
   const { confirm, dialog } = useConfirmDialog();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [platform, setPlatform] = useState<PlatformResourceSummary | null>(null);
@@ -115,10 +113,6 @@ function NodesContent() {
     }
   }
 
-  const maxNodes = entitlements.limits.maxNodes;
-  const atLimit = maxNodes != null && nodes.length >= maxNodes;
-  const limitTitle = atLimit ? t('nodes.limitReached', { max: maxNodes ?? 0 }) : undefined;
-
   return (
     <>
       <PageHeader
@@ -128,37 +122,19 @@ function NodesContent() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCreateOpen(true)}
-              disabled={atLimit}
-              title={limitTitle}
-              className="btn-ghost whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-ghost whitespace-nowrap"
             >
               {t('nodes.addLocal')}
             </button>
             <button
               onClick={() => setRemoteOpen(true)}
-              disabled={atLimit}
-              title={limitTitle}
-              className="btn-primary whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-primary whitespace-nowrap"
             >
               {t('nodes.addRemote')}
             </button>
           </div>
         }
       />
-
-      {maxNodes != null && (
-        <p className="mb-4 text-xs text-neutral-500">
-          {t('nodes.limitHint', { count: nodes.length, max: maxNodes })}
-          {atLimit && (
-            <>
-              {' '}
-              <Link href="/billing" className="text-indigo-300 hover:text-indigo-200">
-                {t('nodes.limitUpgrade')}
-              </Link>
-            </>
-          )}
-        </p>
-      )}
 
       <GuideCard
         storageKey="nodes"

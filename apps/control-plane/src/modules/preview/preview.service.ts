@@ -22,7 +22,7 @@ import { CreatePreviewDto } from './dto/preview.dto';
 const DEFAULT_TTL_HOURS = numFromEnv('PREVIEW_DEFAULT_TTL_HOURS', 72);
 
 /**
- * Preview environments (Pro: preview-envs). A preview is a disposable *child
+ * Preview environments. A preview is a disposable *child
  * service* cloned from a parent: same node/template/repo/env, but built from a
  * chosen branch and routed to its own optional subdomain. It reuses the whole
  * build/deploy pipeline (nothing agent-side changes) and is torn down manually

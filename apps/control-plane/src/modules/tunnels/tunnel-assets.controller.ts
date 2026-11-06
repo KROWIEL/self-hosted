@@ -14,7 +14,7 @@ import { TunnelsService } from './tunnels.service';
  * relay is injected separately.
  *
  * Mounted under `tunnels/assets/*` (not `tunnels/*`) so the routes are not
- * shadowed by the licensed `TunnelsController`'s `:id` param route.
+ * shadowed by the admin-only `TunnelsController`'s `:id` param route.
  */
 @Controller('tunnels/assets')
 export class TunnelAssetsController {

@@ -1,0 +1,53 @@
+# Traefik: HTTPS entry point for everything deployed on this server.
+# Included by docker-compose.yml on the panel server; used on its own on every
+# additional server (install.sh node).
+services:
+  traefik:
+    # Pinned by digest; refresh with: docker buildx imagetools inspect traefik:v3
+    image: traefik:v3@sha256:4299bbed850421258fc5448c2e0e6ad350981d4d335a68de11b92448aedbefe5
+    restart: unless-stopped
+    environment:
+      # Traefik's bundled Docker client otherwise negotiates an API version a
+      # newer Engine rejects.
+      DOCKER_API_VERSION: "1.44"
+      CLOUDFLARE_DNS_API_TOKEN: ${CLOUDFLARE_DNS_API_TOKEN:-}
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=selfhosted-edge"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt-dns.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt-dns.acme.storage=/acme/dns-acme.json"
+      - "--certificatesresolvers.letsencrypt-dns.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt-dns.acme.dnschallenge.provider=${ACME_DNS_PROVIDER:-cloudflare}"
+      - "--certificatesresolvers.letsencrypt-dns.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
+      - "--providers.file.directory=/dynamic"
+      - "--providers.file.watch=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-acme:/acme
+      # Custom certificates uploaded in the panel; the node agent on this
+      # server writes them here.
+      - /var/lib/selfhosted-agent/traefik/certs:/certs
+      - /var/lib/selfhosted-agent/traefik/dynamic:/dynamic
+    networks: [edge]
+
+volumes:
+  traefik-acme:
+
+# Deployed apps join this network (the node agent attaches them), which is how
+# Traefik reaches them.
+networks:
+  edge:
+    name: selfhosted-edge

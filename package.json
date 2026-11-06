@@ -1,14 +1,16 @@
 {
   "name": "self-hosted",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "license": "MIT",
   "private": true,
-  "description": "Self-hosted PaaS panel for deploying SaaS projects (Java backends + React/Next.js frontends) from git into Docker.",
+  "description": "Open-source self-hosted PaaS: deploy apps from git, Docker images or Compose onto your own servers.",
+  "repository": "github:KROWIEL/self-hosted",
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22.19"
   },
   "scripts": {
     "build": "npm run build --workspaces --if-present",

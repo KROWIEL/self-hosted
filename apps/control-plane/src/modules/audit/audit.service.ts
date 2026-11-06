@@ -55,7 +55,7 @@ export class AuditService {
   }
 
   /**
-   * Filtered read used by the Pro audit-export feature. Supports an action
+   * Filtered read used by the audit-export feature. Supports an action
    * prefix, a created-at range and a project scope, with a much higher row cap
    * than the on-screen viewer (bulk export).
    */

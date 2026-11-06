@@ -7,14 +7,9 @@ import {
   getMustChangePassword,
   isAuthed,
   logout,
-  type LicenseModule,
 } from '@/lib/api';
 import { TKey, useI18n } from '@/i18n';
 import { LangSwitcher } from '@/components/lang-switcher';
-import {
-  EntitlementsProvider,
-  useEntitlements,
-} from '@/components/entitlements';
 import { useBranding, safeLogoUrl } from '@/components/branding';
 import { Svg, type IconProps } from '@/components/icons';
 
@@ -80,12 +75,6 @@ const Icon = {
   chevronLeft: (p: IconProps) => (
     <Svg {...p}>
       <path d="m15 18-6-6 6-6" />
-    </Svg>
-  ),
-  billing: (p: IconProps) => (
-    <Svg {...p}>
-      <rect x="2.5" y="5" width="19" height="14" rx="2" />
-      <path d="M2.5 9.5h19M6 15h4" />
     </Svg>
   ),
   audit: (p: IconProps) => (
@@ -164,20 +153,12 @@ const Icon = {
       <path d="M19 8v6M22 11h-6" />
     </Svg>
   ),
-  lock: (p: IconProps) => (
-    <Svg {...p}>
-      <rect x="5" y="11" width="14" height="9" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </Svg>
-  ),
 };
 
 type NavItem = {
   href: string;
   label: TKey;
   icon: (p: IconProps) => ReactNode;
-  /** When set, the item is a licensed module and shows a lock if not unlocked. */
-  module?: LicenseModule;
 };
 
 const NAV: NavItem[] = [
@@ -187,7 +168,6 @@ const NAV: NavItem[] = [
     href: '/tunnels',
     label: 'nav.tunnels',
     icon: Icon.tunnels,
-    module: 'reverse-tunnels',
   },
   { href: '/templates', label: 'nav.templates', icon: Icon.templates },
   { href: '/catalog', label: 'nav.catalog', icon: Icon.catalog },
@@ -196,19 +176,16 @@ const NAV: NavItem[] = [
     href: '/audit',
     label: 'nav.audit',
     icon: Icon.audit,
-    module: 'audit-export',
   },
   {
     href: '/alerts',
     label: 'nav.alerts',
     icon: Icon.alerts,
-    module: 'alerts',
   },
     {
       href: '/offsite',
       label: 'nav.offsite',
       icon: Icon.offsite,
-      module: 'offsite-backups',
     },
     {
       href: '/certificates',
@@ -219,43 +196,36 @@ const NAV: NavItem[] = [
       href: '/api-tokens',
       label: 'nav.apiTokens',
       icon: Icon.key,
-      module: 'api-cli',
     },
   {
     href: '/metrics',
     label: 'nav.metrics',
     icon: Icon.metrics,
-    module: 'metrics-history',
   },
   {
     href: '/white-label',
     label: 'nav.whiteLabel',
     icon: Icon.brush,
-    module: 'white-label',
   },
   {
     href: '/sso',
     label: 'nav.sso',
     icon: Icon.sso,
-    module: 'sso',
   },
   {
     href: '/previews',
     label: 'nav.previews',
     icon: Icon.preview,
-    module: 'preview-envs',
   },
   {
     href: '/git-apps',
     label: 'nav.gitApps',
     icon: Icon.gitApps,
-    module: 'preview-envs',
   },
   {
     href: '/email',
     label: 'nav.email',
     icon: Icon.mail,
-    module: 'email',
   },
   { href: '/invites', label: 'nav.invites', icon: Icon.invite },
 ];
@@ -319,9 +289,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (!ready) return null;
 
   return (
-    <EntitlementsProvider>
-      <AppChrome>{children}</AppChrome>
-    </EntitlementsProvider>
+    <AppChrome>{children}</AppChrome>
   );
 }
 
@@ -329,7 +297,6 @@ function AppChrome({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useI18n();
-  const { has } = useEntitlements();
   const brand = useBranding();
   const [open, setOpen] = useState(false); // mobile drawer
   const [collapsed, setCollapsed] = useState(false); // desktop hide
@@ -423,7 +390,6 @@ function AppChrome({ children }: { children: ReactNode }) {
           {NAV.map((item) => {
             const active = pathname?.startsWith(item.href) ?? false;
             const ItemIcon = item.icon;
-            const locked = item.module ? !has(item.module) : false;
             return (
               <Link
                 key={item.href}
@@ -432,12 +398,6 @@ function AppChrome({ children }: { children: ReactNode }) {
               >
                 <ItemIcon className="shrink-0" />
                 <span className="flex-1">{t(item.label)}</span>
-                {locked && (
-                  <Icon.lock
-                    className="shrink-0 text-amber-400/70"
-                    aria-label={t('nav.locked')}
-                  />
-                )}
               </Link>
             );
           })}
@@ -449,13 +409,6 @@ function AppChrome({ children }: { children: ReactNode }) {
         </div>
 
         <div className="space-y-1 border-t border-white/10 px-3 py-3">
-          <Link
-            href="/billing"
-            className={linkClass(pathname?.startsWith('/billing') ?? false)}
-          >
-            <Icon.billing className="shrink-0" />
-            <span>{t('nav.billing')}</span>
-          </Link>
           <Link
             href="/settings"
             className={linkClass(pathname?.startsWith('/settings') ?? false)}

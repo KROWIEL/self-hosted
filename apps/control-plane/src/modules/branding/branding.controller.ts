@@ -8,8 +8,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { BrandingService } from './branding.service';
 import { SetBrandingDto } from './dto/branding.dto';
 
@@ -28,16 +26,14 @@ export class BrandingController {
   }
 
   @Get('config')
-  @UseGuards(JwtAuthGuard, ModuleGuard)
-  @RequiresModule('white-label')
+  @UseGuards(JwtAuthGuard)
   getConfig(@Request() req: { user?: { role?: string } }) {
     this.assertAdmin(req);
     return this.branding.getConfig();
   }
 
   @Put('config')
-  @UseGuards(JwtAuthGuard, ModuleGuard)
-  @RequiresModule('white-label')
+  @UseGuards(JwtAuthGuard)
   setConfig(
     @Request() req: { user?: { role?: string } },
     @Body() dto: SetBrandingDto,

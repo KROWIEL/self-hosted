@@ -6,7 +6,6 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Queue, Worker } from 'bullmq';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { createRedisConnection } from '../services/deploy.constants';
 import { PreviewService } from './preview.service';
 import {
@@ -17,7 +16,7 @@ import {
 
 /**
  * Periodically tears down expired preview environments. Runs as a BullMQ
- * repeatable job; no-ops unless the `preview-envs` module is licensed.
+ * repeatable job.
  */
 @Injectable()
 export class PreviewWorker implements OnModuleInit, OnModuleDestroy {
@@ -31,7 +30,6 @@ export class PreviewWorker implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(PREVIEW_QUEUE) private readonly queue: Queue<PreviewJobData>,
     private readonly preview: PreviewService,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   async onModuleInit() {
@@ -63,7 +61,6 @@ export class PreviewWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   private async run() {
-    if (!(await this.entitlements.hasModule('preview-envs'))) return;
     const removed = await this.preview.cleanupExpired().catch((e) => {
       this.logger.error(`Preview cleanup failed: ${(e as Error).message}`);
       return 0;

@@ -10,8 +10,6 @@ import {
   revokeApiToken,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -56,8 +54,6 @@ export default function ApiTokensPage() {
 function ApiTokensContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('api-cli');
 
   const [rows, setRows] = useState<ApiToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,13 +79,9 @@ function ApiTokensContent() {
   }
 
   useEffect(() => {
-    if (!unlocked) {
-      setLoading(false);
-      return;
-    }
     reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked]);
+  }, []);
 
   function toggleScope(scope: ApiTokenScope) {
     setScopes((prev): ApiTokenScope[] => {
@@ -158,22 +150,6 @@ function ApiTokensContent() {
     } catch {
       /* clipboard may be unavailable */
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader
-          title={t('apiTokens.title')}
-          subtitle={t('apiTokens.subtitle')}
-        />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('apiTokens.lockedTitle')}
-          featureBody={t('apiTokens.lockedBody')}
-        />
-      </>
-    );
   }
 
   return (

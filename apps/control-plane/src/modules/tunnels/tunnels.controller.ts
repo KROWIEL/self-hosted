@@ -12,15 +12,11 @@ import {
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../../common/guards/admin.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { TunnelsService } from './tunnels.service';
 import { CreateTunnelDto, UpdateTunnelDto } from './dto/tunnel.dto';
 
-// Reverse-tunnels is a paid add-on module (Home-Lab / Pro tiers) and exposes
-// decrypted tunnel tokens / infra control — platform-admin only.
-@UseGuards(JwtAuthGuard, AdminGuard, ModuleGuard)
-@RequiresModule('reverse-tunnels')
+// Reverse tunnels expose decrypted tunnel tokens / infra control — platform-admin only.
+@UseGuards(JwtAuthGuard, AdminGuard)
 @Controller('tunnels')
 export class TunnelsController {
   constructor(private readonly tunnels: TunnelsService) {}

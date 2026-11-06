@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { MetricPoint, Node, getNodeMetrics, listNodes } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -32,8 +30,6 @@ export default function MetricsPage() {
 function MetricsContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('metrics-history');
 
   const [nodes, setNodes] = useState<Node[]>([]);
   const [nodeId, setNodeId] = useState<string>('');
@@ -43,10 +39,6 @@ function MetricsContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!unlocked) {
-      setLoading(false);
-      return;
-    }
     listNodes()
       .then((n) => {
         setNodes(n);
@@ -54,10 +46,10 @@ function MetricsContent() {
       })
       .catch((e) => setError(errorText(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked]);
+  }, []);
 
   useEffect(() => {
-    if (!unlocked || !nodeId) {
+    if (!nodeId) {
       setLoading(false);
       return;
     }
@@ -83,23 +75,7 @@ function MetricsContent() {
       clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, nodeId, hours]);
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader
-          title={t('metricsHistory.title')}
-          subtitle={t('metricsHistory.subtitle')}
-        />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('metricsHistory.lockedTitle')}
-          featureBody={t('metricsHistory.lockedBody')}
-        />
-      </>
-    );
-  }
+  }, [nodeId, hours]);
 
   return (
     <>

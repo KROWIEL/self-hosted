@@ -97,8 +97,6 @@ export const en = {
   'nav.email': 'Email',
   'nav.invites': 'Invites',
   'nav.settings': 'Settings',
-  'nav.billing': 'Billing',
-  'nav.locked': 'Requires an upgrade',
   'nav.openMenu': 'Open menu',
   'nav.closeMenu': 'Close menu',
   'nav.collapse': 'Hide sidebar',
@@ -130,7 +128,6 @@ export const en = {
   'register.subtitleInvite': 'Step 1 of 2 — invited account',
   'register.inviteReady':
     'Invitation accepted — create your account to continue.',
-  'register.passwordHint': 'At least 8 characters.',
   'register.continue': 'Continue',
   'register.creating': 'Creating…',
   'register.haveAccount': 'Already have an account?',
@@ -162,7 +159,7 @@ export const en = {
   'settings.saving': 'Saving…',
   'settings.profileSaved': 'Profile updated',
   'settings.passwordTitle': 'Password',
-  'settings.passwordHint': 'Use at least 8 characters.',
+  'settings.passwordHint': 'Choose a strong password that meets every rule below.',
   'settings.currentPassword': 'Current password',
   'settings.newPassword': 'New password',
   'settings.confirmPassword': 'Confirm new password',
@@ -242,15 +239,6 @@ export const en = {
     'The memory limit exceeds platform capacity.',
   'error.nodes.agentUnreachable':
     'The agent on node “{node}” is unreachable. Make sure it is running (Nodes → Start agent).',
-  'error.license.invalidKey': 'The license key is invalid or malformed.',
-  'error.license.expiredKey': 'The license key has expired.',
-  'error.license.moduleLocked':
-    'This feature requires the {tier} plan. Upgrade in Billing to unlock it.',
-  'error.license.nodeLimit':
-    'Your plan allows at most {max} node(s). Upgrade in Billing to add more.',
-  'error.license.tunnelLimit':
-    'Your plan allows at most {max} reverse tunnel(s). Upgrade in Billing to add more.',
-  'error.sso.notLicensed': 'Single sign-on requires the Pro plan.',
   'error.sso.notConfigured':
     'Single sign-on is not configured. Ask an administrator to set it up.',
   'error.email.notConfigured':
@@ -339,9 +327,6 @@ export const en = {
   'nodes.notEnrolled': 'awaiting enrollment',
   'nodes.adding': 'Adding…',
   'nodes.empty': 'No nodes registered yet.',
-  'nodes.limitHint': '{count} of {max} nodes used on your plan.',
-  'nodes.limitReached': 'Your plan allows at most {max} node(s).',
-  'nodes.limitUpgrade': 'Upgrade for more.',
   'nodes.start': 'Start agent',
   'nodes.stop': 'Stop agent',
   'nodes.startConfirm': 'Start this node agent?',
@@ -416,7 +401,7 @@ export const en = {
   // App catalog
   'catalog.title': 'App catalog',
   'catalog.subtitle':
-    'One-click apps you can install into a project. The whole catalog is free on every plan.',
+    'One-click apps you can install into a project.',
   'catalog.install': 'Install',
   'catalog.installing': 'Installing…',
   'catalog.pickProject': 'Project',
@@ -693,9 +678,6 @@ export const en = {
   'service.cron': 'Scheduled jobs',
   'service.cronHint':
     'Run a command inside the service container on a cron schedule. The service must be running.',
-  'service.cronLockedTitle': 'Per-service cron is a Home-Lab module',
-  'service.cronLockedBody':
-    'Schedule recurring commands inside running containers — maintenance scripts, cache warmers, and more. Upgrade to Home-Lab or Pro to unlock it.',
   'service.cronName': 'Name',
   'service.cronNamePlaceholder': 'e.g. nightly cleanup',
   'service.cronExpr': 'Cron',
@@ -830,9 +812,6 @@ export const en = {
   'tunnel.title': 'Exposure',
   'tunnel.subtitle':
     'Expose this panel through a lightweight public VDS relay. The VDS only forwards traffic to your local proxy — no Docker, no per-app config.',
-  'tunnel.lockedTitle': 'Reverse tunnels are a paid module',
-  'tunnel.lockedBody':
-    'Expose NAT / home-lab nodes to the internet through a public relay — the killer feature for self-hosting behind a grey IP. Unlock it with the Home-Lab plan (or Pro).',
   'tunnel.aboutTitle': 'What is a reverse tunnel?',
   'tunnel.aboutBody':
     'If your node sits behind a grey/NAT IP, it isn’t reachable from the internet. A reverse tunnel fixes this: a small client on your side connects out to a tunnel server on a cheap public VDS, which relays public ports (like 443) back to your Traefik. Visitors hit the VDS; traffic is forwarded to your node.',
@@ -848,9 +827,6 @@ export const en = {
   'tunnel.add': 'Add tunnel',
   'tunnel.adding': 'Adding…',
   'tunnel.empty': 'No tunnels yet. Add one to expose this panel via a public VDS.',
-  'tunnel.limitHint': '{count} of {max} tunnels used on your plan.',
-  'tunnel.limitReached': 'Your plan allows at most {max} tunnel(s).',
-  'tunnel.limitUpgrade': 'Upgrade for more.',
   'tunnel.namePlaceholder': 'Name (e.g. home → vds)',
   'tunnel.serverHostPlaceholder': 'Public VDS host or IP',
   'tunnel.controlPortPlaceholder': 'Control port',
@@ -910,152 +886,10 @@ export const en = {
   'type.BACKEND': 'Backend',
   'type.FRONTEND': 'Frontend',
 
-  // Billing / licensing
-  'billing.subtitle':
-    'Manage this installation’s plan. Free covers the core PaaS; Home-Lab and Pro unlock tunnels, cron, and add-on modules.',
-  'billing.currentPlan': 'Current plan',
-  'billing.active': 'Active',
-  'billing.free': 'Free',
-  'billing.inactive': 'Inactive',
-  'billing.expires': 'Expires',
-  'billing.perpetual': 'Never (perpetual)',
-  'billing.expiresSoon': 'Expires in {days} days — renew to keep paid features.',
-  'billing.activation.online': 'Activated online',
-  'billing.activation.offline': 'Awaiting activation — paid modules are locked until the license server is reachable',
-  'billing.activation.lastCheck': 'last check',
-  'billing.activation.seatLimit':
-    'This key is already in use on another machine. Remove it there — or unbind that machine in the customer portal where you bought it — then paste the key here again.',
-  'billing.activation.otherMachine':
-    'This key was activated on a different machine. A licence covers one machine at a time: unbind the old one in the customer portal where you bought it, and this installation will activate on its next attempt.',
-  'billing.activation.hostHidden':
-    'The licence server cannot tell which machine this is. If the control plane runs in a container, mount /etc/machine-id read-only at /host/etc/machine-id and restart it.',
-  'billing.activation.fleetSecret':
-    'This company licence needs its fleet secret. Set LICENSE_FLEET_SECRET on this machine to the value from your purchase email, or issue a new one from the customer portal.',
-  'billing.unlockedModules': 'Unlocked modules',
-  'billing.noModules': 'Core features only',
-  'billing.licenseKey': 'License key',
-  'billing.licenseKeyHint':
-    'Paste the license key from your purchase confirmation to activate a paid plan on this installation.',
-  'billing.licenseKeyPlaceholder': 'paste license key…',
-  'billing.activate': 'Activate license',
-  'billing.activating': 'Activating…',
-  'billing.remove': 'Remove license',
-  'billing.activated': 'License activated.',
-  'billing.removed': 'License removed. Reverted to Free.',
-  'billing.adminOnly':
-    'Only an administrator can activate or change the license key.',
-  'billing.plansTitle': 'Plans',
-  'billing.yourPlan': 'Your plan',
-  'billing.buy': 'Get started',
-  'billing.downgradeHint':
-    'You already have a higher plan. To switch to a cheaper tier, cancel your current subscription first.',
-  'billing.viewPlans': 'View plans',
-  'billing.requiresPlan': 'Requires the {plan} plan',
-  'billing.forever': 'forever',
-  'billing.perMonth': '/mo',
-  'billing.price.free': '$0',
-  'billing.price.homelab': '$3',
-  'billing.price.pro': '$15',
-  'billing.price.enterprise': '$999',
-  'billing.tier.free': 'Free',
-  'billing.tier.homelab': 'Home-Lab',
-  'billing.tier.pro': 'Pro',
-  'billing.tier.enterprise': 'Enterprise',
-  // Free tier — the core PaaS, no license required.
-  'billing.feat.free.deploy.title': 'Git, image & Compose deploys',
-  'billing.feat.free.deploy.desc':
-    'Clone & build from Git (template, repo Dockerfile, or Nixpacks), run an existing image, or bring up a Docker Compose stack — with live build logs.',
-  'billing.feat.free.catalog.title': 'Full app catalog',
-  'billing.feat.free.catalog.desc':
-    'One-click install of every curated app (Jellyfin, Vaultwarden, Paperless-ngx, Open WebUI, Gitea, and more) with volumes and env presets — no plan required.',
-  'billing.feat.free.volumes.title': 'Persistent volumes',
-  'billing.feat.free.volumes.desc':
-    'Attach named volumes to services so data survives redeploys, with volume backups from the panel.',
-  'billing.feat.free.https.title': 'HTTPS & certificates',
-  'billing.feat.free.https.desc':
-    'Automatic Let’s Encrypt via Traefik, a certificates page for domain TLS status, and optional custom PEM upload.',
-  'billing.feat.free.databases.title': 'Managed databases',
-  'billing.feat.free.databases.desc':
-    'Spin up PostgreSQL or MySQL per project, with scheduled backups and one-click restore.',
-  'billing.feat.free.observability.title': 'Logs & live metrics',
-  'billing.feat.free.observability.desc':
-    'Stream container logs and watch real-time CPU, RAM and disk usage for every service and node.',
-  'billing.feat.free.access.title': 'Projects, RBAC & 2FA',
-  'billing.feat.free.access.desc':
-    'Organize work into projects, control who can do what with roles, and protect accounts with two-factor auth.',
-  'billing.feat.free.node.title': '1 node included',
-  'billing.feat.free.node.desc':
-    'Run the whole platform on a single server — perfect for a personal project or a trial.',
-  // Home-Lab tier — Free core plus reverse tunnels and cron.
-  'billing.feat.homelab.allFree.title': 'Everything in Free',
-  'billing.feat.homelab.allFree.desc':
-    'The complete free core, plus the home-lab additions below.',
-  'billing.feat.homelab.tunnels.title': 'Secure reverse tunnels',
-  'billing.feat.homelab.cron.title': 'Per-service cron jobs',
-  'billing.feat.homelab.limits.title': '3 nodes + 3 tunnels',
-  'billing.feat.homelab.limits.desc':
-    'Connect up to three servers and publish up to three tunneled services — enough for a real multi-machine home lab.',
-  // Pro tier — everything, unlimited, all modules.
-  'billing.feat.pro.allHomelab.title': 'Everything in Free & Home-Lab',
-  'billing.feat.pro.allHomelab.desc':
-    'Reverse tunnels, per-service cron, plus every Pro add-on module below.',
-  'billing.feat.pro.unlimited.title': 'Unlimited nodes & tunnels',
-  'billing.feat.pro.unlimited.desc':
-    'Scale across as many servers and expose as many services as you need — no caps.',
-  // Enterprise tier — the same panel, licensed to a company for a whole fleet.
-  'billing.feat.enterprise.allPro.title': 'Everything in Pro',
-  'billing.feat.enterprise.allPro.desc':
-    'Every module, unlimited nodes and tunnels — the same panel, licensed for a company instead of a person.',
-  'billing.feat.enterprise.fleet.title': 'One key for up to 5000 machines',
-  'billing.feat.enterprise.fleet.desc':
-    'The personal plans license one machine each. This one licenses a fleet, so an estate of panels runs on a single key.',
-  'billing.feat.enterprise.resell.title': 'Run it for your customers',
-  'billing.feat.enterprise.resell.desc':
-    'Built for hosting providers: your customers get the panel on your machines, under your brand, on your licence.',
-  'billing.feat.enterprise.transfers.title': 'Machines come and go freely',
-  'billing.feat.enterprise.transfers.desc':
-    'Bind and unbind installations as you build and retire them, with no waiting period between transfers.',
-  'billing.feat.enterprise.support.title': 'Priority support',
-  'billing.feat.enterprise.support.desc':
-    'A direct line for rollout questions and incidents, ahead of the normal queue.',
-  'billing.proModulesTitle': 'Every Pro module',
   // Per-module value propositions (what it does + why it matters).
-  'billing.moduleDesc.reverse-tunnels':
-    'Publish services behind NAT or a home/LAN network to the internet through a lightweight public relay — no port-forwarding, static IP or router changes needed.',
-  'billing.moduleDesc.service-cron':
-    'Schedule recurring commands inside a running service container (backups, cache warmers, maintenance scripts) with last-run status in the panel.',
-  'billing.moduleDesc.preview-envs':
-    'Spin up disposable previews from any branch, and auto-create/update/tear them down from GitHub or GitLab pull-request webhooks — with optional PR comments.',
-  'billing.moduleDesc.offsite-backups':
-    'Mirror backups to S3, GCS (S3-compat), Azure Blob, or SFTP with encrypted credentials, so your data survives even if a node is lost.',
-  'billing.moduleDesc.alerts':
-    'First-class Discord, Slack, Telegram and generic webhook channels for node-offline, failed deploys/backups and resource thresholds — hear about incidents before your users do.',
-  'billing.moduleDesc.metrics-history':
-    'Continuously sample and store per-node CPU, RAM and disk usage, with history charts for capacity planning and troubleshooting.',
-  'billing.moduleDesc.sso':
-    'Let your team sign in with your identity provider over OpenID Connect, with a domain allow-list and just-in-time user provisioning.',
-  'billing.moduleDesc.audit-export':
-    'Review an organization-wide activity trail and export it as CSV or JSON for compliance and incident investigations.',
-  'billing.moduleDesc.api-cli':
-    'Issue personal access tokens to automate the platform from scripts, CI/CD pipelines and the CLI.',
-  'billing.moduleDesc.white-label':
-    'Rebrand the panel with your own app name, logo, accent color and attribution across the UI and login page.',
-  'billing.moduleDesc.email':
-    'Connect your SMTP provider to send transactional and broadcast email from the panel — configure the sender identity, send test messages, notify all users or specific recipients, and review a delivery log.',
-  'billing.module.reverse-tunnels': 'Reverse-tunnels',
-  'billing.module.service-cron': 'Per-service cron',
-  'billing.module.preview-envs': 'Preview environments',
-  'billing.module.offsite-backups': 'Off-site backups',
-  'billing.module.alerts': 'Alerts',
-  'billing.module.metrics-history': 'Metrics history',
-  'billing.module.sso': 'SSO / OIDC',
-  'billing.module.audit-export': 'Audit export',
 
-  // Audit log page (Pro: audit-export)
+  // Audit log page
   'audit.subtitle': 'Organization-wide activity trail with CSV/JSON export.',
-  'audit.lockedTitle': 'Audit export is a Pro module',
-  'audit.lockedBody':
-    'View the organization-wide activity trail and export it as CSV or JSON for compliance and incident review. Upgrade to Pro to unlock it.',
   'audit.adminOnly': 'The audit log is available to administrators only.',
   'audit.exportTitle': 'Export',
   'audit.exportHint':
@@ -1074,17 +908,11 @@ export const en = {
   'audit.colTarget': 'Target',
   'audit.colIp': 'IP',
   'audit.colStatus': 'Status',
-  'billing.module.api-cli': 'API & CLI',
-  'billing.module.white-label': 'White-label',
-  'billing.module.email': 'Email service',
 
-  // Alerts (Pro: alerts)
+  // Alerts
   'alerts.title': 'Alerts',
   'alerts.subtitle':
     'Get notified about node, deploy, service, database, backup and tunnel incidents.',
-  'alerts.lockedTitle': 'Alerts is a Pro feature',
-  'alerts.lockedBody':
-    'Wire monitored events to Discord, Slack, Telegram, or a custom webhook and get notified automatically.',
   'alerts.adminOnly': 'Only administrators can manage alerts.',
   'alerts.channelsTitle': 'Channels',
   'alerts.channelsHint':
@@ -1135,7 +963,6 @@ export const en = {
   'alerts.grp.databases': 'Databases',
   'alerts.grp.backups': 'Backups',
   'alerts.grp.networking': 'Networking',
-  'alerts.grp.licensing': 'Licensing',
   // Event labels.
   'alerts.ev.nodeOffline': 'Node offline',
   'alerts.ev.nodeOnline': 'Node recovered',
@@ -1154,7 +981,6 @@ export const en = {
   'alerts.ev.offsiteFailed': 'Off-site upload failed',
   'alerts.ev.tunnelOffline': 'Tunnel down',
   'alerts.ev.tunnelOnline': 'Tunnel recovered',
-  'alerts.ev.licenseExpiring': 'License expiring',
   'alerts.eventsTitle': 'Recent alerts',
   'alerts.noEvents': 'No alerts have fired yet.',
   'alerts.colTime': 'Time',
@@ -1164,13 +990,10 @@ export const en = {
   'alerts.statusSent': 'Sent',
   'alerts.statusFailed': 'Failed',
 
-  // Offsite backups (Pro: offsite-backups)
+  // Offsite backups
   'offsite.title': 'Offsite backups',
   'offsite.subtitle':
     'Mirror your local backups to S3, GCS, Azure Blob, or SFTP.',
-  'offsite.lockedTitle': 'Offsite backups is a Pro feature',
-  'offsite.lockedBody':
-    'Automatically copy every successful backup to an off-site destination (AWS S3, GCS, Azure Blob, SFTP, MinIO, R2, B2).',
   'offsite.adminOnly': 'Only administrators can manage offsite backups.',
   'offsite.destTitle': 'Destination',
   'offsite.destHint':
@@ -1222,12 +1045,9 @@ export const en = {
   'offsite.statusUploaded': 'Uploaded',
   'offsite.statusFailed': 'Failed',
 
-  // Personal API tokens (Pro: api-cli)
+  // Personal API tokens
   'apiTokens.title': 'API tokens',
   'apiTokens.subtitle': 'Personal tokens for the API and CLI.',
-  'apiTokens.lockedTitle': 'API & CLI access is a Pro feature',
-  'apiTokens.lockedBody':
-    'Create personal access tokens to script the panel or use it from CI/CD. Tokens carry your own permissions.',
   'apiTokens.createTitle': 'Create a token',
   'apiTokens.name': 'Name',
   'apiTokens.namePlaceholder': 'e.g. CI pipeline',
@@ -1262,13 +1082,10 @@ export const en = {
   'apiTokens.confirmRevoke':
     'Revoke this token? Any script using it will stop working.',
 
-  // White-label (Pro: white-label)
+  // White-label
   'brand.poweredBy': 'Powered by Self-Hosted',
   'whiteLabel.title': 'White-label',
   'whiteLabel.subtitle': 'Rebrand the panel with your own name, logo and colour.',
-  'whiteLabel.lockedTitle': 'White-label is a Pro feature',
-  'whiteLabel.lockedBody':
-    'Replace the app name, logo and accent colour, and remove the “Powered by” attribution.',
   'whiteLabel.adminOnly': 'Only administrators can change branding.',
   'whiteLabel.appName': 'App name',
   'whiteLabel.accentColor': 'Accent colour',
@@ -1283,12 +1100,9 @@ export const en = {
   'whiteLabel.reloadHint':
     'Name, logo, favicon and accent colour apply across the app right away.',
 
-  // Metrics history (Pro: metrics-history)
+  // Metrics history
   'metricsHistory.title': 'Metrics',
   'metricsHistory.subtitle': 'Historical CPU, memory and disk usage per node.',
-  'metricsHistory.lockedTitle': 'Metrics history is a Pro feature',
-  'metricsHistory.lockedBody':
-    'Collect and chart CPU, memory and disk usage over time for every node.',
   'metricsHistory.empty':
     'No data yet — the first sample is collected within about a minute.',
   'metricsHistory.collecting':
@@ -1329,12 +1143,9 @@ export const en = {
   'email.aboutBody':
     'Send and broadcast messages to your users through your own SMTP provider (Mailgun, SendGrid, Amazon SES, Postmark, or any SMTP relay). This is outbound only — it relays mail through a provider you configure; it is not an inbound mail server. Enter your SMTP settings, send a test, then compose a message to all users or a specific list.',
 
-  // Email service (Pro: email)
+  // Email service
   'email.title': 'Email',
   'email.subtitle': 'Send and broadcast messages to your users over SMTP.',
-  'email.lockedTitle': 'Email is a Pro feature',
-  'email.lockedBody':
-    'Connect an SMTP provider to send transactional mail and broadcast announcements to your users and team.',
   'email.adminOnly': 'Only administrators can configure and send email.',
   'email.smtpTitle': 'SMTP settings',
   'email.smtpHint':
@@ -1375,12 +1186,9 @@ export const en = {
   'email.statusSent': 'Sent',
   'email.statusFailed': 'Failed',
 
-  // Single sign-on (Pro: sso)
+  // Single sign-on
   'sso.title': 'Single sign-on',
   'sso.subtitle': 'Let users sign in with your OpenID Connect identity provider.',
-  'sso.lockedTitle': 'Single sign-on is a Pro feature',
-  'sso.lockedBody':
-    'Connect Google, Microsoft Entra, Okta, Keycloak or any OpenID Connect provider so your team signs in with their existing accounts.',
   'sso.adminOnly': 'Only administrators can configure single sign-on.',
   'sso.enabled': 'Enable single sign-on',
   'sso.enabledHint':
@@ -1402,7 +1210,6 @@ export const en = {
   'sso.error.title': 'Sign-in failed',
   'sso.error.backToLogin': 'Back to login',
   'sso.error.invalid_request': 'The sign-in request was incomplete. Please try again.',
-  'sso.error.not_licensed': 'Single sign-on requires the Pro plan.',
   'sso.error.not_configured': 'Single sign-on is not configured.',
   'sso.error.bad_state':
     'The sign-in link expired or was invalid. Please try again.',
@@ -1497,13 +1304,10 @@ export const en = {
   'certs.savingTls': 'Saving…',
   'certs.tlsSaved': 'TLS preferences saved.',
 
-  // Preview environments (Pro: preview-envs)
+  // Preview environments
   'previews.title': 'Preview environments',
   'previews.subtitle':
     'Spin up a disposable copy of a service from any branch, with its own URL.',
-  'previews.lockedTitle': 'Preview environments are a Pro feature',
-  'previews.lockedBody':
-    'Deploy any branch as an isolated, auto-expiring environment with its own subdomain — perfect for reviewing pull requests.',
   'previews.newTitle': 'New preview',
   'previews.service': 'Service',
   'previews.servicePlaceholder': 'Select a service…',
@@ -1526,13 +1330,10 @@ export const en = {
   'previews.delete': 'Delete',
   'previews.pr': 'PR',
 
-  // Git App / PR-triggered previews (Pro: preview-envs)
+  // Git App / PR-triggered previews
   'gitApps.title': 'Git App / PR previews',
   'gitApps.subtitle':
     'Connect GitHub or GitLab webhooks so pull requests spin up preview environments automatically.',
-  'gitApps.lockedTitle': 'Git App previews are a Pro feature',
-  'gitApps.lockedBody':
-    'PR-triggered preview environments require the Pro plan (preview-envs module).',
   'gitApps.adminOnly': 'Only administrators can configure Git App integrations.',
   'gitApps.github': 'GitHub',
   'gitApps.gitlab': 'GitLab',

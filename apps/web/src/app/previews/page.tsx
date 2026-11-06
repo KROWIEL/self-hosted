@@ -14,8 +14,6 @@ import {
   redeployPreview,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -49,8 +47,6 @@ function PreviewsContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
   const statusLabel = useStatusLabel();
-  const { has } = useEntitlements();
-  const unlocked = has('preview-envs');
 
   const [previews, setPreviews] = useState<PreviewEnv[] | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -75,13 +71,12 @@ function PreviewsContent() {
   }
 
   useEffect(() => {
-    if (!unlocked) return;
     reload();
     listProjects()
       .then(setProjects)
       .catch(() => setProjects([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked]);
+  }, []);
 
   // When a parent service is chosen, look up its domain to suggest a host.
   useEffect(() => {
@@ -149,22 +144,6 @@ function PreviewsContent() {
     } catch (e) {
       setError(errorText(e));
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader
-          title={t('previews.title')}
-          subtitle={t('previews.subtitle')}
-        />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('previews.lockedTitle')}
-          featureBody={t('previews.lockedBody')}
-        />
-      </>
-    );
   }
 
   return (

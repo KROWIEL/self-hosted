@@ -12,8 +12,6 @@ import {
   setGitApp,
 } from '@/lib/api';
 import { AppShell } from '@/components/shell';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -36,8 +34,6 @@ export default function GitAppsPage() {
 function GitAppsContent() {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
-  const unlocked = has('preview-envs');
 
   const [me, setMe] = useState<AuthMe | null>(null);
   const [apps, setApps] = useState<GitAppConfig[] | null>(null);
@@ -75,7 +71,7 @@ function GitAppsContent() {
   }, []);
 
   useEffect(() => {
-    if (!unlocked || !isAdmin) return;
+    if (!isAdmin) return;
     listGitApps()
       .then(setApps)
       .catch((e) => setError(errorText(e)));
@@ -83,7 +79,7 @@ function GitAppsContent() {
       .then(setProjects)
       .catch(() => setProjects([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocked, isAdmin]);
+  }, [isAdmin]);
 
   function updateApp(provider: GitAppProvider, patch: Partial<GitAppConfig>) {
     setApps((prev) =>
@@ -146,19 +142,6 @@ function GitAppsContent() {
     } catch {
       setNotice(url);
     }
-  }
-
-  if (!unlocked) {
-    return (
-      <>
-        <PageHeader title={t('gitApps.title')} subtitle={t('gitApps.subtitle')} />
-        <UpgradeNotice
-          tier="pro"
-          featureTitle={t('gitApps.lockedTitle')}
-          featureBody={t('gitApps.lockedBody')}
-        />
-      </>
-    );
   }
 
   if (me && !isAdmin) {

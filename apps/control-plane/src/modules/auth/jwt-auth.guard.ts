@@ -13,7 +13,7 @@ import {
 } from '../api-tokens/api-tokens.constants';
 
 /**
- * Accepts either a normal JWT (session) or a personal API token (Pro: api-cli).
+ * Accepts either a normal JWT (session) or a personal API token.
  * A `Bearer shpat_…` value is validated against stored token hashes; anything
  * else falls through to the standard passport-jwt strategy.
  *

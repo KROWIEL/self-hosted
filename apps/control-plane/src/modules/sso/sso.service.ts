@@ -4,7 +4,6 @@ import { eq } from 'drizzle-orm';
 import { DRIZZLE, Database } from '../../db/database.module';
 import { ssoConfig } from '../../db/schema';
 import { CryptoService } from '../../common/crypto/crypto.service';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { UsersService } from '../users/users.service';
 import { AuthService } from '../auth/auth.service';
 import { SsoErrors } from '../../common/errors/app-errors';
@@ -45,7 +44,7 @@ export type SsoCallbackResult =
   | { ok: false; redirect: string };
 
 /**
- * Single sign-on via OpenID Connect (Pro: sso). Stores a singleton IdP config
+ * Single sign-on via OpenID Connect. Stores a singleton IdP config
  * and drives the Authorization Code flow: `buildAuthUrl` starts it, and
  * `handleCallback` completes it by verifying the ID token and minting a normal
  * panel session for the (optionally auto-provisioned) local user.
@@ -61,7 +60,6 @@ export class SsoService {
   constructor(
     @Inject(DRIZZLE) private readonly db: Database,
     private readonly crypto: CryptoService,
-    private readonly entitlements: EntitlementsService,
     private readonly users: UsersService,
     private readonly auth: AuthService,
   ) {}
@@ -102,11 +100,10 @@ export class SsoService {
 
   /** Public status used by the login page to decide whether to show the button. */
   async status(): Promise<{ enabled: boolean; label: string }> {
-    const licensed = await this.entitlements.hasModule('sso');
     const r = await this.row();
     const configured = !!(r && r.issuer && r.clientId && r.clientSecretEnc);
     return {
-      enabled: licensed && !!r?.enabled && configured,
+      enabled: !!r?.enabled && configured,
       label: r?.buttonLabel?.trim() || DEFAULT_LABEL,
     };
   }
@@ -156,7 +153,6 @@ export class SsoService {
    * ensure the flow is being completed by the browser that started it.
    */
   async buildAuthUrl(req: ReqLike): Promise<{ url: string; csrf: string }> {
-    if (!(await this.entitlements.hasModule('sso'))) throw SsoErrors.notLicensed();
     const r = await this.row();
     if (!r || !r.enabled || !r.issuer || !r.clientId || !r.clientSecretEnc) {
       throw SsoErrors.notConfigured();
@@ -203,8 +199,6 @@ export class SsoService {
     try {
       if (q.error) return fail(q.error);
       if (!q.code || !q.state) return fail('invalid_request');
-      if (!(await this.entitlements.hasModule('sso'))) return fail('not_licensed');
-
       const r = await this.row();
       if (!r || !r.enabled || !r.issuer || !r.clientId || !r.clientSecretEnc) {
         return fail('not_configured');

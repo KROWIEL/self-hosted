@@ -6,7 +6,6 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { Queue, Worker } from 'bullmq';
-import { EntitlementsService } from '../../common/licensing/entitlements.service';
 import { createRedisConnection } from '../services/deploy.constants';
 import { OffsiteService } from './offsite.service';
 import {
@@ -17,8 +16,8 @@ import {
 
 /**
  * Periodically mirrors new local backups to the offsite destination. Runs as a
- * BullMQ repeatable job so it survives restarts; no-ops unless the
- * `offsite-backups` module is licensed and a destination is enabled.
+ * BullMQ repeatable job so it survives restarts; no-ops unless a destination
+ * is enabled.
  */
 @Injectable()
 export class OffsiteWorker implements OnModuleInit, OnModuleDestroy {
@@ -32,7 +31,6 @@ export class OffsiteWorker implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(OFFSITE_QUEUE) private readonly queue: Queue<OffsiteJobData>,
     private readonly offsite: OffsiteService,
-    private readonly entitlements: EntitlementsService,
   ) {}
 
   async onModuleInit() {
@@ -64,7 +62,6 @@ export class OffsiteWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   private async run() {
-    if (!(await this.entitlements.hasModule('offsite-backups'))) return;
     const res = await this.offsite.uploadPending();
     if (res.uploaded || res.failed) {
       this.logger.log(

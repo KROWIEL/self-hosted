@@ -25,7 +25,7 @@ import {
 } from './dto/service-cron.dto';
 
 /**
- * CRUD + BullMQ driver for per-service cron jobs (Home-Lab: service-cron).
+ * CRUD + BullMQ driver for per-service cron jobs.
  * Mirrors BackupScheduler: rebuilds repeatable jobs from the DB on every change.
  */
 @Injectable()

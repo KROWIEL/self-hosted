@@ -49,8 +49,6 @@ import {
 import '@xterm/xterm/css/xterm.css';
 import { AppShell } from '@/components/shell';
 import { BackupsPanel } from '@/components/backups-panel';
-import { useEntitlements } from '@/components/entitlements';
-import { UpgradeNotice } from '@/components/upgrade-notice';
 import {
   Card,
   EmptyState,
@@ -1750,7 +1748,6 @@ function VolumesBox({ id }: { id: string }) {
 function CronBox({ id }: { id: string }) {
   const { t } = useI18n();
   const errorText = useErrorText();
-  const { has } = useEntitlements();
   const { confirm, dialog } = useConfirmDialog();
   const [items, setItems] = useState<ServiceCron[]>([]);
   const [name, setName] = useState('');
@@ -1759,8 +1756,6 @@ function CronBox({ id }: { id: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const unlocked = has('service-cron');
-
   const refresh = useCallback(() => {
     listServiceCrons(id)
       .then(setItems)
@@ -1768,20 +1763,8 @@ function CronBox({ id }: { id: string }) {
   }, [id]);
 
   useEffect(() => {
-    if (unlocked) refresh();
-  }, [unlocked, refresh]);
-
-  if (!unlocked) {
-    return (
-      <PanelCard title={t('service.cron')}>
-        <UpgradeNotice
-          tier="homelab"
-          featureTitle={t('service.cronLockedTitle')}
-          featureBody={t('service.cronLockedBody')}
-        />
-      </PanelCard>
-    );
-  }
+    refresh();
+  }, [refresh]);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();

@@ -9,17 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ModuleGuard } from '../../common/licensing/module.guard';
-import { RequiresModule } from '../../common/licensing/require-module.decorator';
 import { ApiTokenService } from './api-token.service';
 import { CreateApiTokenDto } from './dto/api-tokens.dto';
 
 /**
- * Personal API tokens (Pro: api-cli). Each user manages their own tokens; the
+ * Personal API tokens. Each user manages their own tokens; the
  * whole controller is gated behind the module.
  */
-@UseGuards(JwtAuthGuard, ModuleGuard)
-@RequiresModule('api-cli')
+@UseGuards(JwtAuthGuard)
 @Controller('api-tokens')
 export class ApiTokensController {
   constructor(private readonly tokens: ApiTokenService) {}

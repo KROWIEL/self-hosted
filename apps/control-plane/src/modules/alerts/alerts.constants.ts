@@ -30,8 +30,6 @@ export const ALERT_EVENTS = [
   // Networking
   'tunnel.offline',
   'tunnel.online',
-  // Licensing
-  'license.expiring',
 ] as const;
 
 export type AlertEventName = (typeof ALERT_EVENTS)[number];
@@ -50,7 +48,6 @@ export const ALERT_EVENT_GROUPS: { group: string; events: AlertEventName[] }[] =
   { group: 'databases', events: ['database.error', 'database.stopped'] },
   { group: 'backups', events: ['backup.failed', 'backup.succeeded', 'offsite.failed'] },
   { group: 'networking', events: ['tunnel.offline', 'tunnel.online'] },
-  { group: 'licensing', events: ['license.expiring'] },
 ];
 
 export type AlertsJobData = Record<string, never>;
